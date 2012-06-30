@@ -2,7 +2,7 @@ Falcon DB
 
 Project constitution.
 
-1. The purpose
+== The purpose
 
 This is to be a high-performance, high troughput, opensource, document store database
 with excellent data-mining capabilities.
@@ -11,14 +11,14 @@ Database stores BSON objects organized in collections.
 
 
 
-2. Programing language and technology
+== Programing language and technology
 
 * C++11 for the core product. JavaScript as a (one of) embedded language.
 * CMake is the building system
 * GCC >= 4.6 is the primary compiler, others could be supported
 * x86_64 Linux is the primary target OS, others could be supported
 
-3. Design principles
+== Design principles
 
 * Modular! Pluggable frontend, backend, indexes, server-side languages etc.
   Main source tree should contain at least two of each, to ensure that the modularity is achievable.
@@ -26,3 +26,11 @@ Database stores BSON objects organized in collections.
   - Storage backends: LevelBD, NessDB
 * Concurent - minum locking, maximum concurency. Vertical scalability.
 * Deterministic resource usage: administrator should be able to limint the amount of threads, memory and disk space used.
+
+== Coding standard
+
+* lower_case_undersocre names for all identifiers; boost-style
+* One, project-level namespace: 'falcondb'. 'detail' for implementation details in publi libraries. Othger namespaces used only when neccesary.
+* Indentation: 4 spaces
+* lowercase_file_names, extensions: cpp, hpp, ipp
+* One major c++ class per file
