@@ -1,11 +1,13 @@
 add_library(console_frontend
 
-    console_frontend.cpp console_frontend.hpp
+    frontend.cpp frontend.hpp
+    command_dispatcher.cpp command_dispatcher.hpp
 )
 
 target_link_libraries(console_frontend
 
     boost_system
+    boost_thread
     pthread
     readline
 )

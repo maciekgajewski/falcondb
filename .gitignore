@@ -1,5 +1,5 @@
 # QtCreator artifacts
-CMakeLists.txt.user
+CMakeLists.txt.*
 
 # Compiled Object files
 *.slo
