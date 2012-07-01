@@ -17,38 +17,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_ENGINE_ENGINE_HPP
-#define FALCONDB_ENGINE_ENGINE_HPP
+#ifndef FALCONDB_BACKEND_NESSDB_BACKEND_HPP
+#define FALCONDB_BACKEND_NESSDB_BACKEND_HPP
 
-#include "interfaces/engine.hpp"
 #include "interfaces/storage_backend.hpp"
 
-namespace falcondb { namespace engine {
+namespace falcondb { namespace backend_nessdb {
 
-struct engine_config
-{
-    std::string data_dir; // main data directory
-};
-
-class engine_impl : public interfaces::engine
+class backend : public interfaces::storage_backend
 {
 public:
-    engine_impl(const engine_config& config, interfaces::storage_backend& backend);
+    backend();
+    virtual ~backend();
 
-    /// Initializes the database, then spawns the engine worker threads and return
-    void run();
-
-    // API
-
-    virtual std::vector<std::string> get_databases();
-    virtual std::shared_ptr<interfaces::database> get_database(const std::string& db_name);
-
-private:
-
-    engine_config _config;
-    interfaces::storage_backend& _storage_backend;
+    virtual std::shared_ptr<interfaces::database_backend> open_database(const std::string& path);
+    virtual std::shared_ptr<interfaces::database_backend> create_database(const std::string& path);
 };
 
 } }
 
-#endif
+#endif // FALCONDB_BACKEND_NESSDB_BACKEND_HPP

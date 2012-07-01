@@ -17,38 +17,39 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_ENGINE_ENGINE_HPP
-#define FALCONDB_ENGINE_ENGINE_HPP
+#include "exception.hpp"
 
-#include "interfaces/engine.hpp"
-#include "interfaces/storage_backend.hpp"
+#include <sstream>
 
-namespace falcondb { namespace engine {
+#include <execinfo.h> // glibc-specific backtrace facilities
 
-struct engine_config
+namespace falcondb {
+
+exception::exception(const char* what)
+:
+    _what(what),
+    _backtrace(get_backtrace())
 {
-    std::string data_dir; // main data directory
-};
+}
 
-class engine_impl : public interfaces::engine
+exception::~exception() throw()
 {
-public:
-    engine_impl(const engine_config& config, interfaces::storage_backend& backend);
+}
 
-    /// Initializes the database, then spawns the engine worker threads and return
-    void run();
+std::string exception::get_backtrace()
+{
+    void* buf[1024];
+    int size = ::backtrace(buf, 1024);
 
-    // API
+    char** symbols = ::backtrace_symbols(buf, size);
 
-    virtual std::vector<std::string> get_databases();
-    virtual std::shared_ptr<interfaces::database> get_database(const std::string& db_name);
+    std::stringstream ss;
+    for(int i = 0; i < size; ++i)
+    {
+        ss << symbols[i] << "\n";
+    }
+    ::free(symbols);
+    return ss.str();
+}
 
-private:
-
-    engine_config _config;
-    interfaces::storage_backend& _storage_backend;
-};
-
-} }
-
-#endif
+}

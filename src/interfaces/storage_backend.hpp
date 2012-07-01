@@ -17,38 +17,41 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_ENGINE_ENGINE_HPP
-#define FALCONDB_ENGINE_ENGINE_HPP
+#ifndef STORAGE_BACKEND_HPP
+#define STORAGE_BACKEND_HPP
 
-#include "interfaces/engine.hpp"
-#include "interfaces/storage_backend.hpp"
+#include "utils/range.hpp"
 
-namespace falcondb { namespace engine {
+#include <memory>
 
-struct engine_config
-{
-    std::string data_dir; // main data directory
-};
+namespace falcondb { namespace interfaces {
 
-class engine_impl : public interfaces::engine
+class database_backend;
+
+class storage_backend
 {
 public:
-    engine_impl(const engine_config& config, interfaces::storage_backend& backend);
+    virtual ~storage_backend() {}
 
-    /// Initializes the database, then spawns the engine worker threads and return
-    void run();
+    // Opens exisintg database, throws on error
+    virtual std::shared_ptr<database_backend> open_database(const std::string& path) = 0;
 
-    // API
-
-    virtual std::vector<std::string> get_databases();
-    virtual std::shared_ptr<interfaces::database> get_database(const std::string& db_name);
-
-private:
-
-    engine_config _config;
-    interfaces::storage_backend& _storage_backend;
+    // Create database, throws on error
+    virtual std::shared_ptr<database_backend> create_database(const std::string& path) = 0;
 };
 
-} }
+class database_backend
+{
+public:
+    virtual ~database_backend() {}
+
+    virtual void drop() = 0;
+
+    virtual void add(range key, range data) = 0;
+    virtual void del(range key) = 0;
+    virtual std::string get(range key) = 0;
+};
+
+}}
 
 #endif

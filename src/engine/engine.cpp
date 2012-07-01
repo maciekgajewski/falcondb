@@ -21,8 +21,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace engine {
 
-engine_impl::engine_impl()
+engine_impl::engine_impl(const engine_config& config, interfaces::storage_backend& backend)
+:
+    _config(config),
+    _storage_backend(backend)
 {
+}
+
+void engine_impl::run()
+{
+
 }
 
 } }

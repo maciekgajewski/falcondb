@@ -17,38 +17,39 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_ENGINE_ENGINE_HPP
-#define FALCONDB_ENGINE_ENGINE_HPP
+#ifndef FALCONDB_STRING_HPP
+#define FALCONDB_STRING_HPP
 
-#include "interfaces/engine.hpp"
-#include "interfaces/storage_backend.hpp"
+#include <sstream>
 
-namespace falcondb { namespace engine {
+namespace falcondb {
 
-struct engine_config
+namespace detail {
+
+template <typename A>
+void build_string(std::ostream& s, const A& a)
 {
-    std::string data_dir; // main data directory
-};
+    s << a;
+}
 
-class engine_impl : public interfaces::engine
+template<typename A, typename ...B>
+void build_string(std::ostream& s, const A& a, const B& ...b)
 {
-public:
-    engine_impl(const engine_config& config, interfaces::storage_backend& backend);
+    s << a;
+    build_string(s, b...);
+}
 
-    /// Initializes the database, then spawns the engine worker threads and return
-    void run();
+}
 
-    // API
+/// concatenates all params into string
+template<typename ...T>
+std::string build_string(const T& ...t)
+{
+    std::ostringstream ss;
+    detail::build_string(ss, t...);
+    return ss.str();
+}
 
-    virtual std::vector<std::string> get_databases();
-    virtual std::shared_ptr<interfaces::database> get_database(const std::string& db_name);
-
-private:
-
-    engine_config _config;
-    interfaces::storage_backend& _storage_backend;
-};
-
-} }
+}
 
 #endif

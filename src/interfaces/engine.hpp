@@ -25,19 +25,10 @@ public:
 class database
 {
 public:
-    virtual std::vector<std::string> get_collections() = 0;
-    virtual std::shared_ptr<collection> get_collection(const std::string& collection_name) = 0;
-};
-
-typedef boost::optional<std::string> error_message;
-
-class collection
-{
-public:
-
+    typedef boost::optional<std::string> error_message;
     typedef std::function<void (const error_message& error, const bson_object_list& result)> result_handler;
 
-    /// Puts command into collection's command queue.
+    /// Puts command into datyabases' command queue.
     /// \returns false if the queue is full
     /// \param command the command
     /// \param params command params

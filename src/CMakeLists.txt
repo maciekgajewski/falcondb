@@ -12,4 +12,6 @@ add_subdirectory(ifalcon)
 add_subdirectory(interfaces)
 add_subdirectory(bson)
 add_subdirectory(engine)
+add_subdirectory(utils)
+add_subdirectory(backend_nessdb)
 

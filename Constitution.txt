@@ -30,7 +30,8 @@ Database stores BSON objects organized in collections.
 == Coding standard
 
 * lower_case_undersocre names for all identifiers; boost-style
-* One, project-level namespace: 'falcondb'. 'detail' for implementation details in publi libraries. Othger namespaces used only when neccesary.
+* project-level namespace: 'falcondb'. Per-library namespaces.
 * Indentation: 4 spaces
 * lowercase_file_names, extensions: cpp, hpp, ipp
 * One major c++ class per file
+* Private class members prefixes with underscore

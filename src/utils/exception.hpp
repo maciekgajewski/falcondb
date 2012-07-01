@@ -17,38 +17,42 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_ENGINE_ENGINE_HPP
-#define FALCONDB_ENGINE_ENGINE_HPP
+#ifndef FALCONDB_EXCEPTION_HPP
+#define FALCONDB_EXCEPTION_HPP
 
-#include "interfaces/engine.hpp"
-#include "interfaces/storage_backend.hpp"
+#include "utils/string.hpp"
 
-namespace falcondb { namespace engine {
+#include <stdexcept>
 
-struct engine_config
-{
-    std::string data_dir; // main data directory
-};
+namespace falcondb {
 
-class engine_impl : public interfaces::engine
+class exception : public std::exception
 {
 public:
-    engine_impl(const engine_config& config, interfaces::storage_backend& backend);
 
-    /// Initializes the database, then spawns the engine worker threads and return
-    void run();
+    // simple constructor with pre-formatted message
+    exception(const char* what);
 
-    // API
+    // formatting constructor
+    template<typename ...T>
+    exception(T ...v)
+    : _what(build_string(v...)), _backtrace(get_backtrace())
+    { }
 
-    virtual std::vector<std::string> get_databases();
-    virtual std::shared_ptr<interfaces::database> get_database(const std::string& db_name);
+
+
+    virtual ~exception() throw();
+
+    virtual const char* what() const throw() { return _what.c_str(); }
 
 private:
 
-    engine_config _config;
-    interfaces::storage_backend& _storage_backend;
+    static std::string get_backtrace();
+
+    const std::string _what;
+    const std::string _backtrace;
 };
 
-} }
+} // namespace falcondb
 
-#endif
+#endif // FALCONDB_EXCEPTION_HPP
