@@ -9,4 +9,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_subdirectory(console_frontend)
 add_subdirectory(ifalcon)
+add_subdirectory(interfaces)
+add_subdirectory(bson)
+add_subdirectory(engine)
 

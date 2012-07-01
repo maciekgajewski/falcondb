@@ -22,7 +22,7 @@ private:
     // reading loop
 
     static void static_on_text(char *text);
-    void read_handler(boost::asio::posix::stream_descriptor &stdin_stream);
+    void read_handler(boost::asio::posix::stream_descriptor& stdin_stream);
 
     boost::asio::io_service* _io_service;
     command_dispatcher _dispatcher;
