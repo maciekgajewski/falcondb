@@ -5,6 +5,8 @@ add_executable(ifalcon
 target_link_libraries(ifalcon
 
     console_frontend
+    backend_nessdb
+    engine
 )
 
 

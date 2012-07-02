@@ -39,6 +39,8 @@ public:
         const result_handler& result) = 0;
 };
 
+typedef std::shared_ptr<database> database_ptr;
+
 }}
 
 #endif

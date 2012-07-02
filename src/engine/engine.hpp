@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "interfaces/engine.hpp"
 #include "interfaces/storage_backend.hpp"
 
+#include <boost/asio/io_service.hpp>
+
+#include <boost/thread.hpp>
+
 namespace falcondb { namespace engine {
 
 struct engine_config
@@ -34,6 +38,7 @@ class engine_impl : public interfaces::engine
 {
 public:
     engine_impl(const engine_config& config, interfaces::storage_backend& backend);
+    virtual ~engine_impl();
 
     /// Initializes the database, then spawns the engine worker threads and return
     void run();
@@ -41,12 +46,19 @@ public:
     // API
 
     virtual std::vector<std::string> get_databases();
-    virtual std::shared_ptr<interfaces::database> get_database(const std::string& db_name);
+    virtual interfaces::database_ptr get_database(const std::string& db_name);
 
 private:
 
     engine_config _config;
     interfaces::storage_backend& _storage_backend;
+
+    typedef std::map<std::string, interfaces::database_backend_ptr> database_map;
+    database_map _databases;
+
+    boost::asio::io_service _io_service;
+    std::unique_ptr<boost::thread> _thread;
+    std::unique_ptr<boost::asio::io_service::work> _work;
 };
 
 } }

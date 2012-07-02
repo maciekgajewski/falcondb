@@ -17,42 +17,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef STORAGE_BACKEND_HPP
-#define STORAGE_BACKEND_HPP
+#ifndef FALCONDB_MESSAGE_QUEUE_HPP
+#define FALCONDB_MESSAGE_QUEUE_HPP
 
-#include "utils/range.hpp"
+namespace falcondb {
 
-#include <memory>
-
-namespace falcondb { namespace interfaces {
-
-class database_backend;
-typedef std::shared_ptr<database_backend> database_backend_ptr;
-
-class storage_backend
+class message_queue
 {
 public:
-    virtual ~storage_backend() {}
-
-    // Opens exisintg database, throws on error
-    virtual database_backend_ptr open_database(const std::string& path) = 0;
-
-    // Create database, throws on error
-    virtual database_backend_ptr create_database(const std::string& path) = 0;
+    message_queue();
 };
 
-class database_backend
-{
-public:
-    virtual ~database_backend() {}
-
-    virtual void drop() = 0;
-
-    virtual void add(range key, range data) = 0;
-    virtual void del(range key) = 0;
-    virtual std::string get(range key) = 0;
-};
-
-}}
+}
 
 #endif

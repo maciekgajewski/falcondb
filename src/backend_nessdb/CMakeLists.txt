@@ -6,4 +6,5 @@ add_library(backend_nessdb
 target_link_libraries(backend_nessdb
 
     nessdb
+    utils
 )

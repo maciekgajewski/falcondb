@@ -44,7 +44,7 @@ void frontend::execute()
 
     // cleanup
     rl_callback_handler_remove();
-    static_instance.reset();
+    static_instance.release();
     _io_service = nullptr;
 
     std::cout << "bye bye..." << std::endl;
