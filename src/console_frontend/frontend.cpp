@@ -16,8 +16,8 @@ frontend::frontend()
 :
     _io_service(nullptr)
 {
-    _dispatcher.add_command("quit", "Exit", [this](const arg_list& al) { handle_quit(al); });
-    _dispatcher.add_command("help", "Display this help", [this](const arg_list& al) { _dispatcher.print_help(); });
+    _dispatcher.add_command("quit", "quit", "Exit", [this](const arg_list& al) { handle_quit(al); });
+    _dispatcher.add_command("help", "help", "Display this help", [this](const arg_list& al) { _dispatcher.print_help(); });
 }
 
 void frontend::execute()

@@ -10,9 +10,13 @@ command_dispatcher::command_dispatcher()
 {
 }
 
-void command_dispatcher::add_command(const std::string& command, const std::string& description, const command_handler& handler)
+void command_dispatcher::add_command(
+        const std::string& command,
+        const std::string& synopsis,
+        const std::string& description,
+        const command_handler& handler)
 {
-    _commands.insert(std::make_pair(command, command_description {description, handler}));
+    _commands.insert(std::make_pair(command, command_description {synopsis, description, handler}));
 }
 
 void command_dispatcher::tokenize_and_execute(const std::string& commandline)
@@ -43,20 +47,20 @@ void command_dispatcher::tokenize_and_execute(const std::string& commandline)
 
 void command_dispatcher::print_help()
 {
-    // find the longest command
+    // find the longest synopsis
     auto longest_it = std::max_element(
                 _commands.begin(),
                 _commands.end(),
                 [] (const command_map::value_type& a, const command_map::value_type& b)
-                    { return a.first.length() < b.first.length(); });
+                    { return a.second.synopsis.length() < b.second.synopsis.length(); });
 
     // print them out
     std::cout << "Available commands: " << std::endl;
     for(auto i : _commands)
     {
-        std::cout << "  " << i.first << "  ";
+        std::cout << "  " << i.second.synopsis << "  ";
         // padding
-        std::cout << std::string(' ', longest_it->first.length() - i.first.length());
+        std::cout << std::string(' ', longest_it->second.synopsis.length() - i.second.synopsis.length());
         std::cout << "- " << i.second.description << std::endl;
     }
 }

@@ -414,7 +414,8 @@ namespace mongo {
 
         /** Implements builder interface but no-op in ObjBuilder */
         void appendNull() {
-            msgasserted(16234, "Invalid call to appendNull in BSONObj Builder.");
+            std::cerr << "Invalid call to appendNull in BSONObj Builder." << std::endl;
+            assert(false);
         }
 
         /** Append a Null element to the object */

@@ -23,7 +23,11 @@ public:
     command_dispatcher();
 
     /// Adds command to the dispatcher
-    void add_command(const std::string& command, const std::string& description, const command_handler& handler);
+    void add_command(
+        const std::string& command,
+        const std::string& synopsis,
+        const std::string& description,
+        const command_handler& handler);
 
     /// Tokenizes command-line input, executes command
     void tokenize_and_execute(const std::string& commandline);
@@ -36,6 +40,7 @@ private:
 
     struct command_description
     {
+        std::string synopsis;
         std::string description;
         command_handler handler;
     };

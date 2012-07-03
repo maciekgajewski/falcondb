@@ -56,7 +56,7 @@ namespace mongo {
 
     const int BufferMaxSize = 64 * 1024 * 1024;
 
-    void msgasserted(int msgid, const char *msg);
+    inline void msgasserted(int msgid, const char *msg) { std::cerr << msg << std::endl; assert(false); }
 
     template <typename Allocator>
     class StringBuilderImpl;

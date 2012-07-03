@@ -23,9 +23,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "interfaces/engine.hpp"
 #include "interfaces/storage_backend.hpp"
 
-#include <boost/asio/io_service.hpp>
+#include "engine/command_processor.hpp"
 
-#include <boost/thread.hpp>
+#include "utils/rwmutex.hpp"
+
 
 namespace falcondb { namespace engine {
 
@@ -47,18 +48,20 @@ public:
 
     virtual std::vector<std::string> get_databases();
     virtual interfaces::database_ptr get_database(const std::string& db_name);
+    virtual void create_database();
+    virtual void drop_database();
 
 private:
 
     engine_config _config;
     interfaces::storage_backend& _storage_backend;
 
+    // databases
     typedef std::map<std::string, interfaces::database_backend_ptr> database_map;
     database_map _databases;
+    rwmutex _databases_mutex;
 
-    boost::asio::io_service _io_service;
-    std::unique_ptr<boost::thread> _thread;
-    std::unique_ptr<boost::asio::io_service::work> _work;
+    command_processor _processor;
 };
 
 } }

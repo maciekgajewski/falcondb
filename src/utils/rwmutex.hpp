@@ -40,7 +40,7 @@ struct rwmutex_stats
     std::atomic<std::uint64_t> cycles_waiting_for_read;
 };
 
-rwmutex_stats global_rwmutex_stats;
+extern rwmutex_stats global_rwmutex_stats;
 #endif // NO_MUTEX_STATS
 
 
@@ -108,9 +108,29 @@ public:
         _mutex.unlock();
     }
 
+    // RIIA scoped locks
+
+    class scoped_write_lock
+    {
+    public:
+        scoped_write_lock(rwmutex& m) : _m(m) { _m.lock(); }
+        ~scoped_write_lock() { _m.unlock(); }
+    private:
+        rwmutex& _m;
+    };
+
+    class scoped_read_lock
+    {
+    public:
+        scoped_read_lock(rwmutex& m) : _m(m) { _m.lock_shared(); }
+        ~scoped_read_lock() { _m.unlock_shared(); }
+    private:
+        rwmutex& _m;
+    };
+
 private:
 
-    boost::thread::shared_mutex _mutex;
+    boost::shared_mutex _mutex;
 };
 
 }

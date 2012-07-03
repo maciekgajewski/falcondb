@@ -18,39 +18,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "engine/engine.hpp"
+#include "engine/database_impl.hpp"
+
+#include "utils/exception.hpp"
 
 #include <boost/filesystem.hpp>
 
 #include <algorithm>
+#include <memory>
 
 namespace falcondb { namespace engine {
-
-namespace detail {
-
-class db_handler : public interfaces::database
-{
-public:
-
-    db_handler(boost::asio::io_service& io_service, interfaces::database_backend_ptr db)
-    : _io_service(io_service), _db(db)
-    { }
-
-    virtual bool post(
-        const std::string& command,
-        const bson_object& params,
-        const result_handler& result)
-
-    {
-        // TODO
-    }
-
-private:
-
-   boost::asio::io_service& _io_service ;
-   interfaces::database_backend_ptr _db;
-};
-
-} // detail
 
 engine_impl::engine_impl(const engine_config& config, interfaces::storage_backend& backend)
 :
@@ -61,8 +38,6 @@ engine_impl::engine_impl(const engine_config& config, interfaces::storage_backen
 
 engine_impl::~engine_impl()
 {
-    _work.reset();
-    if (_thread) _thread->join();
 }
 
 void engine_impl::run()
@@ -91,10 +66,7 @@ void engine_impl::run()
         }
     }
     std::cout << _databases.size() << " databases loaded" << std::endl;
-
-    // start worker thread
-    _work.reset(new boost::asio::io_service::work(_io_service));
-    _thread.reset(new boost::thread([this] { _io_service.run(); }));
+    _processor.run();
 }
 
 std::vector<std::string> engine_impl::get_databases()
@@ -108,7 +80,29 @@ std::vector<std::string> engine_impl::get_databases()
 
 interfaces::database_ptr engine_impl::get_database(const std::string& db_name)
 {
-    return interfaces::database_ptr();
+    rwmutex::scoped_read_lock lock(_databases_mutex);
+
+    auto it = _databases.find(db_name);
+    if (it == _databases.end())
+    {
+        throw exception("no such database: ", db_name);
+    }
+    else
+    {
+        return std::make_shared<database_impl>(it->second, std::ref(_processor));
+    }
+}
+
+void engine_impl::create_database()
+{
+    namespace bfs = boost::filesystem3;
+    bfs::path new_db_path = bfs::path(_config.data_dir)
+}
+
+void engine_impl::drop_database()
+{
+    // TODO
+    throw exception("drop_database not implemented");
 }
 
 } }

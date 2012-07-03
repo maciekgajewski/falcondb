@@ -17,20 +17,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_TSCCLOCK_HPP
-#define FALCONDB_TSCCLOCK_HPP
+#include "engine/database_impl.hpp"
 
-#include <cstdint>
+#include "engine/command_processor.hpp"
 
-namespace falcondb {
+namespace falcondb { namespace engine {
 
-inline std::uint64_t tsc_read()
+database_impl::database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor)
+    : _storage(storage), _processor(processor)
 {
-    uint32_t lo, hi;
-    __asm__ __volatile__("rdtscp" : "=a"(lo), "=d"(hi) :: "ecx" );
-    return (uint64_t)hi << 32 | lo;
 }
 
+bool database_impl::post(
+    const std::string& command,
+    const bson_object& params,
+    const interfaces::result_handler& result)
+{
+    _processor.post(command, params, result, _storage);
 }
 
-#endif
+} }

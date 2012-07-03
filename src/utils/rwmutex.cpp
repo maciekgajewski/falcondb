@@ -17,20 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_TSCCLOCK_HPP
-#define FALCONDB_TSCCLOCK_HPP
-
-#include <cstdint>
+#include "utils/rwmutex.hpp"
 
 namespace falcondb {
 
-inline std::uint64_t tsc_read()
-{
-    uint32_t lo, hi;
-    __asm__ __volatile__("rdtscp" : "=a"(lo), "=d"(hi) :: "ecx" );
-    return (uint64_t)hi << 32 | lo;
-}
+rwmutex_stats global_rwmutex_stats;
 
 }
 
-#endif
