@@ -10,6 +10,8 @@
 #include <memory>
 #include <functional>
 
+// These interfaces are the API exposed to db frontend
+
 namespace falcondb { namespace interfaces {
 
 class database;
@@ -27,8 +29,8 @@ class engine
 public:
     virtual std::vector<std::string> get_databases() = 0;
     virtual std::shared_ptr<database> get_database(const std::string& db_name) = 0;
-    virtual void create_database() = 0;
-    virtual void drop_database() = 0;
+    virtual void create_database(const std::string& db_name) = 0;
+    virtual void drop_database(const std::string& db_name) = 0;
 };
 
 class database

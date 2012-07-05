@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "engine/engine.hpp"
-#include "engine/database_impl.hpp"
+#include "dbengine/engine.hpp"
+#include "dbengine/database_impl.hpp"
 
 #include "utils/exception.hpp"
 
@@ -27,20 +27,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <algorithm>
 #include <memory>
 
-namespace falcondb { namespace engine {
+namespace falcondb { namespace dbengine {
 
-engine_impl::engine_impl(const engine_config& config, interfaces::storage_backend& backend)
+engine::engine(const engine_config& config, interfaces::storage_backend& backend)
 :
     _config(config),
     _storage_backend(backend)
 {
 }
 
-engine_impl::~engine_impl()
+engine::~engine()
 {
 }
 
-void engine_impl::run()
+void engine::run()
 {
     namespace bfs = boost::filesystem3;
 
@@ -69,7 +69,7 @@ void engine_impl::run()
     _processor.run();
 }
 
-std::vector<std::string> engine_impl::get_databases()
+std::vector<std::string> engine::get_databases()
 {
     std::vector<std::string> result;
     std::transform(_databases.begin(), _databases.end(),
@@ -78,7 +78,7 @@ std::vector<std::string> engine_impl::get_databases()
     return result;
 }
 
-interfaces::database_ptr engine_impl::get_database(const std::string& db_name)
+interfaces::database_ptr engine::get_database(const std::string& db_name)
 {
     rwmutex::scoped_read_lock lock(_databases_mutex);
 
@@ -93,13 +93,21 @@ interfaces::database_ptr engine_impl::get_database(const std::string& db_name)
     }
 }
 
-void engine_impl::create_database()
+void engine::create_database(const std::string& db_name)
 {
     namespace bfs = boost::filesystem3;
-    bfs::path new_db_path = bfs::path(_config.data_dir)
+    bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
+
+    if (bfs::exists(new_db_path))
+    {
+        throw exception("File ", new_db_path, " already exists");
+    }
+
+    bfs::create_directory(new_db_path);
+    _storage_backend.create_database(new_db_path.generic_string());
 }
 
-void engine_impl::drop_database()
+void engine::drop_database(const std::string& db_name)
 {
     // TODO
     throw exception("drop_database not implemented");

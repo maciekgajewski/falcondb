@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <memory>
 
+// These interfaces have to be implemented by storage backend
+
 namespace falcondb { namespace interfaces {
 
 class database_backend;
@@ -34,16 +36,20 @@ class storage_backend
 public:
     virtual ~storage_backend() {}
 
-    // Opens exisintg database, throws on error
+    /// Opens exisintg database, throws on error
     virtual database_backend_ptr open_database(const std::string& path) = 0;
 
-    // Create database, throws on error
+    /// Create database, throws on error
     virtual database_backend_ptr create_database(const std::string& path) = 0;
 };
 
+/// Low-level storage interface.
+/// All calls should be thread-safe
 class database_backend
 {
 public:
+    typedef std::function<void (const range&)> key_handler;
+
     virtual ~database_backend() {}
 
     virtual void drop() = 0;
@@ -51,6 +57,7 @@ public:
     virtual void add(range key, range data) = 0;
     virtual void del(range key) = 0;
     virtual std::string get(range key) = 0;
+    virtual void for_each(const key_handler& handler) = 0;
 };
 
 }}

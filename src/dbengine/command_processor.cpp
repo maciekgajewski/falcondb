@@ -17,11 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "engine/command_processor.hpp"
+#include "dbengine/command_processor.hpp"
 
 #include "utils/exception.hpp"
 
-namespace falcondb { namespace engine {
+namespace falcondb { namespace dbengine {
 
 command_processor::command_processor()
 {
@@ -67,7 +67,24 @@ void command_processor::post(
 
     const interfaces::command_handler& handler = it->second;
     bson_object params_copy = params.copy();
-    _io_service.post([=](){ handler(params_copy, result, storage); });
+    _io_service.post([=](){ handler_wrapper(command, params_copy, result, storage, handler); });
+}
+
+void command_processor::handler_wrapper(
+    const std::string& command,
+    const bson_object& params,
+    const interfaces::result_handler& result,
+    const interfaces::database_backend_ptr& storage,
+    const interfaces::command_handler& handler)
+{
+    try
+    {
+        handler(params, result, storage);
+    }
+    catch(const std::exception& e)
+    {
+        result(std::string(e.what()), bson_object_list());
+    }
 }
 
 } }

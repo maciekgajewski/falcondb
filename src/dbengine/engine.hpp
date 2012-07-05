@@ -23,23 +23,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "interfaces/engine.hpp"
 #include "interfaces/storage_backend.hpp"
 
-#include "engine/command_processor.hpp"
+#include "dbengine/command_processor.hpp"
 
 #include "utils/rwmutex.hpp"
 
 
-namespace falcondb { namespace engine {
+namespace falcondb { namespace dbengine {
 
 struct engine_config
 {
     std::string data_dir; // main data directory
 };
 
-class engine_impl : public interfaces::engine
+class engine : public interfaces::engine
 {
 public:
-    engine_impl(const engine_config& config, interfaces::storage_backend& backend);
-    virtual ~engine_impl();
+    engine(const engine_config& config, interfaces::storage_backend& backend);
+    virtual ~engine();
 
     /// Initializes the database, then spawns the engine worker threads and return
     void run();
@@ -48,8 +48,8 @@ public:
 
     virtual std::vector<std::string> get_databases();
     virtual interfaces::database_ptr get_database(const std::string& db_name);
-    virtual void create_database();
-    virtual void drop_database();
+    virtual void create_database(const std::string& db_name);
+    virtual void drop_database(const std::string& db_name);
 
 private:
 

@@ -1,5 +1,7 @@
 #include "console_frontend/frontend.hpp"
 
+#include "utils/exception.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/thread/tss.hpp>
 
@@ -12,12 +14,15 @@ namespace falcondb { namespace console_frontend {
 
 static boost::thread_specific_ptr<frontend> static_instance;
 
-frontend::frontend()
+frontend::frontend(interfaces::engine& engine)
 :
+    _engine(engine),
     _io_service(nullptr)
 {
     _dispatcher.add_command("quit", "quit", "Exit", [this](const arg_list& al) { handle_quit(al); });
     _dispatcher.add_command("help", "help", "Display this help", [this](const arg_list& al) { _dispatcher.print_help(); });
+    _dispatcher.add_command("create", "create DBNAME", "Create new database", [this](const arg_list& al) { handle_quit(al); });
+    _dispatcher.add_command("drop", "drop DBNAME", "Drop existing database", [this](const arg_list& al) { _dispatcher.print_help(); });
 }
 
 void frontend::execute()
@@ -58,9 +63,28 @@ void frontend::read_handler(boost::asio::posix::stream_descriptor& stdin_stream)
                 [&](const boost::system::error_code&, std::size_t){ read_handler(stdin_stream); });
 }
 
+const std::string& frontend::require_arg(const command_dispatcher::arg_list& al, std::size_t idx)
+{
+    if (al.size() >= idx)
+    {
+        throw exception("missing argument");
+    }
+    return al[idx];
+}
+
 void frontend::handle_quit(const frontend::arg_list &al)
 {
     _io_service->stop();
+}
+
+void frontend::handle_create_db(const frontend::arg_list& al)
+{
+    _engine.create_database(require_arg(al, 0));
+}
+
+void frontend::handle_drop_db(const frontend::arg_list& al)
+{
+    _engine.drop_database(require_arg(al, 0));
 }
 
 void frontend::static_on_text(char* text)

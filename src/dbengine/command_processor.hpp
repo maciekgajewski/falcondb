@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <memory>
 #include <unordered_map>
 
-namespace falcondb { namespace engine {
+namespace falcondb { namespace dbengine {
 
 class command_processor
 {
@@ -64,6 +64,14 @@ private:
     boost::asio::io_service _io_service;
     std::unique_ptr<boost::thread> _thread;
     std::unique_ptr<boost::asio::io_service::work> _work;
+
+    static void handler_wrapper(
+        const std::string& command,
+        const bson_object& params,
+        const interfaces::result_handler& result,
+        const interfaces::database_backend_ptr& storage,
+        const interfaces::command_handler& handler);
+
 };
 
 } }

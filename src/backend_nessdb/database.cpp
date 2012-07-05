@@ -90,4 +90,10 @@ std::string database::get(range key)
     return result;
 }
 
+void database::for_each(const interfaces::database_backend::key_handler& handler)
+{
+    // undoable with current nessdb
+    throw exception("for_each not implemented in nessdb backend");
+}
+
 } }

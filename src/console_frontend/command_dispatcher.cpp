@@ -38,10 +38,20 @@ void command_dispatcher::tokenize_and_execute(const std::string& commandline)
     if (it == _commands.end())
     {
         std::cout << "Unknown command: " << command << std::endl;
+        std::cout << "Type 'help' for list of available commands" << std::endl;
     }
     else
     {
-        it->second.handler(arguments);
+        try
+        {
+            it->second.handler(arguments);
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << std::endl;
+            std::cout << "Error executing: " << commandline << std::endl;
+            std::cout << "quick help: " << it->second.synopsis << " - " << it->second.description << std::endl;
+        }
     }
 }
 
@@ -54,13 +64,15 @@ void command_dispatcher::print_help()
                 [] (const command_map::value_type& a, const command_map::value_type& b)
                     { return a.second.synopsis.length() < b.second.synopsis.length(); });
 
+    std::size_t longest_synopis = longest_it->second.synopsis.length();
+
     // print them out
     std::cout << "Available commands: " << std::endl;
     for(auto i : _commands)
     {
         std::cout << "  " << i.second.synopsis << "  ";
         // padding
-        std::cout << std::string(' ', longest_it->second.synopsis.length() - i.second.synopsis.length());
+        std::cout << std::string(longest_synopis - i.second.synopsis.length(), ' ');
         std::cout << "- " << i.second.description << std::endl;
     }
 }

@@ -17,23 +17,33 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "engine/database_impl.hpp"
+#ifndef FLACONDB_ENGINE_DATABASE_IMPL_HPP
+#define FLACONDB_ENGINE_DATABASE_IMPL_HPP
 
-#include "engine/command_processor.hpp"
+#include "interfaces/engine.hpp"
+#include "interfaces/storage_backend.hpp"
 
-namespace falcondb { namespace engine {
+namespace falcondb { namespace dbengine {
 
-database_impl::database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor)
-    : _storage(storage), _processor(processor)
+class command_processor;
+
+class database_impl : public interfaces::database
 {
-}
+public:
+    database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor);
 
-bool database_impl::post(
-    const std::string& command,
-    const bson_object& params,
-    const interfaces::result_handler& result)
-{
-    _processor.post(command, params, result, _storage);
-}
+    virtual bool post(
+        const std::string& command,
+        const bson_object& params,
+        const interfaces::result_handler& result);
+
+private:
+
+    interfaces::database_backend_ptr _storage;
+    command_processor& _processor;
+
+};
 
 } }
+
+#endif
