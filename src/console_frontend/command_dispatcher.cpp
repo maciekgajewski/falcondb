@@ -49,7 +49,7 @@ void command_dispatcher::tokenize_and_execute(const std::string& commandline)
         catch(const std::exception& e)
         {
             std::cout << std::endl;
-            std::cout << "Error executing: " << commandline << std::endl;
+            std::cout << "Error executing " << commandline << " : " << e.what() << std::endl;
             std::cout << "quick help: " << it->second.synopsis << " - " << it->second.description << std::endl;
         }
     }

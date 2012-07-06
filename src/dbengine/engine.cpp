@@ -45,27 +45,38 @@ void engine::run()
     namespace bfs = boost::filesystem3;
 
     std::cout << "initializing databases from " << _config.data_dir << std::endl;
-    bfs::directory_iterator it(_config.data_dir);
-    for( ;it != bfs::directory_iterator(); ++it)
-    {
-        if (it->status().type() == bfs::directory_file)
-        {
-            std::cout << "trying " << it->path() << " ... ";
-            try
-            {
-                interfaces::database_backend_ptr db = _storage_backend.open_database(it->path().string());
-                // TODO ...
-                std::cout << "OK";
 
-            }
-            catch(const std::exception& e)
+    bfs::path data_dir_path(_config.data_dir);
+
+    if (bfs::exists(data_dir_path))
+    {
+        bfs::directory_iterator it(data_dir_path);
+        for( ;it != bfs::directory_iterator(); ++it)
+        {
+            if (it->status().type() == bfs::directory_file)
             {
-                std::cout << "Failed: " << e.what();
+                std::cout << "trying " << it->path() << " ... ";
+                try
+                {
+                    interfaces::database_backend_ptr db = _storage_backend.open_database(it->path().string());
+                    // TODO ...
+                    std::cout << "OK";
+
+                }
+                catch(const std::exception& e)
+                {
+                    std::cout << "Failed: " << e.what();
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
         }
+        std::cout << _databases.size() << " databases loaded" << std::endl;
     }
-    std::cout << _databases.size() << " databases loaded" << std::endl;
+    else
+    {
+        std::cout << "Creating data directory " << data_dir_path << std::endl;
+        bfs::create_directory(data_dir_path);
+    }
     _processor.run();
 }
 

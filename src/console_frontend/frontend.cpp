@@ -21,8 +21,8 @@ frontend::frontend(interfaces::engine& engine)
 {
     _dispatcher.add_command("quit", "quit", "Exit", [this](const arg_list& al) { handle_quit(al); });
     _dispatcher.add_command("help", "help", "Display this help", [this](const arg_list& al) { _dispatcher.print_help(); });
-    _dispatcher.add_command("create", "create DBNAME", "Create new database", [this](const arg_list& al) { handle_quit(al); });
-    _dispatcher.add_command("drop", "drop DBNAME", "Drop existing database", [this](const arg_list& al) { _dispatcher.print_help(); });
+    _dispatcher.add_command("create", "create DBNAME", "Create new database", [this](const arg_list& al) { handle_create_db(al); });
+    _dispatcher.add_command("drop", "drop DBNAME", "Drop existing database", [this](const arg_list& al) { handle_drop_db(al); });
 }
 
 void frontend::execute()
@@ -65,9 +65,9 @@ void frontend::read_handler(boost::asio::posix::stream_descriptor& stdin_stream)
 
 const std::string& frontend::require_arg(const command_dispatcher::arg_list& al, std::size_t idx)
 {
-    if (al.size() >= idx)
+    if (al.size() <= idx)
     {
-        throw exception("missing argument");
+        throw exception("missing command argument");
     }
     return al[idx];
 }
