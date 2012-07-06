@@ -17,41 +17,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "console_frontend/frontend.hpp"
+#ifndef FALCONDB_BACKEND_LEVELDB_BACKEND_HPP
+#define FALCONDB_BACKEND_LEVELDB_BACKEND_HPP
 
-#include "backend_leveldb/backend.hpp"
+#include "interfaces/storage_backend.hpp"
 
-#include "dbengine/engine.hpp"
+namespace falcondb { namespace backend_leveldb {
 
-using namespace falcondb;
-
-void help()
+class backend : public interfaces::storage_backend
 {
-    std::cout << "usage: ifalcon DBPATH" << std::endl;
-}
+public:
+    backend();
+    virtual ~backend();
 
-int main(int argc, char** argv)
-{
-    if (argc < 2)
-    {
-        help();
-        return 1;
-    }
-    std::string arg = argv[1];
-    if (arg == "--help" || arg == "-help")
-    {
-        help();
-        return 1;
-    }
+    virtual std::shared_ptr<interfaces::database_backend> open_database(const std::string& path);
+    virtual std::shared_ptr<interfaces::database_backend> create_database(const std::string& path);
+};
 
-    backend_leveldb::backend backend;
+} }
 
-    dbengine::engine_config config = { arg };
-    dbengine::engine engine(config, backend);
-
-    console_frontend::frontend frontend(engine);
-
-    engine.run();
-
-    frontend.execute();
-}
+#endif
