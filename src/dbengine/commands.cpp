@@ -82,6 +82,14 @@ void list(
     handler(boost::none, result);
 }
 
+void remove(
+    const bson_object& param,
+    const interfaces::result_handler& handler,
+    const interfaces::database_backend_ptr& storage)
+{
+    storage->del(range(param.objdata(), param.objsize()));
+    handler(boost::none, bson_object_list());
+}
 
 
 }

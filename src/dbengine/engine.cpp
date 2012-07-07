@@ -37,6 +37,7 @@ engine::engine(const engine_config& config, interfaces::storage_backend& backend
 {
     _processor.register_command("insert", commands::insert);
     _processor.register_command("list", commands::list);
+    _processor.register_command("remove", commands::remove);
 }
 
 engine::~engine()

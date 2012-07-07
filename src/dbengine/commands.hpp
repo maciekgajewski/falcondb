@@ -38,6 +38,12 @@ void list(
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage);
 
+// removes object which _id is equal to param
+void remove(
+    const bson_object& param,
+    const interfaces::result_handler& handler,
+    const interfaces::database_backend_ptr& storage);
+
 
 
 }

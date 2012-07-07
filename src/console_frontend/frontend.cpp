@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <boost/thread/tss.hpp>
 
 #include <readline/readline.h>
+#include <readline/history.h>
 
 #include <iostream>
 #include <algorithm>
@@ -50,6 +51,8 @@ frontend::frontend(interfaces::engine& engine)
         [this](const arg_list& al) { handle_insert(al); });
     _dispatcher.add_command("list", "list DATABASE", "Get the entire content of the db",
         [this](const arg_list& al) { handle_list(al); });
+    _dispatcher.add_command("remove", "remove DATABASE KEY", "Remove document with _id=KEY from db",
+        [this](const arg_list& al) { handle_remove(al); });
 }
 
 void frontend::execute()
@@ -64,20 +67,43 @@ void frontend::execute()
     // setup readline
     rl_callback_handler_install("ifalcon> ", static_on_text);
 
+    char* home = ::getenv("HOME");
+    boost::optional<std::string> history_file;
+    if (home)
+    {
+        history_file = std::string(home) + "/.falcondb_history";
+        read_history(history_file->c_str());
+    }
+
+
     // read stdin
 
     stdin_stream.async_read_some(
                     boost::asio::null_buffers(),
                     [&](const boost::system::error_code&, std::size_t){ read_handler(stdin_stream); });
 
+    // enter loop
     _io_service = &io_service;
     static_instance.reset(this);
-    io_service.run();
+
+    try
+    {
+        io_service.run();
+    }
+    catch(const std::exception& e)
+    {
+        std::cout << "Error in consloe frontend: " << e.what() << std::endl;
+    }
 
     // cleanup
     rl_callback_handler_remove();
     static_instance.release();
     _io_service = nullptr;
+
+    if (home)
+    {
+        write_history(history_file->c_str());
+    }
 
     std::cout << "bye bye..." << std::endl;
 }
@@ -161,6 +187,13 @@ void frontend::handle_list(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
     post_command(db_name, "list");
+}
+
+void frontend::handle_remove(const frontend::arg_list& al)
+{
+    std::string db_name = require_arg(al, 0);
+    bson_object document = json_to_bson(require_arg(al, 1));
+    post_command(db_name, "remove", document);
 }
 
 }}

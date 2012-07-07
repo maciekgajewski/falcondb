@@ -68,6 +68,7 @@ private:
     void handle_drop_db(const arg_list& al);
     void handle_insert(const arg_list& al);
     void handle_list(const arg_list& al);
+    void handle_remove(const arg_list& al);
 };
 
 }}
