@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string>
 #include <string.h>
+#include <cassert>
 
 #include "bson/inline_decls.h"
 #include "bson/stringdata.h"

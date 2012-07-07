@@ -15,17 +15,13 @@
  *    limitations under the License.
  */
 
-#include "mongo/pch.h"
-
 #include <boost/functional/hash.hpp>
 
-#include "mongo/platform/atomic_word.h"
-#include "mongo/bson/bsonobjbuilder.h"
-#include "mongo/bson/oid.h"
-#include "mongo/bson/util/atomic_int.h"
-#include "mongo/db/nonce.h"
-
-#define verify MONGO_verify
+#include "bson/util/atomic_word.h"
+#include "bson/bsonobjbuilder.h"
+#include "bson/oid.hpp"
+#include "bson/util/atomic_int.h"
+#include "bson/nonce.h"
 
 BOOST_STATIC_ASSERT( sizeof(mongo::OID) == 12 );
 
@@ -40,7 +36,7 @@ namespace mongo {
     // machine # before folding in the process id
     OID::MachineAndPid OID::ourMachine;
 
-    ostream& operator<<( ostream &s, const OID &o ) {
+    std::ostream& operator<<( std::ostream &s, const OID &o ) {
         s << o.str();
         return s;
     }
@@ -74,7 +70,7 @@ namespace mongo {
             nonce64 a = Security::getNonceDuringInit();
             nonce64 b = Security::getNonceDuringInit();
             nonce64 c = Security::getNonceDuringInit();
-            verify( !(a==b && b==c) );
+            assert( !(a==b && b==c) );
         }
 
         unsigned long long n = Security::getNonceDuringInit();
@@ -109,7 +105,7 @@ namespace mongo {
         // xor in the pid into _pid.  this reduces the probability of collisions.
         foldInPid(x);
         ourMachineAndPid = genMachineAndPid();
-        verify( x != ourMachineAndPid );
+        assert( x != ourMachineAndPid );
         ourMachineAndPid = x;
     }
 
@@ -158,7 +154,7 @@ namespace mongo {
     }
 
     void OID::init( string s ) {
-        verify( s.size() == 24 );
+        assert( s.size() == 24 );
         const char *p = s.c_str();
         for( int i = 0; i < 12; i++ ) {
             data[i] = fromHex(p);

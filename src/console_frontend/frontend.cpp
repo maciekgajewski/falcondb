@@ -38,10 +38,16 @@ frontend::frontend(interfaces::engine& engine)
     _engine(engine),
     _io_service(nullptr)
 {
-    _dispatcher.add_command("quit", "quit", "Exit", [this](const arg_list& al) { handle_quit(al); });
-    _dispatcher.add_command("help", "help", "Display this help", [this](const arg_list& al) { _dispatcher.print_help(); });
-    _dispatcher.add_command("create", "create DBNAME", "Create new database", [this](const arg_list& al) { handle_create_db(al); });
-    _dispatcher.add_command("drop", "drop DBNAME", "Drop existing database", [this](const arg_list& al) { handle_drop_db(al); });
+    _dispatcher.add_command("quit", "quit", "Exit",
+        [this](const arg_list& al) { handle_quit(al); });
+    _dispatcher.add_command("help", "help", "Display this help",
+        [this](const arg_list& al) { _dispatcher.print_help(); });
+    _dispatcher.add_command("create", "create DBNAME", "Create new database",
+        [this](const arg_list& al) { handle_create_db(al); });
+    _dispatcher.add_command("drop", "drop DBNAME", "Drop existing database",
+        [this](const arg_list& al) { handle_drop_db(al); });
+    _dispatcher.add_command("insert", "insert DATABASE DOCUMENT", "Upsert document into database",
+        [this](const arg_list& al) { handle_insert(al); });
 }
 
 void frontend::execute()
@@ -91,6 +97,11 @@ const std::string& frontend::require_arg(const command_dispatcher::arg_list& al,
     return al[idx];
 }
 
+void frontend::static_on_text(char* text)
+{
+    static_instance->_dispatcher.tokenize_and_execute(text);
+}
+
 void frontend::handle_quit(const frontend::arg_list &al)
 {
     _io_service->stop();
@@ -106,9 +117,27 @@ void frontend::handle_drop_db(const frontend::arg_list& al)
     _engine.drop_database(require_arg(al, 0));
 }
 
-void frontend::static_on_text(char* text)
+void frontend::generic_result_handler(const std::string& operation, const interfaces::error_message& err)
 {
-    static_instance->_dispatcher.tokenize_and_execute(text);
+    if (err)
+    {
+        std::cout << operation << " error: " << err << std::endl;
+    }
+    else
+    {
+        std::cout << operation << " successfull" << std::endl;
+    }
+}
+
+
+void frontend::handle_insert(const frontend::arg_list& al)
+{
+    std::string db_name = require_arg(al, 0);
+    bson_object document = json_to_bson(require_arg(al, 1));
+
+    interfaces::database_ptr db = _engine.get_database(db_name);
+    db->post("insert", document,
+        [this](const interfaces::error_message& error, const bson_object_list& result) { generic_result_handler("insert", error); });
 }
 
 }}

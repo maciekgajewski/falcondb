@@ -25,8 +25,8 @@
 
 #pragma once
 
-#include "../util/optime.h"
-#include "../util/time_support.h"
+#include "bson/optime.h"
+#include "bson/time_support.hpp"
 
 namespace mongo {
 
@@ -55,9 +55,8 @@ namespace mongo {
         case CodeWScope:
             return std::string(codeWScopeCode(), *(int*)(valuestr())-1);
         default:
-            log() << "can't convert type: " << (int)(type()) << " to code" << std::endl;
+            assert(false); // 10062 ,  "not code" , 0 );
         }
-        uassert( 10062 ,  "not code" , 0 );
         return "";
     }
 

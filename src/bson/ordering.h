@@ -61,7 +61,7 @@ namespace mongo {
                 BSONElement e = k.next();
                 if( e.eoo() )
                     break;
-                uassert( 13103, "too many compound keys", n <= 31 );
+                assert(false); // 13103, "too many compound keys", n <= 31 );
                 if( e.number() < 0 )
                     b |= (1 << n);
                 n++;

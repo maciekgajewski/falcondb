@@ -38,6 +38,7 @@ class collection;
 class database_backend;
 
 typedef std::shared_ptr<database_backend> database_backend_ptr;
+typedef std::shared_ptr<database> database_ptr;
 
 typedef boost::optional<std::string> error_message;
 typedef std::function<void (const error_message& error, const bson_object_list& result)> result_handler;
@@ -47,7 +48,7 @@ class engine
 {
 public:
     virtual std::vector<std::string> get_databases() = 0;
-    virtual std::shared_ptr<database> get_database(const std::string& db_name) = 0;
+    virtual database_ptr get_database(const std::string& db_name) = 0;
     virtual void create_database(const std::string& db_name) = 0;
     virtual void drop_database(const std::string& db_name) = 0;
 };

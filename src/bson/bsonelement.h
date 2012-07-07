@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "bson/bsontypes.h"
-#include "bson/oid.h"
+#include "bson/oid.hpp"
 #include "bson/float_utils.h"
 
 namespace mongo {

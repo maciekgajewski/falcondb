@@ -39,11 +39,18 @@
 #include "bson/bsonobjiterator.h"
 #include "bson/bsontypes.h"
 #include "bson/bson-inl.h"
-#include "bson/oid.h"
+#include "bson/oid.hpp"
 #include "bson/util/builder.h"
+#include "bson/json.hpp"
 
 // namespacte translation (temporary, until code cleaned up)
 namespace falcondb {
     typedef mongo::BSONObj bson_object;
     typedef std::vector<bson_object> bson_object_list;
+
+    // temporary wrapper
+    inline bson_object json_to_bson(const std::string& json)
+    {
+        mongo::fromjson(json);
+    }
 }
