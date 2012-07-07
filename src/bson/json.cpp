@@ -32,7 +32,7 @@
 #include "bson/util/builder.h"
 #include "bson/jsobj.hpp"
 #include "bson/json.hpp"
-#include "bson/base64.h"
+#include "bson/base64.hpp"
 #include "bson/hex.h"
 #include "bson/optime.h"
 
@@ -637,6 +637,7 @@ namespace mongo {
         else if ( !result.full ) {
             int limit = strnlen(result.stop , 10);
             if (limit == -1) limit = 10;
+            std::cerr << "Failure parsing JSON string near: " << std::string( result.stop, limit ) << std::endl;
             assert(false); //msgasserted(10340, "Failure parsing JSON string near: " + string( result.stop, limit ));
         }
         BSONObj ret = b.pop();

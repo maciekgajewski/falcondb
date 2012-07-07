@@ -21,7 +21,7 @@
 #include "bson/bsonobjbuilder.h"
 #include "bson/oid.hpp"
 #include "bson/util/atomic_int.h"
-#include "bson/nonce.h"
+#include "bson/nonce.hpp"
 
 BOOST_STATIC_ASSERT( sizeof(mongo::OID) == 12 );
 

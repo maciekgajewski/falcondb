@@ -31,7 +31,7 @@
 #include "bson/util/builder.h"
 #include "bson/optime.h"
 #include "bson/bsontypes.h"
-#include "bson/oid.h"
+#include "bson/oid.hpp"
 #include "bson/bsonelement.h"
 #include "bson/bsonobj.h"
 #include "bson/bsonmisc.h"

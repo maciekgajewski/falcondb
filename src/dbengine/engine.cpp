@@ -58,8 +58,10 @@ void engine::run()
                 std::cout << "trying " << it->path() << " ... ";
                 try
                 {
+                    rwmutex::scoped_write_lock lock(_databases_mutex);
                     interfaces::database_backend_ptr db = _storage_backend.open_database(it->path().string());
-                    // TODO ...
+                    std::string name = it->path().filename().generic_string();
+                    _databases.insert(std::make_pair(name, db));
                     std::cout << "OK";
 
                 }

@@ -25,13 +25,13 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/static_assert.hpp>
 
-#include "bson/oid.h"
+#include "bson/oid.hpp"
 #include "bson/util/atomic_int.h"
 //#include "bson/jsobjmanipulator.h"
 #include "bson/json.hpp"
 //#include "bson/nonce.h"
 #include "bson/float_utils.h"
-#include "bson/base64.h"
+#include "bson/base64.hpp"
 #include "bson/embedded_builder.h"
 //#include "mongo/util/md5.hpp"
 //#include "mongo/util/mongoutils/str.h"

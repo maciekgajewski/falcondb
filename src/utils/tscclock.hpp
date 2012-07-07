@@ -27,7 +27,8 @@ namespace falcondb {
 inline std::uint64_t tsc_read()
 {
     uint32_t lo, hi;
-    __asm__ __volatile__("rdtscp" : "=a"(lo), "=d"(hi) :: "ecx" );
+    //__asm__ __volatile__("rdtscp" : "=a"(lo), "=d"(hi) :: "ecx" );
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi) :: "ecx" );
     return (uint64_t)hi << 32 | lo;
 }
 
