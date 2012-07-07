@@ -1,6 +1,7 @@
 add_executable(bson_test
-#    main.cpp
+    main.cpp
     bson.cpp
+    another.cpp
 )
 
 target_link_libraries(bson_test

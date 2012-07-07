@@ -1,11 +1,15 @@
-#define BOOST_TEST_MODULE bson_test
-#include <boost/test/included/unit_test.hpp>
+//#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "bson/bson.hpp"
 
 using namespace mongo;
 
 BOOST_AUTO_TEST_SUITE(bson_test_suite)
+
+
+
+// tests belov copied from original mongo code
 
 BOOST_AUTO_TEST_CASE(regex)
 {
