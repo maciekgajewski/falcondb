@@ -16,19 +16,19 @@
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "pch.h"
-
-#include "stringutils.h"
+#include "bson/stringutils.hpp"
+#include "bson/util/misc.h"
+#include <cstring>
 
 namespace mongo {
 
-    void splitStringDelim( const string& str , vector<string>* res , char delim ) {
+    void splitStringDelim( const std::string& str , std::vector<std::string>* res , char delim ) {
         if ( str.empty() )
             return;
 
         size_t beg = 0;
         size_t pos = str.find( delim );
-        while ( pos != string::npos ) {
+        while ( pos != std::string::npos ) {
             res->push_back( str.substr( beg, pos - beg) );
             beg = ++pos;
             pos = str.find( delim, beg );
@@ -36,8 +36,8 @@ namespace mongo {
         res->push_back( str.substr( beg ) );
     }
 
-    void joinStringDelim( const vector<string>& strs , string* res , char delim ) {
-        for ( vector<string>::const_iterator it = strs.begin(); it != strs.end(); ++it ) {
+    void joinStringDelim( const std::vector<std::string>& strs , std::string* res , char delim ) {
+        for ( std::vector<std::string>::const_iterator it = strs.begin(); it != strs.end(); ++it ) {
             if ( it !=strs.begin() ) res->push_back( delim );
             res->append( *it );
         }
@@ -147,7 +147,7 @@ namespace mongo {
     bool LexNumCmp::operator()( const char *s1, const char *s2 ) const {
         return cmp( s1, s2 ) < 0;
     }
-    bool LexNumCmp::operator()( const string &s1, const string &s2 ) const {
+    bool LexNumCmp::operator()( const std::string &s1, const std::string &s2 ) const {
         return (*this)( s1.c_str(), s2.c_str() );
     }
     

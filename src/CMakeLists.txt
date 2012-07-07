@@ -26,6 +26,7 @@ add_subdirectory(ifalcon)
 
 # general-purpose utilities
 add_subdirectory(bson)
+add_subdirectory(bson_test)
 add_subdirectory(utils)
 add_subdirectory(threads)
 
