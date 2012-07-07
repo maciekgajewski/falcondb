@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "dbengine/engine.hpp"
 #include "dbengine/database_impl.hpp"
+#include "dbengine/commands.hpp"
 
 #include "utils/exception.hpp"
 
@@ -34,6 +35,8 @@ engine::engine(const engine_config& config, interfaces::storage_backend& backend
     _config(config),
     _storage_backend(backend)
 {
+    _processor.register_command("insert", commands::insert);
+    _processor.register_command("list", commands::list);
 }
 
 engine::~engine()

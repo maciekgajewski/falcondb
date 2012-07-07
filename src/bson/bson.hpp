@@ -51,6 +51,6 @@ namespace falcondb {
     // temporary wrapper
     inline bson_object json_to_bson(const std::string& json)
     {
-        mongo::fromjson(json);
+        return mongo::fromjson(json);
     }
 }

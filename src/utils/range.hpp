@@ -53,6 +53,8 @@ public:
     std::size_t size() const { return _end - _begin; }
     bool empty() const { return _begin == _end; }
 
+    std::string to_string() const { return std::string(begin(), size()); }
+
 private:
 
     const value_type* _begin;

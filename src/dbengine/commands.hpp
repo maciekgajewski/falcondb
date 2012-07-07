@@ -17,24 +17,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "dbengine/database_impl.hpp"
+#ifndef FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
+#define FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
 
-#include "dbengine/command_processor.hpp"
+#include "interfaces/engine.hpp"
+#include "interfaces/storage_backend.hpp"
 
 namespace falcondb { namespace dbengine {
+namespace commands {
 
-database_impl::database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor)
-    : _storage(storage), _processor(processor)
-{
+/// upsert object into collection. _id is added to the object if absent
+void insert(
+    const bson_object& param,
+    const interfaces::result_handler& handler,
+    const interfaces::database_backend_ptr& storage);
+
+// returns the entire content of the collection in no particular order
+void list(
+    const bson_object& param,
+    const interfaces::result_handler& handler,
+    const interfaces::database_backend_ptr& storage);
+
+
+
 }
-
-bool database_impl::post(
-    const std::string& command,
-    const bson_object& params,
-    const interfaces::result_handler& result)
-{
-    _processor.post(command, params, result, _storage);
-    return true;
-}
-
 } }
+
+#endif

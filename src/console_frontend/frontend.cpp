@@ -48,6 +48,8 @@ frontend::frontend(interfaces::engine& engine)
         [this](const arg_list& al) { handle_drop_db(al); });
     _dispatcher.add_command("insert", "insert DATABASE DOCUMENT", "Upsert document into database",
         [this](const arg_list& al) { handle_insert(al); });
+    _dispatcher.add_command("list", "list DATABASE", "Get the entire content of the db",
+        [this](const arg_list& al) { handle_list(al); });
 }
 
 void frontend::execute()
@@ -97,6 +99,17 @@ const std::string& frontend::require_arg(const command_dispatcher::arg_list& al,
     return al[idx];
 }
 
+void frontend::post_command(const std::string& db_name, const std::string& command, bson_object param)
+{
+    interfaces::database_ptr db = _engine.get_database(db_name);
+
+    db->post(command, param,
+             [this, command](const interfaces::error_message& error, const bson_object_list& data)
+             {
+                result_handler(command, error, data);
+            });
+}
+
 void frontend::static_on_text(char* text)
 {
     static_instance->_dispatcher.tokenize_and_execute(text);
@@ -117,7 +130,7 @@ void frontend::handle_drop_db(const frontend::arg_list& al)
     _engine.drop_database(require_arg(al, 0));
 }
 
-void frontend::generic_result_handler(const std::string& operation, const interfaces::error_message& err)
+void frontend::result_handler(const std::string& operation, const interfaces::error_message& err, const bson_object_list& data)
 {
     if (err)
     {
@@ -126,18 +139,28 @@ void frontend::generic_result_handler(const std::string& operation, const interf
     else
     {
         std::cout << operation << " successfull" << std::endl;
+        if (data.empty()) std::cout << "no data returned" << std::endl;
+        else
+        {
+            std::cout << data.size() << " documents returned" << std::endl;
+            std::copy(data.begin(), data.end(), std::ostream_iterator<bson_object>(std::cout, "\n"));
+            std::cout << std::endl;
+        }
     }
+    _io_service->post([]{ rl_forced_update_display(); });
 }
-
 
 void frontend::handle_insert(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
     bson_object document = json_to_bson(require_arg(al, 1));
+    post_command(db_name, "insert", document);
+}
 
-    interfaces::database_ptr db = _engine.get_database(db_name);
-    db->post("insert", document,
-        [this](const interfaces::error_message& error, const bson_object_list& result) { generic_result_handler("insert", error); });
+void frontend::handle_list(const frontend::arg_list& al)
+{
+    std::string db_name = require_arg(al, 0);
+    post_command(db_name, "list");
 }
 
 }}
