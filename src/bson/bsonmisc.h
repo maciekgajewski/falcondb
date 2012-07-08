@@ -18,7 +18,6 @@
 #pragma once
 
 #include "bson/bsonelement.hpp"
-#include "bson/stringutils.hpp"
 
 #include <memory>
 
@@ -52,10 +51,6 @@ namespace mongo {
         RIGHT_BEFORE = 1 ,
         RIGHT_SUBFIELD = 2
     };
-
-    class LexNumCmp;
-    FieldCompareResult compareDottedFieldNames( const std::string& l , const std::string& r ,
-                                               const LexNumCmp& cmp );
 
     /** Use BSON macro to build a BSONObj from a stream
 
