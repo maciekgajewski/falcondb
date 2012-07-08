@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "bson/bsonelement.h"
+#include "bson/bsonelement.hpp"
 #include "bson/stringutils.hpp"
 
 #include <memory>

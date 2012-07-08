@@ -33,8 +33,8 @@
 
 #pragma once
 
-#include "bson/bsonelement.h"
-#include "bson/bsonobj.h"
+#include "bson/bsonelement.hpp"
+#include "bson/bsonobj.hpp"
 #include "bson/bsonobjbuilder.h"
 #include "bson/bsonobjiterator.h"
 #include "bson/bsontypes.h"

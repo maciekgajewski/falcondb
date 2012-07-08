@@ -1,5 +1,8 @@
 add_library(bson
     bson.hpp
+    bsonobj.hpp
+    bsonelement.hpp
+    bsonobjbuilder.hpp
     json.hpp json.cpp
     jsobj.cpp jsobj.hpp
     oid.cpp oid.hpp

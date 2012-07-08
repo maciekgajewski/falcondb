@@ -26,21 +26,13 @@
 #include <cmath>
 #include <limits>
 
-#include "bson/bsonelement.h"
-#include "bson/bsonobj.h"
+#include "bson/bsonelement.hpp"
+#include "bson/bsonobj.hpp"
 #include "bson/bsonmisc.h"
 #include "bson/bson_builder_base.h"
 
-#if defined(_DEBUG) && defined(MONGO_EXPOSE_MACROS)
-#include "mongo/util/log.h"
-#endif
-
 namespace mongo {
 
-#if defined(_WIN32)
-// warning: 'this' : used in base member initializer list
-#pragma warning( disable : 4355 )
-#endif
 
     template<typename T>
     class BSONFieldValue {
