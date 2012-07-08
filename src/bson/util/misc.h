@@ -73,11 +73,11 @@ namespace mongo {
 
     struct Date_t {
         // TODO: make signed (and look for related TODO's)
-        unsigned long long millis;
+        uint64_t millis;
         Date_t(): millis(0) {}
-        Date_t(unsigned long long m): millis(m) {}
-        operator unsigned long long&() { return millis; }
-        operator const unsigned long long&() const { return millis; }
+        Date_t(uint64_t m): millis(m) {}
+        operator uint64_t&() { return millis; }
+        operator const uint64_t&() const { return millis; }
         void toTm (tm *buf) {
             time_t dtime = toTimeT();
 #if defined(_WIN32)
@@ -93,8 +93,8 @@ namespace mongo {
         }
         time_t toTimeT() const {
             // cant use uassert from bson/util
-            assert((long long)millis >= 0); // TODO when millis is signed, delete
-            assert(((long long)millis/1000) < (std::numeric_limits<time_t>::max)());
+            assert((int64_t)millis >= 0); // TODO when millis is signed, delete
+            assert(((int64_t)millis/1000) < (std::numeric_limits<time_t>::max)());
             return millis / 1000;
         }
     };

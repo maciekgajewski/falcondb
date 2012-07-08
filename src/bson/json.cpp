@@ -29,7 +29,6 @@
 #endif
 
 #include "bson/bsonobjbuilder.hpp"
-#include "bson/util/builder.h"
 #include "bson/jsobj.hpp"
 #include "bson/json.hpp"
 #include "bson/base64.hpp"
@@ -291,9 +290,9 @@ namespace mongo {
 
     struct intValue {
         intValue( ObjectBuilder &_b ) : b( _b ) {}
-        void operator() ( long long num ) const {
-            if (num >= std::numeric_limits<int>::min() && num <= std::numeric_limits<int>::max())
-                b.back()->append( b.fieldName(), (int)num );
+        void operator() ( int64_t num ) const {
+            if (num >= std::numeric_limits<int32_t>::min() && num <= std::numeric_limits<int32_t>::max())
+                b.back()->append( b.fieldName(), (int32_t)num );
             else
                 b.back()->append( b.fieldName(), num );
         }

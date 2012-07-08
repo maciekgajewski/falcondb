@@ -27,24 +27,17 @@
 #include <boost/static_assert.hpp>
 
 #include "bson/oid.hpp"
+#include "bson/bsonelement.ipp"
+#include "bson/bsonobj.ipp"
 #include "bson/util/atomic_int.h"
-//#include "bson/jsobjmanipulator.h"
 #include "bson/json.hpp"
-//#include "bson/nonce.h"
 #include "bson/float_utils.h"
 #include "bson/base64.hpp"
 #include "bson/embedded_builder.h"
-//#include "mongo/util/md5.hpp"
-//#include "mongo/util/mongoutils/str.h"
 #include "bson/optime.h"
-//#include "mongo/util/startup_test.h"
-//#include "bson/stringutils.hpp"
 
 
 // make sure our assumptions are valid
-BOOST_STATIC_ASSERT( sizeof(short) == 2 );
-BOOST_STATIC_ASSERT( sizeof(int) == 4 );
-BOOST_STATIC_ASSERT( sizeof(long long) == 8 );
 BOOST_STATIC_ASSERT( sizeof(double) == 8 );
 BOOST_STATIC_ASSERT( sizeof(mongo::Date_t) == 8 );
 BOOST_STATIC_ASSERT( sizeof(mongo::OID) == 12 );
@@ -1066,7 +1059,7 @@ namespace mongo {
         }
 
         try {
-            long long num = boost::lexical_cast<long long>( data );
+            int64_t num = boost::lexical_cast<int64_t>( data );
             append( fieldName , num );
             return true;
         }

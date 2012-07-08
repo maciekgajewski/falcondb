@@ -22,6 +22,8 @@
 #include "bson/util/misc.h"
 #include "bson/hex.h"
 
+#include "bson/string_builder.hpp"
+
 namespace mongo {
 
 #pragma pack(1)

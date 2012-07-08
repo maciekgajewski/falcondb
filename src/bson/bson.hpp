@@ -36,12 +36,14 @@
 #include "bson/bsonelement.hpp"
 #include "bson/bsonobj.hpp"
 #include "bson/bsonobjbuilder.hpp"
-#include "bson/bsonobjiterator.h"
+#include "bson/bsonobjiterator.hpp"
 #include "bson/bsontypes.h"
-#include "bson/bson-inl.h"
 #include "bson/oid.hpp"
-#include "bson/util/builder.h"
 #include "bson/json.hpp"
+
+#include "bson/bsonobjbuilder.ipp"
+#include "bson/bsonobj.ipp"
+#include "bson/bsonelement.ipp"
 
 // namespacte translation (temporary, until code cleaned up)
 namespace falcondb {

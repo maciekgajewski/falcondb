@@ -16,7 +16,6 @@
 #pragma once
 
 #include "bson/stringdata.h"
-#include "bson/util/builder.h"
 
 namespace mongo {
 
@@ -38,9 +37,9 @@ namespace mongo {
 
         virtual BSONBuilderBase& append( const BSONElement& e) = 0;
 
-        virtual BSONBuilderBase& append( const StringData& fieldName , int n ) = 0;
+        virtual BSONBuilderBase& append( const StringData& fieldName , int32_t n ) = 0;
 
-        virtual BSONBuilderBase& append( const StringData& fieldName , long long n ) = 0;
+        virtual BSONBuilderBase& append( const StringData& fieldName , int64_t n ) = 0;
 
         virtual BSONBuilderBase& append( const StringData& fieldName , double n ) = 0;
 

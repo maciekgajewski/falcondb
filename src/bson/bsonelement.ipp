@@ -19,16 +19,14 @@
  */
 
 #pragma once
+#ifndef BSON_ELEMENT_IPP
+#define BSON_ELEMENT_IPP
+
 
 #include <map>
 #include <limits>
 #include <cassert>
 
-
-#if defined(_WIN32)
-#undef max
-#undef min
-#endif
 
 namespace mongo {
 
@@ -167,10 +165,6 @@ dodouble:
         return x;
     }
 
-    inline BSONObjIterator BSONObj::begin() const {
-        return BSONObjIterator(*this);
-    }
-
     inline BSONObj BSONElement::embeddedObjectUserCheck() const {
         if ( MONGO_likely(isABSONObj()) )
             return BSONObj(value());
@@ -192,49 +186,6 @@ dodouble:
         return BSONObj( value() + 4 + 4 + strSizeWNull );
     }
 
-    // deep (full) equality
-    inline bool BSONObj::equal(const BSONObj &rhs) const {
-        BSONObjIterator i(*this);
-        BSONObjIterator j(rhs);
-        BSONElement l,r;
-        do {
-            // so far, equal...
-            l = i.next();
-            r = j.next();
-            if ( l.eoo() )
-                return r.eoo();
-        } while( l == r );
-        return false;
-    }
-
-    inline NOINLINE_DECL void BSONObj::_assertInvalid() const {
-        StringBuilder ss;
-        int os = objsize();
-        ss << "Invalid BSONObj size: " << os << " (0x" << toHex( &os, 4 ) << ')';
-        try {
-            BSONElement e = firstElement();
-            ss << " first element: " << e.toString();
-        }
-        catch ( ... ) { }
-        assert( 0 );
-    }
-
-    /* the idea with NOINLINE_DECL here is to keep this from inlining in the
-       getOwned() method.  the presumption being that is better.
-    */
-    inline NOINLINE_DECL BSONObj BSONObj::copy() const {
-        Holder *h = (Holder*) malloc(objsize() + sizeof(unsigned));
-        h->zero();
-        memcpy(h->data, objdata(), objsize());
-        return BSONObj(h);
-    }
-
-    inline BSONObj BSONObj::getOwned() const {
-        if ( isOwned() )
-            return *this;
-        return copy();
-    }
-
     // wrap this element up as a singleton object.
     inline BSONObj BSONElement::wrap() const {
         BSONObjBuilder b(size()+6);
@@ -246,136 +197,6 @@ dodouble:
         BSONObjBuilder b(size()+6+(int)strlen(newName));
         b.appendAs(*this,newName);
         return b.obj();
-    }
-
-    inline void BSONObj::getFields(unsigned n, const char **fieldNames, BSONElement *fields) const { 
-        BSONObjIterator i(*this);
-        while ( i.more() ) {
-            BSONElement e = i.next();
-            const char *p = e.fieldName();
-            for( unsigned i = 0; i < n; i++ ) {
-                if( strcmp(p, fieldNames[i]) == 0 ) {
-                    fields[i] = e;
-                    break;
-                }
-            }
-        }
-    }
-
-    inline BSONElement BSONObj::getField(const StringData& name) const {
-        BSONObjIterator i(*this);
-        while ( i.more() ) {
-            BSONElement e = i.next();
-            if ( strcmp(e.fieldName(), name.data()) == 0 )
-                return e;
-        }
-        return BSONElement();
-    }
-
-    inline int BSONObj::getIntField(const char *name) const {
-        BSONElement e = getField(name);
-        return e.isNumber() ? (int) e.number() : std::numeric_limits< int >::min();
-    }
-
-    inline bool BSONObj::getBoolField(const char *name) const {
-        BSONElement e = getField(name);
-        return e.type() == Bool ? e.boolean() : false;
-    }
-
-    inline const char * BSONObj::getStringField(const char *name) const {
-        BSONElement e = getField(name);
-        return e.type() == String ? e.valuestr() : "";
-    }
-
-    /* add all the fields from the object specified to this object */
-    inline BSONObjBuilder& BSONObjBuilder::appendElements(BSONObj x) {
-        BSONObjIterator it(x);
-        while ( it.moreWithEOO() ) {
-            BSONElement e = it.next();
-            if ( e.eoo() ) break;
-            append(e);
-        }
-        return *this;
-    }
-
-    /* add all the fields from the object specified to this object if they don't exist */
-    inline BSONObjBuilder& BSONObjBuilder::appendElementsUnique(BSONObj x) {
-        std::set<std::string> have;
-        {
-            BSONObjIterator i = iterator();
-            while ( i.more() )
-                have.insert( i.next().fieldName() );
-        }
-        
-        BSONObjIterator it(x);
-        while ( it.more() ) {
-            BSONElement e = it.next();
-            if ( have.count( e.fieldName() ) )
-                continue;
-            append(e);
-        }
-        return *this;
-    }
-
-
-    inline bool BSONObj::isValid() const {
-        int x = objsize();
-        return x > 0 && x <= BSONObjMaxInternalSize;
-    }
-
-    inline bool BSONObj::getObjectID(BSONElement& e) const {
-        BSONElement f = getField("_id");
-        if( !f.eoo() ) {
-            e = f;
-            return true;
-        }
-        return false;
-    }
-
-    // {a: {b:1}} -> {a.b:1}
-    void nested2dotted(BSONObjBuilder& b, const BSONObj& obj, const std::string& base="");
-    inline BSONObj nested2dotted(const BSONObj& obj) {
-        BSONObjBuilder b;
-        nested2dotted(b, obj);
-        return b.obj();
-    }
-
-    // {a.b:1} -> {a: {b:1}}
-    void dotted2nested(BSONObjBuilder& b, const BSONObj& obj);
-    inline BSONObj dotted2nested(const BSONObj& obj) {
-        BSONObjBuilder b;
-        dotted2nested(b, obj);
-        return b.obj();
-    }
-
-    inline BSONObjIterator BSONObjBuilder::iterator() const {
-        const char * s = _b.buf() + _offset;
-        const char * e = _b.buf() + _b.len();
-        return BSONObjIterator( s , e );
-    }
-
-    inline bool BSONObjBuilder::hasField( const StringData& name ) const {
-        BSONObjIterator i = iterator();
-        while ( i.more() )
-            if ( strcmp( name.data() , i.next().fieldName() ) == 0 )
-                return true;
-        return false;
-    }
-
-    /* WARNING: nested/dotted conversions are not 100% reversible
-     * nested2dotted(dotted2nested({a.b: {c:1}})) -> {a.b.c: 1}
-     * also, dotted2nested ignores order
-     */
-
-    typedef std::map<std::string, BSONElement> BSONMap;
-    inline BSONMap bson2map(const BSONObj& obj) {
-        BSONMap m;
-        BSONObjIterator it(obj);
-        while (it.more()) {
-            BSONElement e = it.next();
-            m[e.fieldName()] = e;
-        }
-        return m;
     }
 
     struct BSONElementFieldNameCmp {
@@ -393,43 +214,6 @@ dodouble:
         return s;
     }
 
-    inline std::string BSONObj::toString( bool isArray, bool full ) const {
-        if ( isEmpty() ) return "{}";
-        StringBuilder s;
-        toString(s, isArray, full);
-        return s.str();
-    }
-    inline void BSONObj::toString( StringBuilder& s,  bool isArray, bool full, int depth ) const {
-        if ( isEmpty() ) {
-            s << "{}";
-            return;
-        }
-
-        s << ( isArray ? "[ " : "{ " );
-        BSONObjIterator i(*this);
-        bool first = true;
-        while ( 1 ) {
-            assert( i.moreWithEOO() );
-            BSONElement e = i.next( true );
-            assert( e.size() > 0 );
-            assert( e.size() < ( 1 << 30 ) );
-            int offset = (int) (e.rawdata() - this->objdata());
-            assert( e.size() + offset <= this->objsize() );
-            e.validate();
-            bool end = ( e.size() + offset == this->objsize() );
-            if ( e.eoo() ) {
-                assert(end );
-                break;
-            }
-            if ( first )
-                first = false;
-            else
-                s << ", ";
-            e.toString( s, !isArray, full, depth );
-        }
-        s << ( isArray ? " ]" : " }" );
-    }
-
     inline void BSONElement::validate() const {
         const BSONType t = type();
 
@@ -439,14 +223,8 @@ dodouble:
         case Symbol:
         case mongo::String: {
             unsigned x = (unsigned) valuestrsize();
-            bool lenOk = x > 0 && x < (unsigned) BSONObjMaxInternalSize;
-            if( lenOk && valuestr()[x-1] == 0 )
+            if( valuestr()[x-1] == 0 )
                 return;
-            StringBuilder buf;
-            buf <<  "Invalid dbref/code/string/symbol size: " << x;
-            if( lenOk )
-                buf << " strnlen:" << mongo::strnlen( valuestr() , x );
-            std::cerr << buf.str() << std::endl;
             assert(false);
             break;
         }
@@ -735,129 +513,21 @@ dodouble:
         }
     }
 
-    /* return has eoo() true if no match
-       supports "." notation to reach into embedded objects
-    */
-    inline BSONElement BSONObj::getFieldDotted(const char *name) const {
-        BSONElement e = getField( name );
-        if ( e.eoo() ) {
-            const char *p = strchr(name, '.');
-            if ( p ) {
-                std::string left(name, p-name);
-                BSONObj sub = getObjectField(left.c_str());
-                return sub.isEmpty() ? BSONElement() : sub.getFieldDotted(p+1);
-            }
-        }
+inline BSONObj BSONElement::Obj() const { return embeddedObjectUserCheck(); }
 
-        return e;
-    }
+inline BSONElement BSONElement::operator[] (const std::string& field) const {
+    BSONObj o = Obj();
+    return o[field];
+}
 
-    inline BSONObj BSONObj::getObjectField(const char *name) const {
-        BSONElement e = getField(name);
-        BSONType t = e.type();
-        return t == Object || t == Array ? e.embeddedObject() : BSONObj();
-    }
+inline std::ostream& operator<<( std::ostream &s, const BSONElement &e ) {
+    return s << e.toString();
+}
 
-    inline int BSONObj::nFields() const {
-        int n = 0;
-        BSONObjIterator i(*this);
-        while ( i.moreWithEOO() ) {
-            BSONElement e = i.next();
-            if ( e.eoo() )
-                break;
-            n++;
-        }
-        return n;
-    }
-
-    inline BSONObj::BSONObj() {
-        /* little endian ordering here, but perhaps that is ok regardless as BSON is spec'd
-           to be little endian external to the system. (i.e. the rest of the implementation of bson,
-           not this part, fails to support big endian)
-        */
-        static char p[] = { /*size*/5, 0, 0, 0, /*eoo*/0 };
-        _objdata = p;
-    }
-
-    inline BSONObj BSONElement::Obj() const { return embeddedObjectUserCheck(); }
-
-    inline BSONElement BSONElement::operator[] (const std::string& field) const {
-        BSONObj o = Obj();
-        return o[field];
-    }
-
-    inline void BSONObj::elems(std::vector<BSONElement> &v) const {
-        BSONObjIterator i(*this);
-        while( i.more() )
-            v.push_back(i.next());
-    }
-
-    inline void BSONObj::elems(std::list<BSONElement> &v) const {
-        BSONObjIterator i(*this);
-        while( i.more() )
-            v.push_back(i.next());
-    }
-
-    template <class T>
-    void BSONObj::Vals(std::vector<T>& v) const {
-        BSONObjIterator i(*this);
-        while( i.more() ) {
-            T t;
-            i.next().Val(t);
-            v.push_back(t);
-        }
-    }
-    template <class T>
-    void BSONObj::Vals(std::list<T>& v) const {
-        BSONObjIterator i(*this);
-        while( i.more() ) {
-            T t;
-            i.next().Val(t);
-            v.push_back(t);
-        }
-    }
-
-    template <class T>
-    void BSONObj::vals(std::vector<T>& v) const {
-        BSONObjIterator i(*this);
-        while( i.more() ) {
-            try {
-                T t;
-                i.next().Val(t);
-                v.push_back(t);
-            }
-            catch(...) { }
-        }
-    }
-    template <class T>
-    void BSONObj::vals(std::list<T>& v) const {
-        BSONObjIterator i(*this);
-        while( i.more() ) {
-            try {
-                T t;
-                i.next().Val(t);
-                v.push_back(t);
-            }
-            catch(...) { }
-        }
-    }
-
-    inline std::ostream& operator<<( std::ostream &s, const BSONObj &o ) {
-        return s << o.toString();
-    }
-
-    inline std::ostream& operator<<( std::ostream &s, const BSONElement &e ) {
-        return s << e.toString();
-    }
-
-    inline StringBuilder& operator<<( StringBuilder &s, const BSONObj &o ) {
-        o.toString( s );
-        return s;
-    }
-    inline StringBuilder& operator<<( StringBuilder &s, const BSONElement &e ) {
-        e.toString( s );
-        return s;
-    }
+inline StringBuilder& operator<<( StringBuilder &s, const BSONElement &e ) {
+    e.toString( s );
+    return s;
+}
 
 
     inline void BSONElement::Val(BSONObj& v) const { v = Obj(); }
@@ -912,43 +582,7 @@ dodouble:
         return ret.str();
     }
 
-    inline std::string BSONObj::hexDump() const {
-        std::stringstream ss;
-        const char *d = objdata();
-        int size = objsize();
-        for( int i = 0; i < size; ++i ) {
-            ss.width( 2 );
-            ss.fill( '0' );
-            ss << std::hex << (unsigned)(unsigned char)( d[ i ] ) << std::dec;
-            if ( ( d[ i ] >= '0' && d[ i ] <= '9' ) || ( d[ i ] >= 'A' && d[ i ] <= 'z' ) )
-                ss << '\'' << d[ i ] << '\'';
-            if ( i != size - 1 )
-                ss << ' ';
-        }
-        return ss.str();
-    }
 
-    inline void BSONObjBuilder::appendKeys( const BSONObj& keyPattern , const BSONObj& values ) {
-        BSONObjIterator i(keyPattern);
-        BSONObjIterator j(values);
+} // namespace
 
-        while ( i.more() && j.more() ) {
-            appendAs( j.next() , i.next().fieldName() );
-        }
-
-        assert( ! i.more() );
-        assert( ! j.more() );
-    }
-
-    inline BSONObj BSONObj::removeField(const StringData& name) const { 
-        BSONObjBuilder b;
-        BSONObjIterator i(*this);
-        while ( i.more() ) {
-            BSONElement e = i.next();
-            const char *fname = e.fieldName();
-            if( strcmp(name.data(), fname) )
-                b.append(e);
-        }
-        return b.obj();
-    }
-}
+#endif // BSON_ELEMENT_IPP

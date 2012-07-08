@@ -193,7 +193,7 @@ BOOST_FIXTURE_TEST_CASE(Nan, Base)
     BOOST_CHECK( basic("a", nan).woCompare( basic("a", nan) ) == 0 );
     BOOST_CHECK( basic("a", nan).woCompare( basic("a", 1) ) < 0 );
 
-    BOOST_CHECK( basic("a", nan).woCompare( basic( "a" , 5000000000LL ) ) < 0 );
+    BOOST_CHECK( basic("a", nan).woCompare( basic( "a" , (int64_t)5000000000LL ) ) < 0 );
 
     BOOST_CHECK( basic("a", 1).woCompare( basic("a", nan) ) > 0 );
 

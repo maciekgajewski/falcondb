@@ -18,8 +18,7 @@
 #pragma once
 
 #include <string>
-
-#include "bson/util/builder.h"
+#include "bson/string_builder.hpp"
 
 namespace mongo {
     //can't use hex namespace because it conflicts with hex iostream function

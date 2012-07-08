@@ -28,7 +28,6 @@
 
 #pragma once
 
-#include "bson/util/builder.h"
 #include "bson/optime.h"
 #include "bson/bsontypes.h"
 #include "bson/oid.hpp"
@@ -36,8 +35,7 @@
 #include "bson/bsonobj.hpp"
 #include "bson/bsonmisc.h"
 #include "bson/bsonobjbuilder.hpp"
-#include "bson/bsonobjiterator.h"
-#include "bson/bson-inl.h"
+#include "bson/bsonobjiterator.hpp"
 #include "bson/ordering.h"
 #include "bson/stringdata.h"
 #include "bson/bson_db.h"

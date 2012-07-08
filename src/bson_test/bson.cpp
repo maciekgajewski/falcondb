@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(bounds)
     BSONObj l , r;
     {
         BSONObjBuilder b;
-        b.append( "x" , std::numeric_limits<long long>::max() );
+        b.append( "x" , std::numeric_limits<int64_t>::max() );
         l = b.obj();
     }
     {
@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_CASE(order)
 {
     {
         BSONObj x,y,z;
-        { BSONObjBuilder b; b.append( "x" , (long long)2 ); x = b.obj(); }
+        { BSONObjBuilder b; b.append( "x" , (int64_t)2 ); x = b.obj(); }
         { BSONObjBuilder b; b.append( "x" , (int)3 ); y = b.obj(); }
-        { BSONObjBuilder b; b.append( "x" , (long long)4 ); z = b.obj(); }
+        { BSONObjBuilder b; b.append( "x" , (int64_t)4 ); z = b.obj(); }
         BOOST_CHECK_LT( x.woCompare( y ) , 0 );
         BOOST_CHECK_LT( x.woCompare( z ) , 0 );
         BOOST_CHECK_GT( y.woCompare( x ) , 0 );
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(order)
 
     {
         BSONObj ll,d,i,n,u;
-        { BSONObjBuilder b; b.append( "x" , (long long)2 ); ll = b.obj(); }
+        { BSONObjBuilder b; b.append( "x" , (int64_t)2 ); ll = b.obj(); }
         { BSONObjBuilder b; b.append( "x" , (double)2 ); d = b.obj(); }
         { BSONObjBuilder b; b.append( "x" , (int)2 ); i = b.obj(); }
         { BSONObjBuilder b; b.appendNull( "x" ); n = b.obj(); }

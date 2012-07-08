@@ -16,6 +16,8 @@
  */
 
 #pragma once
+#ifndef BSON_ELEMENT_HPP
+#define BSON_ELEMENT_HPP
 
 #include <string.h> // strlen
 #include <string>
@@ -24,6 +26,7 @@
 #include "bson/bsontypes.h"
 #include "bson/oid.hpp"
 #include "bson/float_utils.h"
+#include "bson/string_builder.hpp"
 
 namespace mongo {
     class OpTime;
@@ -193,11 +196,11 @@ namespace mongo {
         bool isNumber() const;
 
         /** Return double value for this field. MUST be NumberDouble type. */
-        double _numberDouble() const {return (reinterpret_cast< const PackedDouble* >( value() ))->d; }
+        double _numberDouble() const {return (*reinterpret_cast< const double* >( value() )); }
         /** Return int value for this field. MUST be NumberInt type. */
         int _numberInt() const {return *reinterpret_cast< const int* >( value() ); }
         /** Return long long value for this field. MUST be NumberLong type. */
-        long long _numberLong() const {return *reinterpret_cast< const long long* >( value() ); }
+        long long _numberLong() const {return *reinterpret_cast< const int64_t* >( value() ); }
 
         /** Retrieve int value for the element safely.  Zero returned if not a number. */
         int numberInt() const;
@@ -528,11 +531,11 @@ namespace mongo {
     inline bool BSONElement::trueValue() const {
         switch( type() ) {
         case NumberLong:
-            return *reinterpret_cast< const long long* >( value() ) != 0;
+            return *reinterpret_cast< const int64_t* >( value() ) != 0;
         case NumberDouble:
-            return (reinterpret_cast < const PackedDouble* >(value ()))->d != 0;
+            return (reinterpret_cast < const double* >(value ())) != 0;
         case NumberInt:
-            return *reinterpret_cast< const int* >( value() ) != 0;
+            return *reinterpret_cast< const int32_t* >( value() ) != 0;
         case mongo::Bool:
             return boolean();
         case EOO:
@@ -644,5 +647,8 @@ namespace mongo {
         fieldNameSize_ = 0;
         totalSize = 1;
     }
-
 }
+
+#endif // BSON_ELEMENT_HPP
+
+

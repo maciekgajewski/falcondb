@@ -27,7 +27,6 @@
 #include "bson/bsonelement.hpp"
 #include "bson/stringdata.h"
 #include "bson/util/atomic_int.h"
-#include "bson/util/builder.h"
 
 namespace mongo {
 
