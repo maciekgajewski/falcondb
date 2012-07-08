@@ -17,10 +17,9 @@
 
 #include <boost/functional/hash.hpp>
 
-#include "bson/util/atomic_word.h"
 #include "bson/bsonobjbuilder.hpp"
 #include "bson/oid.hpp"
-#include "bson/util/atomic_int.h"
+#include "bson/atomic.hpp"
 #include "bson/nonce.hpp"
 
 BOOST_STATIC_ASSERT( sizeof(mongo::OID) == 12 );
@@ -110,7 +109,8 @@ namespace mongo {
     }
 
     void OID::init() {
-        static AtomicUInt inc = (unsigned) Security::getNonce();
+        static AtomicUInt inc;
+        inc = (unsigned) Security::getNonce();
 
         {
             unsigned t = (unsigned) time(0);
@@ -145,7 +145,7 @@ namespace mongo {
         }
         
         {
-            unsigned long long nextNumber = _initSequential_sequence.fetchAndAdd(1);
+            uint64_t nextNumber = _initSequential_sequence.fetch_add(1);
             unsigned char* numberData = reinterpret_cast<unsigned char*>(&nextNumber);
             for ( int i=0; i<8; i++ ) {
                 data[4+i] = numberData[7-i];

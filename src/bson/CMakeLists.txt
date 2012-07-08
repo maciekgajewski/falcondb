@@ -13,5 +13,6 @@ add_library(bson
     allocators.hpp
     buf_builder.hpp
     string_builder.hpp
+    atomic.hpp
 
 )

@@ -29,7 +29,6 @@
 #include "bson/oid.hpp"
 #include "bson/bsonelement.ipp"
 #include "bson/bsonobj.ipp"
-#include "bson/util/atomic_int.h"
 #include "bson/json.hpp"
 #include "bson/float_utils.h"
 #include "bson/base64.hpp"

@@ -26,7 +26,7 @@
 
 #include "bson/bsonelement.hpp"
 #include "bson/stringdata.h"
-#include "bson/util/atomic_int.h"
+#include "bson/atomic.hpp"
 
 namespace mongo {
 
@@ -464,7 +464,7 @@ namespace mongo {
         public:
             char data[4]; // start of object
 
-            void zero() { refCount.zero(); }
+            void zero() { refCount.store(0); }
 
             // these are called automatically by boost::intrusive_ptr
             friend void intrusive_ptr_add_ref(Holder* h) { h->refCount++; }
