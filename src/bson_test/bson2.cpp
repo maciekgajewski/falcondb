@@ -27,20 +27,25 @@ BOOST_AUTO_TEST_SUITE(bson_test_suite2)
 class Base
 {
 protected:
-    static BSONObj basic( const char *name, int val ) {
+    template< typename T >
+    static BSONObj basic( const char *name, const T& val ) {
         BSONObjBuilder b;
         b.append( name, val );
         return b.obj();
     }
-    static BSONObj basic( const char *name, std::vector< int > val ) {
+    template< typename T, typename U >
+    static BSONObj basic( const char *name, const T& val, const char* name2, const U& val2 ) {
         BSONObjBuilder b;
         b.append( name, val );
+        b.append( name2, val2 );
         return b.obj();
     }
-    template< class T >
-    static BSONObj basic( const char *name, T val ) {
+    template< typename T, typename U, typename V >
+    static BSONObj basic( const char *n1, const T& v1, const char* n2, const U& v2, const char* n3, const V& v3) {
         BSONObjBuilder b;
-        b.append( name, val );
+        b.append( n1, v1 );
+        b.append( n2, v2 );
+        b.append( n3, v3 );
         return b.obj();
     }
 };
@@ -57,23 +62,23 @@ BOOST_FIXTURE_TEST_CASE(WoCompareBasic, Base)
 BOOST_FIXTURE_TEST_CASE(IsPrefixOf, Base)
 {
     {
-        BSONObj k = BSON( "x" << 1 );
-        BOOST_CHECK( ! k.isPrefixOf( BSON( "a" << 1 ) ) );
-        BOOST_CHECK( k.isPrefixOf( BSON( "x" << 1 ) ) );
-        BOOST_CHECK( k.isPrefixOf( BSON( "x" << 1 << "a" << 1 ) ) );
-        BOOST_CHECK( ! k.isPrefixOf( BSON( "a" << 1 << "x" << 1 ) ) );
+        BSONObj k = basic("x", 1);
+        BOOST_CHECK( ! k.isPrefixOf( basic("a", 1) ) );
+        BOOST_CHECK( k.isPrefixOf( basic("x", 1) ) );
+        BOOST_CHECK( k.isPrefixOf( basic("x", 1, "a", 1) ) );
+        BOOST_CHECK( ! k.isPrefixOf( basic("a", 1, "x", 1) ) );
     }
     {
-        BSONObj k = BSON( "x" << 1 << "y" << 1 );
-        BOOST_CHECK( ! k.isPrefixOf( BSON( "x" << 1 ) ) );
-        BOOST_CHECK( ! k.isPrefixOf( BSON( "x" << 1 << "z" << 1 ) ) );
-        BOOST_CHECK( k.isPrefixOf( BSON( "x" << 1 << "y" << 1 ) ) );
-        BOOST_CHECK( k.isPrefixOf( BSON( "x" << 1 << "y" << 1 << "z" << 1 ) ) );
+        BSONObj k = basic("x", 1, "y", 1);
+        BOOST_CHECK( ! k.isPrefixOf( basic("x", 1) ) );
+        BOOST_CHECK( ! k.isPrefixOf( basic("x", 1, "z", 1) ) );
+        BOOST_CHECK( k.isPrefixOf( basic("x", 1, "y", 1) ) );
+        BOOST_CHECK( k.isPrefixOf( basic("x", 1, "y", 1, "z", 1 ) ) );
     }
     {
-        BSONObj k = BSON( "x" << 1 );
-        BOOST_CHECK( ! k.isPrefixOf( BSON( "x" << "hi" ) ) );
-        BOOST_CHECK( k.isPrefixOf( BSON( "x" << 1 << "a" << "hi" ) ) );
+        BSONObj k = basic("x", 1);
+        BOOST_CHECK( ! k.isPrefixOf( basic("x", "hi") ) );
+        BOOST_CHECK( k.isPrefixOf( basic("x", 1, "a", "hi") ) );
     }
 }
 
@@ -120,54 +125,54 @@ BOOST_FIXTURE_TEST_CASE(WoCompareOrdered, Base)
 
 BOOST_FIXTURE_TEST_CASE(WoCompareDifferentLength, Base)
 {
-    BOOST_CHECK( BSON( "a" << 1 ).woCompare( BSON( "a" << 1 << "b" << 1 ) ) < 0 );
-    BOOST_CHECK( BSON( "a" << 1 << "b" << 1 ).woCompare( BSON( "a" << 1 ) ) > 0 );
+    BOOST_CHECK( basic( "a", 1 ).woCompare( basic("a", 1, "b", 1) ) < 0 );
+    BOOST_CHECK( basic("a", 1, "b", 1).woCompare( basic("a", 1) ) > 0 );
 }
 
 BOOST_FIXTURE_TEST_CASE(WoSortOrder, Base)
 {
-    BOOST_CHECK( BSON( "a" << 1 ).woSortOrder( BSON( "a" << 2 ), BSON( "b" << 1 << "a" << 1 ) ) < 0 );
-    BOOST_CHECK( fromjson( "{a:null}" ).woSortOrder( BSON( "b" << 1 ), BSON( "a" << 1 ) ) == 0 );
+    BOOST_CHECK( basic( "a", 1 ).woSortOrder( basic("a", 2), basic("b", 1, "a", 1) ) < 0 );
+    BOOST_CHECK( fromjson( "{a:null}" ).woSortOrder( basic("b", 1), basic("a", 1) ) == 0 );
 }
 
 BOOST_FIXTURE_TEST_CASE(MultiKeySortOrder, Base)
 {
-    BOOST_CHECK( BSON( "x" << "a" ).woCompare( BSON( "x" << "b" ) ) < 0 );
-    BOOST_CHECK( BSON( "x" << "b" ).woCompare( BSON( "x" << "a" ) ) > 0 );
+    BOOST_CHECK( basic( "x" , "a" ).woCompare( basic("x", "b") ) < 0 );
+    BOOST_CHECK( basic( "x" , "b" ).woCompare( basic("x", "a") ) > 0 );
 
-    BOOST_CHECK( BSON( "x" << "a" << "y" << "a" ).woCompare( BSON( "x" << "a" << "y" << "b" ) ) < 0 );
-    BOOST_CHECK( BSON( "x" << "a" << "y" << "a" ).woCompare( BSON( "x" << "b" << "y" << "a" ) ) < 0 );
-    BOOST_CHECK( BSON( "x" << "a" << "y" << "a" ).woCompare( BSON( "x" << "b" ) ) < 0 );
+    BOOST_CHECK( basic("x", "a", "y", "a").woCompare( basic("x", "a", "y", "b") ) < 0 );
+    BOOST_CHECK( basic("x", "a", "y", "a").woCompare( basic("x", "b", "y", "a") ) < 0 );
+    BOOST_CHECK( basic("x", "a", "y", "a").woCompare( basic("x", "b") ) < 0 );
 
-    BOOST_CHECK( BSON( "x" << "c" ).woCompare( BSON( "x" << "b" << "y" << "h" ) ) > 0 );
-    BOOST_CHECK( BSON( "x" << "b" << "y" << "b" ).woCompare( BSON( "x" << "c" ) ) < 0 );
+    BOOST_CHECK( basic( "x" , "c" ).woCompare( basic("x", "b", "y", "h") ) > 0 );
+    BOOST_CHECK( basic("x", "b", "y", "b").woCompare( basic("x", "c") ) < 0 );
 
-    BSONObj key = BSON( "x" << 1 << "y" << 1 );
+    BSONObj key = basic("x", 1, "y", 1);
 
-    BOOST_CHECK( BSON( "x" << "c" ).woSortOrder( BSON( "x" << "b" << "y" << "h" ) , key ) > 0 );
-    BOOST_CHECK( BSON( "x" << "b" << "y" << "b" ).woCompare( BSON( "x" << "c" ) , key ) < 0 );
+    BOOST_CHECK( basic( "x" , "c" ).woSortOrder( basic("x", "b", "y", "h") , key ) > 0 );
+    BOOST_CHECK( basic("x", "b", "y", "b").woCompare( basic("x", "c") , key ) < 0 );
 
-    key = BSON( "" << 1 << "" << 1 );
+    key = basic("", 1, "", 1);
 
-    BOOST_CHECK( BSON( "" << "c" ).woSortOrder( BSON( "" << "b" << "" << "h" ) , key ) > 0 );
-    BOOST_CHECK( BSON( "" << "b" << "" << "b" ).woCompare( BSON( "" << "c" ) , key ) < 0 );
+    BOOST_CHECK( basic( "" , "c" ).woSortOrder( basic("", "b", "", "h") , key ) > 0 );
+    BOOST_CHECK( basic("", "b", "", "b").woCompare( basic("", "c") , key ) < 0 );
 
     {
         BSONObjBuilder b;
         b.append( "" , "c" );
         b.appendNull( "" );
         BSONObj o = b.obj();
-        BOOST_CHECK( o.woSortOrder( BSON( "" << "b" << "" << "h" ) , key ) > 0 );
-        BOOST_CHECK( BSON( "" << "b" << "" << "h" ).woSortOrder( o , key ) < 0 );
+        BOOST_CHECK( o.woSortOrder( basic("", "b", "", "h") , key ) > 0 );
+        BOOST_CHECK( basic("", "b", "", "h").woSortOrder( o , key ) < 0 );
 
     }
 
-    BOOST_CHECK( BSON( "" << "a" ).woCompare( BSON( "" << "a" << "" << "c" ) ) < 0 );
+    BOOST_CHECK( basic( "" , "a" ).woCompare( basic("", "a", "", "c") ) < 0 );
     {
         BSONObjBuilder b;
         b.append( "" , "a" );
         b.appendNull( "" );
-        BOOST_CHECK(  b.obj().woCompare( BSON( "" << "a" << "" << "c" ) ) < 0 ); // SERVER-282
+        BOOST_CHECK(  b.obj().woCompare( basic("", "a", "", "c") ) < 0 );
     }
 
 }
@@ -181,54 +186,56 @@ BOOST_FIXTURE_TEST_CASE(Nan, Base)
     BOOST_CHECK( isNaN(nan2) );
     BOOST_CHECK( !isNaN(inf) );
 
-    BOOST_CHECK( BSON( "a" << inf ).woCompare( BSON( "a" << inf ) ) == 0 );
-    BOOST_CHECK( BSON( "a" << inf ).woCompare( BSON( "a" << 1 ) ) > 0 );
-    BOOST_CHECK( BSON( "a" << 1 ).woCompare( BSON( "a" << inf ) ) < 0 );
+    BOOST_CHECK( basic("a", inf).woCompare( basic("a", inf) ) == 0 );
+    BOOST_CHECK( basic("a", inf).woCompare( basic("a", 1) ) > 0 );
+    BOOST_CHECK( basic("a", 1).woCompare( basic("a", inf) ) < 0 );
 
-    BOOST_CHECK( BSON( "a" << nan ).woCompare( BSON( "a" << nan ) ) == 0 );
-    BOOST_CHECK( BSON( "a" << nan ).woCompare( BSON( "a" << 1 ) ) < 0 );
+    BOOST_CHECK( basic("a", nan).woCompare( basic("a", nan) ) == 0 );
+    BOOST_CHECK( basic("a", nan).woCompare( basic("a", 1) ) < 0 );
 
-    BOOST_CHECK( BSON( "a" << nan ).woCompare( BSON( "a" << 5000000000LL ) ) < 0 );
+    BOOST_CHECK( basic("a", nan).woCompare( basic( "a" , 5000000000LL ) ) < 0 );
 
-    BOOST_CHECK( BSON( "a" << 1 ).woCompare( BSON( "a" << nan ) ) > 0 );
+    BOOST_CHECK( basic("a", 1).woCompare( basic("a", nan) ) > 0 );
 
-    BOOST_CHECK( BSON( "a" << nan2 ).woCompare( BSON( "a" << nan2 ) ) == 0 );
-    BOOST_CHECK( BSON( "a" << nan2 ).woCompare( BSON( "a" << 1 ) ) < 0 );
-    BOOST_CHECK( BSON( "a" << 1 ).woCompare( BSON( "a" << nan2 ) ) > 0 );
+    BOOST_CHECK( basic("a", nan2).woCompare( basic("a", nan2) ) == 0 );
+    BOOST_CHECK( basic("a", nan2).woCompare( basic("a", 1) ) < 0 );
+    BOOST_CHECK( basic("a", 1).woCompare( basic("a", nan2) ) > 0 );
 
-    BOOST_CHECK( BSON( "a" << inf ).woCompare( BSON( "a" << nan ) ) > 0 );
-    BOOST_CHECK( BSON( "a" << inf ).woCompare( BSON( "a" << nan2 ) ) > 0 );
-    BOOST_CHECK( BSON( "a" << nan ).woCompare( BSON( "a" << nan2 ) ) == 0 );
+    BOOST_CHECK( basic("a", inf).woCompare( basic("a", nan) ) > 0 );
+    BOOST_CHECK( basic("a", inf).woCompare( basic("a", nan2) ) > 0 );
+    BOOST_CHECK( basic("a", nan).woCompare( basic("a", nan2) ) == 0 );
 }
 
-BOOST_AUTO_TEST_CASE(AppendAs)
+BOOST_FIXTURE_TEST_CASE(AppendAs, Base)
 {
     BSONObjBuilder b;
     {
-        BSONObj foo = BSON( "foo" << 1 );
+        BSONObj foo = basic("foo", 1);
         b.appendAs( foo.firstElement(), "bar" );
     }
-    BOOST_CHECK_EQUAL( BSON( "bar" << 1 ), b.done() );
+    BOOST_CHECK_EQUAL( basic("bar", 1), b.done() );
 }
 
-BOOST_AUTO_TEST_CASE(ArrayAppendAs)
+BOOST_FIXTURE_TEST_CASE(ArrayAppendAs, Base)
 {
     BSONArrayBuilder b;
     {
-        BSONObj foo = BSON( "foo" << 1 );
+        BSONObj foo = basic("foo", 1);
         b.appendAs( foo.firstElement(), "3" );
     }
     BSONArray a = b.arr();
-    BSONObj expected = BSON( "3" << 1 );
+    BSONObj expected = basic( "3" , 1 );
     BOOST_CHECK_EQUAL( expected.firstElement(), a[ 3 ] );
     BOOST_CHECK_EQUAL( 4, a.nFields() );
 }
 
-BOOST_AUTO_TEST_CASE(GetField)
+BOOST_FIXTURE_TEST_CASE(GetField, Base)
 {
-    BSONObj o = BSON( "a" << 1 <<
-                      "b" << BSON( "a" << 2 ) <<
-                      "c" << BSON_ARRAY( BSON( "a" << 3 ) << BSON( "a" << 4 ) ) );
+    BSONObj o = BSONObjBuilder()
+        .append("a",1)
+        .append("b", basic("a", 2))
+        .append("c", BSONArrayBuilder().append(basic("a", 3)).append(basic("a", 4)).arr())
+        .obj();
     BOOST_CHECK_EQUAL( 1 , o.getFieldDotted( "a" ).numberInt() );
     BOOST_CHECK_EQUAL( 2 , o.getFieldDotted( "b.a" ).numberInt() );
     BOOST_CHECK_EQUAL( 3 , o.getFieldDotted( "c.0.a" ).numberInt() );
@@ -240,7 +247,7 @@ static BSONObj recursiveBSON( int depth )
 {
     BSONObjBuilder b;
     if ( depth==0 ) {
-        b << "name" << "Joe";
+        b.append("name", "Joe");
         return b.obj();
     }
     b.append( "test", recursiveBSON( depth - 1) );

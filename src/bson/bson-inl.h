@@ -332,54 +332,6 @@ dodouble:
         return false;
     }
 
-    inline BSONObjBuilderValueStream::BSONObjBuilderValueStream( BSONObjBuilder * builder ) {
-        _fieldName = 0;
-        _builder = builder;
-    }
-
-    template<class T>
-    inline BSONObjBuilder& BSONObjBuilderValueStream::operator<<( T value ) {
-        _builder->append(_fieldName, value);
-        _fieldName = 0;
-        return *_builder;
-    }
-
-    inline BSONObjBuilder& BSONObjBuilderValueStream::operator<<( const BSONElement& e ) {
-        _builder->appendAs( e , _fieldName );
-        _fieldName = 0;
-        return *_builder;
-    }
-
-    inline Labeler BSONObjBuilderValueStream::operator<<( const Labeler::Label &l ) {
-        return Labeler( l, this );
-    }
-
-    inline void BSONObjBuilderValueStream::endField( const char *nextFieldName ) {
-        if ( _fieldName && haveSubobj() ) {
-            _builder->append( _fieldName, subobj()->done() );
-        }
-        _subobj.reset();
-        _fieldName = nextFieldName;
-    }
-
-    inline BSONObjBuilder *BSONObjBuilderValueStream::subobj() {
-        if ( !haveSubobj() )
-            _subobj.reset( new BSONObjBuilder() );
-        return _subobj.get();
-    }
-
-    template<class T> inline
-    BSONObjBuilder& Labeler::operator<<( T value ) {
-        s_->subobj()->append( l_.l_, value );
-        return *s_->_builder;
-    }
-
-    inline
-    BSONObjBuilder& Labeler::operator<<( const BSONElement& e ) {
-        s_->subobj()->appendAs( e, l_.l_ );
-        return *s_->_builder;
-    }
-
     // {a: {b:1}} -> {a.b:1}
     void nested2dotted(BSONObjBuilder& b, const BSONObj& obj, const std::string& base="");
     inline BSONObj nested2dotted(const BSONObj& obj) {
@@ -572,7 +524,7 @@ dodouble:
             break;
         case RegEx: {
             const char *p = value();
-            size_t len1 = ( maxLen == -1 ) ? strlen( p ) : (size_t)mongo::strnlen( p, remain );
+            size_t len1 = ( maxLen == -1 ) ? std::strlen( p ) : std::strlen( p );
             //massert( 10318 ,  "Invalid regex string", len1 != -1 ); // ERH - 4/28/10 - don't think this does anything
             p = p + len1 + 1;
             size_t len2;
@@ -581,7 +533,7 @@ dodouble:
             else {
                 size_t x = remain - len1 - 1;
                 assert( x <= 0x7fffffff );
-                len2 = mongo::strnlen( p, (int) x );
+                len2 = std::strlen( p );
             }
             //massert( 10319 ,  "Invalid regex options string", len2 != -1 ); // ERH - 4/28/10 - don't think this does anything
             x = (int) (len1 + 1 + len2 + 1);

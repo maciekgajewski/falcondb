@@ -50,8 +50,6 @@ namespace mongo {
 
         virtual void appendNull( ) = 0;
 
-        virtual BSONBuilderBase& operator<<( const BSONElement& e ) = 0;
-
         virtual bool isArray() const = 0;
     };
 

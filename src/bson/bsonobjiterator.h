@@ -18,6 +18,7 @@
 #pragma once
 
 #include <boost/preprocessor/cat.hpp> // like the ## operator but works with __LINE__
+#include <boost/lexical_cast.hpp>
 
 #include "bson/bsonobj.hpp"
 
@@ -142,7 +143,7 @@ namespace mongo {
             BSONElement e = i.next();
             const char *f = e.fieldName();
             try {
-                unsigned u = stringToNum(f);
+                unsigned u = boost::lexical_cast<unsigned>(f);
                 assert( u < 1000000 );
                 if( u >= v.size() )
                     v.resize(u+1);

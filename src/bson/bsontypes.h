@@ -25,7 +25,6 @@ namespace mongo {
     class BSONElement;
     class BSONObj;
     class BSONObjBuilder;
-    class BSONObjBuilderValueStream;
     class BSONObjIterator;
     class Ordering;
     class Record;

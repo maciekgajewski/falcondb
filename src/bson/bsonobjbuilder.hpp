@@ -82,7 +82,7 @@ namespace mongo {
     class BSONObjBuilder : public BSONBuilderBase, private boost::noncopyable {
     public:
         /** @param initsize this is just a hint as to the final size of the object */
-        BSONObjBuilder(int initsize=512) : _b(_buf), _buf(initsize + sizeof(unsigned)), _offset( sizeof(unsigned) ), _s( this ) , _tracker(0) , _doneCalled(false) {
+        BSONObjBuilder(int initsize=512) : _b(_buf), _buf(initsize + sizeof(unsigned)), _offset( sizeof(unsigned) ), _tracker(0) , _doneCalled(false) {
             _b.appendNum((unsigned)0); // ref-count
             _b.skip(4); /*leave room for size field and ref-count*/
         }
@@ -90,11 +90,11 @@ namespace mongo {
         /** @param baseBuilder construct a BSONObjBuilder using an existing BufBuilder
          *  This is for more efficient adding of subobjects/arrays. See docs for subobjStart for example.
          */
-        BSONObjBuilder( BufBuilder &baseBuilder ) : _b( baseBuilder ), _buf( 0 ), _offset( baseBuilder.len() ), _s( this ) , _tracker(0) , _doneCalled(false) {
+        BSONObjBuilder( BufBuilder &baseBuilder ) : _b( baseBuilder ), _buf( 0 ), _offset( baseBuilder.len() ), _tracker(0) , _doneCalled(false) {
             _b.skip( 4 );
         }
 
-        BSONObjBuilder( const BSONSizeTracker & tracker ) : _b(_buf) , _buf(tracker.getSize() + sizeof(unsigned) ), _offset( sizeof(unsigned) ), _s( this ) , _tracker( (BSONSizeTracker*)(&tracker) ) , _doneCalled(false) {
+        BSONObjBuilder( const BSONSizeTracker & tracker ) : _b(_buf) , _buf(tracker.getSize() + sizeof(unsigned) ), _offset( sizeof(unsigned) ), _tracker( (BSONSizeTracker*)(&tracker) ) , _doneCalled(false) {
             _b.appendNum((unsigned)0); // ref-count
             _b.skip(4);
         }
@@ -598,47 +598,11 @@ namespace mongo {
             return o.str();
         }
 
-        /** Stream oriented way to add field names and values. */
-        BSONObjBuilderValueStream &operator<<(const char * name ) {
-            _s.endField( name );
-            return _s;
-        }
-
-        /** Stream oriented way to add field names and values. */
-        BSONObjBuilder& operator<<( GENOIDLabeler ) { return genOID(); }
-
         // prevent implicit string conversions which would allow bad things like BSON( BSON( "foo" << 1 ) << 2 )
         struct ForceExplicitString {
             ForceExplicitString( const std::string &str ) : str_( str ) {}
             std::string str_;
         };
-
-        /** Stream oriented way to add field names and values. */
-        BSONObjBuilderValueStream &operator<<( const ForceExplicitString& name ) {
-            return operator<<( name.str_.c_str() );
-        }
-
-        Labeler operator<<( const Labeler::Label &l ) {
-            assert( _s.subobjStarted() );
-            return _s << l;
-        }
-
-        template<typename T>
-        BSONObjBuilderValueStream& operator<<( const BSONField<T>& f ) {
-            _s.endField( f.name().c_str() );
-            return _s;
-        }
-
-        template<typename T>
-        BSONObjBuilder& operator<<( const BSONFieldValue<T>& v ) {
-            append( v.name().c_str() , v.value() );
-            return *this;
-        }
-
-        BSONObjBuilder& operator<<( const BSONElement& e ){
-            append( e );
-            return *this;
-        }
 
         bool isArray() const {
             return false;
@@ -661,7 +625,6 @@ namespace mongo {
                 return _b.buf() + _offset;
 
             _doneCalled = true;
-            _s.endField();
             _b.appendNum((char) EOO);
             char *data = _b.buf() + _offset;
             int size = _b.len() - _offset;
@@ -674,7 +637,6 @@ namespace mongo {
         BufBuilder &_b;
         BufBuilder _buf;
         int _offset;
-        BSONObjBuilderValueStream _s;
         BSONSizeTracker * _tracker;
         bool _doneCalled;
 
@@ -697,15 +659,6 @@ namespace mongo {
         BSONArrayBuilder& append(const BSONElement& e) {
             _b.appendAs(e, num());
             return *this;
-        }
-
-        BSONArrayBuilder& operator<<(const BSONElement& e) {
-            return append(e);
-        }
-
-        template <typename T>
-        BSONArrayBuilder& operator<<(const T& x) {
-            return append(x);
         }
 
         void appendNull() {
@@ -876,18 +829,4 @@ namespace mongo {
     inline BSONArrayBuilder& BSONArrayBuilder::append( const std::set< T >& vals ) {
         return _appendArrayIt< std::set< T > >( *this, vals );
     }
-
-
-    // $or helper: OR(BSON("x" << GT << 7), BSON("y" << LT 6));
-    inline BSONObj OR(const BSONObj& a, const BSONObj& b)
-    { return BSON( "$or" << BSON_ARRAY(a << b) ); }
-    inline BSONObj OR(const BSONObj& a, const BSONObj& b, const BSONObj& c)
-    { return BSON( "$or" << BSON_ARRAY(a << b << c) ); }
-    inline BSONObj OR(const BSONObj& a, const BSONObj& b, const BSONObj& c, const BSONObj& d)
-    { return BSON( "$or" << BSON_ARRAY(a << b << c << d) ); }
-    inline BSONObj OR(const BSONObj& a, const BSONObj& b, const BSONObj& c, const BSONObj& d, const BSONObj& e)
-    { return BSON( "$or" << BSON_ARRAY(a << b << c << d << e) ); }
-    inline BSONObj OR(const BSONObj& a, const BSONObj& b, const BSONObj& c, const BSONObj& d, const BSONObj& e, const BSONObj& f)
-    { return BSON( "$or" << BSON_ARRAY(a << b << c << d << e << f) ); }
-
 }

@@ -18,6 +18,7 @@
  */
 
 #include "bson/jsobj.hpp"
+#include "bson/lex_num_cmp.hpp"
 
 #include <limits>
 #include <cmath>
@@ -48,134 +49,11 @@ BOOST_STATIC_ASSERT( sizeof(double) == 8 );
 BOOST_STATIC_ASSERT( sizeof(mongo::Date_t) == 8 );
 BOOST_STATIC_ASSERT( sizeof(mongo::OID) == 12 );
 
+using namespace bson;
+
 namespace mongo {
 
     BSONElement eooElement;
-
-    /** Functor for combining lexical and numeric comparisons. */
-    class LexNumCmp {
-    public:
-        /** @param lexOnly - compare all characters lexically, including digits. */
-        LexNumCmp( bool lexOnly );
-        /**
-         * Non numeric characters are compared lexicographically; numeric substrings
-         * are compared numerically; dots separate ordered comparable subunits.
-         * For convenience, character 255 is greater than anything else.
-         * @param lexOnly - compare all characters lexically, including digits.
-         */
-        static int cmp( const char *s1, const char *s2, bool lexOnly );
-        int cmp( const char *s1, const char *s2 ) const;
-        bool operator()( const char *s1, const char *s2 ) const;
-        bool operator()( const std::string &s1, const std::string &s2 ) const;
-    private:
-        bool _lexOnly;
-    };
-    LexNumCmp::LexNumCmp( bool lexOnly ) :
-    _lexOnly( lexOnly ) {
-    }
-
-    int LexNumCmp::cmp( const char *s1, const char *s2, bool lexOnly ) {
-
-        bool startWord = true;
-
-        while( *s1 && *s2 ) {
-
-            bool d1 = ( *s1 == '.' );
-            bool d2 = ( *s2 == '.' );
-            if ( d1 && !d2 )
-                return -1;
-            if ( d2 && !d1 )
-                return 1;
-            if ( d1 && d2 ) {
-                ++s1; ++s2;
-                startWord = true;
-                continue;
-            }
-
-            bool p1 = ( *s1 == (char)255 );
-            bool p2 = ( *s2 == (char)255 );
-            //cout << "\t\t " << p1 << "\t" << p2 << endl;
-            if ( p1 && !p2 )
-                return 1;
-            if ( p2 && !p1 )
-                return -1;
-
-            if ( !lexOnly ) {
-
-                bool n1 = isNumber( *s1 );
-                bool n2 = isNumber( *s2 );
-
-                if ( n1 && n2 ) {
-                    // get rid of leading 0s
-                    if ( startWord ) {
-                        while ( *s1 == '0' ) s1++;
-                        while ( *s2 == '0' ) s2++;
-                    }
-
-                    char * e1 = (char*)s1;
-                    char * e2 = (char*)s2;
-
-                    // find length
-                    // if end of string, will break immediately ('\0')
-                    while ( isNumber (*e1) ) e1++;
-                    while ( isNumber (*e2) ) e2++;
-
-                    int len1 = (int)(e1-s1);
-                    int len2 = (int)(e2-s2);
-
-                    int result;
-                    // if one is longer than the other, return
-                    if ( len1 > len2 ) {
-                        return 1;
-                    }
-                    else if ( len2 > len1 ) {
-                        return -1;
-                    }
-                    // if the lengths are equal, just strcmp
-                    else if ( (result = strncmp(s1, s2, len1)) != 0 ) {
-                        return result;
-                    }
-
-                    // otherwise, the numbers are equal
-                    s1 = e1;
-                    s2 = e2;
-                    startWord = false;
-                    continue;
-                }
-
-                if ( n1 )
-                    return 1;
-
-                if ( n2 )
-                    return -1;
-            }
-
-            if ( *s1 > *s2 )
-                return 1;
-
-            if ( *s2 > *s1 )
-                return -1;
-
-            s1++; s2++;
-            startWord = false;
-        }
-
-        if ( *s1 )
-            return 1;
-        if ( *s2 )
-            return -1;
-        return 0;
-    }
-
-    int LexNumCmp::cmp( const char *s1, const char *s2 ) const {
-        return cmp( s1, s2, _lexOnly );
-    }
-    bool LexNumCmp::operator()( const char *s1, const char *s2 ) const {
-        return cmp( s1, s2 ) < 0;
-    }
-    bool LexNumCmp::operator()( const std::string &s1, const std::string &s2 ) const {
-        return (*this)( s1.c_str(), s2.c_str() );
-    }
 
     // need to move to bson/, but has dependency on base64 so move that to bson/util/ first.
     inline string BSONElement::jsonString( JsonStringFormat format, bool includeFieldNames, int pretty ) const {
@@ -455,16 +333,6 @@ namespace mongo {
     }
 
     /* BSONObj ------------------------------------------------------------*/
-
-    /*
-    string BSONObj::md5() const {
-        md5digest d;
-        md5_state_t st;
-        md5_init(&st);
-        md5_append( &st , (const md5_byte_t*)_objdata , objsize() );
-        md5_finish(&st, d);
-        return digestToString( d );
-    }*/
 
     string BSONObj::jsonString( JsonStringFormat format, int pretty ) const {
 
@@ -949,19 +817,6 @@ namespace mongo {
         return true;
     }
 
-    /*
-    void BSONObj::dump() const {
-        out() << hex;
-        const char *p = objdata();
-        for ( int i = 0; i < objsize(); i++ ) {
-            out() << i << '\t' << ( 0xff & ( (unsigned) *p ) );
-            if ( *p >= 'A' && *p <= 'z' )
-                out() << '\t' << *p;
-            out() << endl;
-            p++;
-        }
-    }*/
-
     void nested2dotted(BSONObjBuilder& b, const BSONObj& obj, const string& base) {
         BSONObjIterator it(obj);
         while (it.more()) {
@@ -1018,153 +873,7 @@ namespace mongo {
     } minkeydata;
     BSONObj minKey((const char *) &minkeydata);
 
-    /*
-        struct JSObj0 {
-            JSObj0() {
-                totsize = 5;
-                eoo = EOO;
-            }
-            int totsize;
-            char eoo;
-        } js0;
-    */
 #pragma pack()
-
-#if 0
-    struct BsonUnitTest : public StartupTest {
-        void testRegex() {
-
-            BSONObjBuilder b;
-            b.appendRegex("x", "foo");
-            BSONObj o = b.done();
-
-            BSONObjBuilder c;
-            c.appendRegex("x", "goo");
-            BSONObj p = c.done();
-
-            assert( !o.binaryEqual( p ) );
-            assert( o.woCompare( p ) < 0 );
-
-        }
-        void testoid() {
-            OID id;
-            id.init();
-            //            sleepsecs(3);
-
-            OID b;
-            // goes with sleep above...
-            // b.init();
-            // assert( memcmp(id.getData(), b.getData(), 12) < 0 );
-
-            b.init( id.str() );
-            assert( b == id );
-        }
-
-        void testbounds() {
-            BSONObj l , r;
-            {
-                BSONObjBuilder b;
-                b.append( "x" , std::numeric_limits<long long>::max() );
-                l = b.obj();
-            }
-            {
-                BSONObjBuilder b;
-                b.append( "x" , std::numeric_limits<double>::max() );
-                r = b.obj();
-            }
-            assert( l.woCompare( r ) < 0 );
-            assert( r.woCompare( l ) > 0 );
-            {
-                BSONObjBuilder b;
-                b.append( "x" , std::numeric_limits<int>::max() );
-                l = b.obj();
-            }
-            assert( l.woCompare( r ) < 0 );
-            assert( r.woCompare( l ) > 0 );
-        }
-
-        void testorder() {
-            {
-                BSONObj x,y,z;
-                { BSONObjBuilder b; b.append( "x" , (long long)2 ); x = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (int)3 ); y = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (long long)4 ); z = b.obj(); }
-                assert( x.woCompare( y ) < 0 );
-                assert( x.woCompare( z ) < 0 );
-                assert( y.woCompare( x ) > 0 );
-                assert( z.woCompare( x ) > 0 );
-                assert( y.woCompare( z ) < 0 );
-                assert( z.woCompare( y ) > 0 );
-            }
-
-            {
-                BSONObj ll,d,i,n,u;
-                { BSONObjBuilder b; b.append( "x" , (long long)2 ); ll = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (double)2 ); d = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (int)2 ); i = b.obj(); }
-                { BSONObjBuilder b; b.appendNull( "x" ); n = b.obj(); }
-                { BSONObjBuilder b; u = b.obj(); }
-
-                assert( ll.woCompare( u ) == d.woCompare( u ) );
-                assert( ll.woCompare( u ) == i.woCompare( u ) );
-                BSONObj k = BSON( "x" << 1 );
-                assert( ll.woCompare( u , k ) == d.woCompare( u , k ) );
-                assert( ll.woCompare( u , k ) == i.woCompare( u , k ) );
-
-                assert( u.woCompare( ll ) == u.woCompare( d ) );
-                assert( u.woCompare( ll ) == u.woCompare( i ) );
-                assert( u.woCompare( ll , k ) == u.woCompare( d , k ) );
-                assert( u.woCompare( ll , k ) == u.woCompare( d , k ) );
-
-                assert( i.woCompare( n ) == d.woCompare( n ) );
-
-                assert( ll.woCompare( n ) == d.woCompare( n ) );
-                assert( ll.woCompare( n ) == i.woCompare( n ) );
-                assert( ll.woCompare( n , k ) == d.woCompare( n , k ) );
-                assert( ll.woCompare( n , k ) == i.woCompare( n , k ) );
-
-                assert( n.woCompare( ll ) == n.woCompare( d ) );
-                assert( n.woCompare( ll ) == n.woCompare( i ) );
-                assert( n.woCompare( ll , k ) == n.woCompare( d , k ) );
-                assert( n.woCompare( ll , k ) == n.woCompare( d , k ) );
-            }
-
-            {
-                BSONObj l,r;
-                { BSONObjBuilder b; b.append( "x" , "eliot" ); l = b.obj(); }
-                { BSONObjBuilder b; b.appendSymbol( "x" , "eliot" ); r = b.obj(); }
-                assert( l.woCompare( r ) == 0 );
-                assert( r.woCompare( l ) == 0 );
-            }
-        }
-
-        void run() {
-            testRegex();
-            BSONObjBuilder A,B,C;
-            A.append("x", 2);
-            B.append("x", 2.0);
-            C.append("x", 2.1);
-            BSONObj a = A.done();
-            BSONObj b = B.done();
-            BSONObj c = C.done();
-            assert( !a.binaryEqual( b ) ); // comments on operator==
-            int cmp = a.woCompare(b);
-            assert( cmp == 0 );
-            cmp = a.woCompare(c);
-            assert( cmp < 0 );
-            testoid();
-            testbounds();
-            testorder();
-        }
-    } bson_unittest;
-#endif
-    Labeler::Label GT( "$gt" );
-    Labeler::Label GTE( "$gte" );
-    Labeler::Label LT( "$lt" );
-    Labeler::Label LTE( "$lte" );
-    Labeler::Label NE( "$ne" );
-    Labeler::Label NIN( "$nin" );
-    Labeler::Label BSIZE( "$size" );
 
     void BSONObjBuilder::appendMinForType( const StringData& fieldName , int t ) {
         switch ( t ) {
@@ -1280,26 +989,13 @@ namespace mongo {
         assert(false);
     }
 
-    bool fieldsMatch(const BSONObj& lhs, const BSONObj& rhs) {
-        BSONObjIterator l(lhs);
-        BSONObjIterator r(rhs);
-
-        while (l.more() && r.more()){
-            if (strcmp(l.next().fieldName(), r.next().fieldName())) {
-                return false;
-            }
-        }
-
-        return !(l.more() || r.more()); // false if lhs and rhs have diff nFields()
-    }
-
     /** Compare two bson elements, provided as const char *'s, by field name. */
     class BSONIteratorSorted::ElementFieldCmp {
     public:
         ElementFieldCmp( bool isArray );
         bool operator()( const char *s1, const char *s2 ) const;
     private:
-        LexNumCmp _cmp;
+        lex_num_cmp _cmp;
     };
     
     BSONIteratorSorted::ElementFieldCmp::ElementFieldCmp( bool isArray ) :

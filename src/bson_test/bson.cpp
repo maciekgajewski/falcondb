@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(order)
 
         BOOST_CHECK_EQUAL( ll.woCompare( u ) , d.woCompare( u ) );
         BOOST_CHECK_EQUAL( ll.woCompare( u ) , i.woCompare( u ) );
-        BSONObj k = BSON( "x" << 1 );
+        BSONObj k = BSONObjBuilder().append("x",  1).obj();
         BOOST_CHECK_EQUAL( ll.woCompare( u , k ) , d.woCompare( u , k ) );
         BOOST_CHECK_EQUAL( ll.woCompare( u , k ) , i.woCompare( u , k ) );
 
