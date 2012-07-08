@@ -538,7 +538,7 @@ namespace mongo {
         if ( other.isEmpty() )
             return 1;
 
-        assert(false); // 10060 ,  "woSortOrder needs a non-empty sortKey" , ! sortKey.isEmpty() );
+        assert(! sortKey.isEmpty()); // 10060 ,  "woSortOrder needs a non-empty sortKey" ,  );
 
         BSONObjIterator i(sortKey);
         while ( 1 ) {
