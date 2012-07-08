@@ -29,7 +29,6 @@
 #include "bson/bsonelement.hpp"
 #include "bson/bsonobj.hpp"
 #include "bson/bsonmisc.h"
-#include "bson/bson_builder_base.h"
 
 namespace mongo {
 
@@ -79,7 +78,7 @@ namespace mongo {
     /** Utility for creating a BSONObj.
         See also the BSON() and BSON_ARRAY() macros.
     */
-    class BSONObjBuilder : public BSONBuilderBase, private boost::noncopyable {
+    class BSONObjBuilder : private boost::noncopyable {
     public:
         /** @param initsize this is just a hint as to the final size of the object */
         BSONObjBuilder(int initsize=512) : _b(_buf), _buf(initsize + sizeof(unsigned)), _offset( sizeof(unsigned) ), _tracker(0) , _doneCalled(false) {
@@ -637,7 +636,7 @@ namespace mongo {
         static bool numStrsReady; // for static init safety. see comments in db/jsobj.cpp
     };
 
-    class BSONArrayBuilder : public BSONBuilderBase, private boost::noncopyable {
+    class BSONArrayBuilder : private boost::noncopyable {
     public:
         BSONArrayBuilder() : _i(0), _b() {}
         BSONArrayBuilder( BufBuilder &_b ) : _i(0), _b(_b) {}

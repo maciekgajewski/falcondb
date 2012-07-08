@@ -16,6 +16,8 @@
  */
 
 #pragma once
+#ifndef BSON_OPTIME_HPP
+#define BSON_OPTIME_HPP
 
 #include "bson/util/misc.h"
 
@@ -145,3 +147,5 @@ namespace mongo {
 #pragma pack()
 
 } // namespace mongo
+
+#endif // BSON_OPTIME_HPP

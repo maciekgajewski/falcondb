@@ -5,7 +5,7 @@ add_library(bson
     bsonobjbuilder.hpp bsonobjbuilder.ipp
     bsonobjiterator.hpp
     json.hpp json.cpp
-    jsobj.cpp jsobj.hpp
+    jsobj.cpp
     oid.cpp oid.hpp
     base64.cpp base64.hpp
     nonce.cpp nonce.hpp
@@ -14,5 +14,8 @@ add_library(bson
     buf_builder.hpp
     string_builder.hpp
     atomic.hpp
-
+    ordering.hpp
+    string_data.hpp
+    embedded_builder.hpp
+    optime.hpp
 )

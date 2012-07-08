@@ -18,6 +18,8 @@
  */
 
 #pragma once
+#ifndef BSON_ORDERING_HPP
+#define BSON_ORDERING_HPP
 
 #include <ctime>
 #include <limits>
@@ -108,3 +110,5 @@ namespace mongo {
         return -1;
     }
 }
+
+#endif // BSON_ORDERING_HPP

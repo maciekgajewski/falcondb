@@ -22,6 +22,11 @@
 #ifndef BSON_ELEMENT_IPP
 #define BSON_ELEMENT_IPP
 
+#include "bson/bsonelement.hpp"
+#include "bson/bsonobj.hpp"
+#include "bson/bsonobjbuilder.hpp"
+#include "bson/bsonobjiterator.hpp"
+#include "bson/optime.hpp"
 
 #include <map>
 #include <limits>
@@ -166,7 +171,7 @@ dodouble:
     }
 
     inline BSONObj BSONElement::embeddedObjectUserCheck() const {
-        if ( MONGO_likely(isABSONObj()) )
+        if ( isABSONObj() )
             return BSONObj(value());
         std::stringstream ss;
         ss << "invalid parameter: expected an object (" << fieldName() << ")";
@@ -580,6 +585,24 @@ inline StringBuilder& operator<<( StringBuilder &s, const BSONElement &e ) {
             }
         }
         return ret.str();
+    }
+    inline OpTime BSONElement::_opTime() const {
+        if( type() == mongo::Date || type() == Timestamp )
+            return OpTime( *reinterpret_cast< const unsigned long long* >( value() ) );
+        return OpTime();
+    }
+
+    inline std::string BSONElement::_asCode() const {
+        switch( type() ) {
+        case mongo::String:
+        case Code:
+            return std::string(valuestr(), valuestrsize()-1);
+        case CodeWScope:
+            return std::string(codeWScopeCode(), *(int*)(valuestr())-1);
+        default:
+            assert(false); // 10062 ,  "not code" , 0 );
+        }
+        return "";
     }
 
 

@@ -16,6 +16,8 @@
  */
 
 #pragma once
+#ifndef BSON_OBJ_HPP
+#define BSON_OBJ_HPP
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/noncopyable.hpp>
@@ -25,7 +27,7 @@
 #include <vector>
 
 #include "bson/bsonelement.hpp"
-#include "bson/stringdata.h"
+#include "bson/string_data.hpp"
 #include "bson/atomic.hpp"
 
 namespace mongo {
@@ -527,3 +529,5 @@ namespace mongo {
     };
 
 }
+
+#endif // BSON_OBJ_HPP

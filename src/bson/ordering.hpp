@@ -46,13 +46,6 @@ namespace mongo {
         // for woCompare...
         unsigned descending(unsigned mask) const { return bits & mask; }
 
-        /*operator std::string() const {
-            StringBuilder buf;
-            for ( unsigned i=0; i<nkeys; i++)
-                buf.append( get(i) > 0 ? "+" : "-" );
-            return buf.str();
-        }*/
-
         static Ordering make(const BSONObj& obj) {
             unsigned b = 0;
             BSONObjIterator k(obj);

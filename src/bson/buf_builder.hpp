@@ -140,7 +140,7 @@ public:
 
 private:
     /* "slow" portion of 'grow()'  */
-    void NOINLINE_DECL grow_reallocate() {
+    void grow_reallocate() {
         int a = 64;
         while( a < l )
             a = a * 2;

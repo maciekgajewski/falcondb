@@ -27,8 +27,7 @@
 #include <string.h>
 #include <cassert>
 
-#include "bson/inline_decls.h"
-#include "bson/stringdata.h"
+#include "bson/string_data.hpp"
 
 #include "bson/buf_builder.hpp"
 #include "bson/allocators.hpp"

@@ -19,8 +19,11 @@
  */
 
 #pragma once
-#ifndef BSON_OBJBUILDER_HPP
-#define BSON_OBJBUILDER_HPP
+#ifndef BSON_OBJBUILDER_IPP
+#define BSON_OBJBUILDER_IPP
+
+#include "bson/bsonobjbuilder.hpp"
+#include "bson/optime.hpp"
 
 #include <map>
 #include <limits>
@@ -84,6 +87,17 @@ namespace mongo {
         assert( ! j.more() );
     }
 
+    /**
+    Timestamps are a special BSON datatype that is used internally for replication.
+    Append a timestamp element to the object being ebuilt.
+    @param time - in millis (but stored in seconds)
+    */
+    inline BSONObjBuilder& BSONObjBuilder::appendTimestamp( const StringData& fieldName , uint64_t time , uint32_t inc ) {
+        OpTime t( (unsigned) (time / 1000) , inc );
+        appendTimestamp( fieldName , t.asDate() );
+        return *this;
+    }
+
 } // namespace
 
-#endif // BSON_OBJBUILDER_HPP
+#endif // BSON_OBJBUILDER_IPP

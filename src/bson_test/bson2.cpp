@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(ToStringRecursionDepth)
     nestedBSONString = s.str();
     found = nestedBSONString.find( "..." );
     // did not find the "..." pattern
-    BOOST_CHECK_EQUAL( found!=string::npos, false );
+    BOOST_CHECK_EQUAL( found!=std::string::npos, false );
 
     // recursion depth is equal to max allowed  -- do not shorten the string
     nestedBSON = recursiveBSON( BSONObj::maxToStringRecursionDepth );
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(ToStringRecursionDepth)
     nestedBSONString = s.str();
     found = nestedBSONString.find( "..." );
     // did not find the "..." pattern
-    BOOST_CHECK_EQUAL( found!=string::npos, false );
+    BOOST_CHECK_EQUAL( found!=std::string::npos, false );
 
     // recursion depth - one greater than max allowed -- shorten the string
     nestedBSON = recursiveBSON( BSONObj::maxToStringRecursionDepth + 1 );
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(ToStringRecursionDepth)
     nestedBSONString = s.str();
     found = nestedBSONString.find( "..." );
     // found the "..." pattern
-    BOOST_CHECK_EQUAL( found!=string::npos, true );
+    BOOST_CHECK_EQUAL( found!=std::string::npos, true );
 
     /* recursion depth - one greater than max allowed but with full=true
      * should fail with an assertion

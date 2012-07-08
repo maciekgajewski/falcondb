@@ -17,7 +17,6 @@
  *    limitations under the License.
  */
 
-#include "bson/jsobj.hpp"
 #include "bson/lex_num_cmp.hpp"
 
 #include <limits>
@@ -32,8 +31,8 @@
 #include "bson/json.hpp"
 #include "bson/float_utils.h"
 #include "bson/base64.hpp"
-#include "bson/embedded_builder.h"
-#include "bson/optime.h"
+#include "bson/embedded_builder.hpp"
+#include "bson/optime.hpp"
 
 
 // make sure our assumptions are valid
@@ -48,7 +47,7 @@ namespace mongo {
     BSONElement eooElement;
 
     // need to move to bson/, but has dependency on base64 so move that to bson/util/ first.
-    inline string BSONElement::jsonString( JsonStringFormat format, bool includeFieldNames, int pretty ) const {
+    inline std::string BSONElement::jsonString( JsonStringFormat format, bool includeFieldNames, int pretty ) const {
         BSONType t = type();
         int sign;
         if ( t == Undefined )
@@ -60,7 +59,7 @@ namespace mongo {
         switch ( type() ) {
         case mongo::String:
         case Symbol:
-            s << '"' << escape( string(valuestr(), valuestrsize()-1) ) << '"';
+            s << '"' << escape( std::string(valuestr(), valuestrsize()-1) ) << '"';
             break;
         case NumberLong:
             s << _numberLong();
@@ -326,7 +325,7 @@ namespace mongo {
 
     /* BSONObj ------------------------------------------------------------*/
 
-    string BSONObj::jsonString( JsonStringFormat format, int pretty ) const {
+    std::string BSONObj::jsonString( JsonStringFormat format, int pretty ) const {
 
         if ( isEmpty() ) return "{}";
 
@@ -518,7 +517,7 @@ namespace mongo {
         if ( e.eoo() ) {
             const char *p = strchr(name.data(), '.');
             if ( p ) {
-                string left(name.data(), p-name.data());
+                std::string left(name.data(), p-name.data());
                 const char* next = p+1;
                 BSONElement e = obj->getField( left.c_str() );
 
@@ -575,7 +574,7 @@ namespace mongo {
         BSONElement sub;
 
         if ( p ) {
-            sub = getField( string(name, p-name) );
+            sub = getField( std::string(name, p-name) );
             name = p + 1;
         }
         else {
@@ -809,16 +808,16 @@ namespace mongo {
         return true;
     }
 
-    void nested2dotted(BSONObjBuilder& b, const BSONObj& obj, const string& base) {
+    void nested2dotted(BSONObjBuilder& b, const BSONObj& obj, const std::string& base) {
         BSONObjIterator it(obj);
         while (it.more()) {
             BSONElement e = it.next();
             if (e.type() == Object) {
-                string newbase = base + e.fieldName() + ".";
+                std::string newbase = base + e.fieldName() + ".";
                 nested2dotted(b, e.embeddedObject(), newbase);
             }
             else {
-                string newbase = base + e.fieldName();
+                std::string newbase = base + e.fieldName();
                 b.appendAs(e, newbase);
             }
         }
@@ -1022,7 +1021,7 @@ namespace mongo {
     BSONIteratorSorted( array, ElementFieldCmp( true ) ) {
     }
 
-    bool BSONObjBuilder::appendAsNumber( const StringData& fieldName , const string& data ) {
+    bool BSONObjBuilder::appendAsNumber( const StringData& fieldName , const std::string& data ) {
         if ( data.size() == 0 || data == "-" || data == ".")
             return false;
 

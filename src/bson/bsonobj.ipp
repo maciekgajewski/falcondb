@@ -19,8 +19,8 @@
  */
 
 #pragma once
-#ifndef BSON_OBJ_HPP
-#define BSON_OBJ_HPP
+#ifndef BSON_OBJ_IPP
+#define BSON_OBJ_IPP
 
 #include <map>
 #include <limits>
@@ -336,4 +336,4 @@ inline BSONMap bson2map(const BSONObj& obj) {
 
 } // namespace
 
-#endif // BSON_OBJ_HPP
+#endif // BSON_OBJ_IPP

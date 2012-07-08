@@ -29,11 +29,10 @@
 #endif
 
 #include "bson/bsonobjbuilder.hpp"
-#include "bson/jsobj.hpp"
 #include "bson/json.hpp"
 #include "bson/base64.hpp"
 #include "bson/hex.h"
-#include "bson/optime.h"
+#include "bson/optime.hpp"
 
 using namespace boost::spirit;
 
@@ -93,14 +92,14 @@ namespace mongo {
         void nameFromIndex() {
             fieldNames.back() = BSONObjBuilder::numStr( indexes.back() );
         }
-        string popString() {
-            string ret = ss.str();
+        std::string popString() {
+            std::string ret = ss.str();
             ss.str( "" );
             return ret;
         }
         // Cannot use auto_ptr because its copy constructor takes a non const reference.
         std::vector< boost::shared_ptr< BSONObjBuilder > > builders;
-        std::vector< string > fieldNames;
+        std::vector< std::string > fieldNames;
         std::vector< int > indexes;
         std::stringstream ss;
         std::string ns;
@@ -224,7 +223,7 @@ namespace mongo {
     struct fieldNameEnd {
         fieldNameEnd( ObjectBuilder &_b ) : b( _b ) {}
         void operator() ( const char *start, const char *end ) const {
-            string name = b.popString();
+            std::string name = b.popString();
             /*
             massert( 10338 ,  "Invalid use of reserved field name: " + name,
                      name != "$oid" &&
@@ -242,7 +241,7 @@ namespace mongo {
     struct unquotedFieldNameEnd {
         unquotedFieldNameEnd( ObjectBuilder &_b ) : b( _b ) {}
         void operator() ( const char *start, const char *end ) const {
-            string name( start, end );
+            std::string name( start, end );
             b.fieldNames.back() = name;
         }
         ObjectBuilder &b;
@@ -259,7 +258,7 @@ namespace mongo {
     struct numberValue {
         numberValue( ObjectBuilder &_b ) : b( _b ) {}
         void operator() ( const char *start, const char *end ) const {
-            string raw(start);
+            std::string raw(start);
             double val;
 
             // strtod isn't able to deal with NaN and inf in a portable way.
@@ -467,7 +466,7 @@ namespace mongo {
     struct regexOptions {
         regexOptions( ObjectBuilder &_b ) : b( _b ) {}
         void operator() ( const char *start, const char *end ) const {
-            b.regexOptions = string( start, end );
+            b.regexOptions = std::string( start, end );
         }
         ObjectBuilder &b;
     };
@@ -637,14 +636,14 @@ namespace mongo {
             int limit = strnlen(result.stop , 10);
             if (limit == -1) limit = 10;
             std::cerr << "Failure parsing JSON string near: " << std::string( result.stop, limit ) << std::endl;
-            assert(false); //msgasserted(10340, "Failure parsing JSON string near: " + string( result.stop, limit ));
+            assert(false); //msgasserted(10340, "Failure parsing JSON string near: " + std::string( result.stop, limit ));
         }
         BSONObj ret = b.pop();
         assert( b.empty() );
         return ret;
     }
 
-    BSONObj fromjson( const string &str ) {
+    BSONObj fromjson( const std::string &str ) {
         return fromjson( str.c_str() );
     }
 
