@@ -19,7 +19,7 @@
 
 #include <boost/preprocessor/cat.hpp> // like the ## operator but works with __LINE__
 
-#include "bson/bsonobj.h"
+#include "bson/bsonobj.hpp"
 
 namespace mongo {
 

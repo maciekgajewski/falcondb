@@ -22,10 +22,10 @@
 
 #include <boost/scoped_array.hpp>
 
+// TODO get rid of this file
+
 namespace mongo {
 
-    // see also mongoutils/str.h - perhaps move these there?
-    // see also text.h
 
     void splitStringDelim( const std::string& str , std::vector<std::string>* res , char delim );
 

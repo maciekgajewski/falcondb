@@ -28,7 +28,7 @@
 #include <boost/spirit/utility/lists.hpp>
 #endif
 
-#include "bson/bsonobjbuilder.h"
+#include "bson/bsonobjbuilder.hpp"
 #include "bson/util/builder.h"
 #include "bson/jsobj.hpp"
 #include "bson/json.hpp"

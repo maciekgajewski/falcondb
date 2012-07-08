@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include "bson/bsonobj.h"
+#include "bson/bsonobj.hpp"
 
 namespace mongo {
 

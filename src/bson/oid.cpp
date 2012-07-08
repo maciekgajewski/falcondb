@@ -18,7 +18,7 @@
 #include <boost/functional/hash.hpp>
 
 #include "bson/util/atomic_word.h"
-#include "bson/bsonobjbuilder.h"
+#include "bson/bsonobjbuilder.hpp"
 #include "bson/oid.hpp"
 #include "bson/util/atomic_int.h"
 #include "bson/nonce.hpp"
