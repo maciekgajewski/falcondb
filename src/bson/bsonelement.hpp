@@ -23,10 +23,11 @@
 #include <string>
 #include <vector>
 
-#include "bson/bsontypes.h"
+#include "bson/date.hpp"
 #include "bson/oid.hpp"
-#include "bson/float_utils.h"
 #include "bson/string_builder.hpp"
+#include "bson/enums.hpp"
+#include "bson/float_utils.h"
 
 namespace mongo {
     class OpTime;
@@ -641,12 +642,22 @@ namespace mongo {
         }
     }
 
-    inline BSONElement::BSONElement() {
-        static char z = 0;
-        data = &z;
-        fieldNameSize_ = 0;
-        totalSize = 1;
+inline BSONElement::BSONElement()
+{
+    static char z = 0;
+    data = &z;
+    fieldNameSize_ = 0;
+    totalSize = 1;
+}
+
+struct BSONElementCmpWithoutField
+{
+    bool operator()( const BSONElement &l, const BSONElement &r ) const {
+        return l.woCompare( r, false ) < 0;
     }
+};
+
+
 }
 
 #endif // BSON_ELEMENT_HPP

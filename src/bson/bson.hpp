@@ -37,7 +37,6 @@
 #include "bson/bsonobj.hpp"
 #include "bson/bsonobjbuilder.hpp"
 #include "bson/bsonobjiterator.hpp"
-#include "bson/bsontypes.h"
 #include "bson/oid.hpp"
 #include "bson/json.hpp"
 

@@ -18,4 +18,8 @@ add_library(bson
     string_data.hpp
     embedded_builder.hpp
     optime.hpp
+    misc.hpp
+    date.hpp
+    enums.hpp
+    size_tracker.hpp
 )

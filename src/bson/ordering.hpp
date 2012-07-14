@@ -16,6 +16,10 @@
  */
 
 #pragma once
+#ifndef BSON_ORDERING_HPP
+#define BSON_ORDERING_HPP
+
+#include "bson/bsonobjiterator.hpp"
 
 namespace mongo {
 
@@ -64,3 +68,6 @@ namespace mongo {
     };
 
 }
+
+#endif // BSON_ORDERING_HPP
+

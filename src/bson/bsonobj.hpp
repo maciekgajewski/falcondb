@@ -27,13 +27,16 @@
 #include <vector>
 
 #include "bson/bsonelement.hpp"
-#include "bson/string_data.hpp"
+#include "bson/date.hpp"
 #include "bson/atomic.hpp"
 
 namespace mongo {
 
     typedef std::set< BSONElement, BSONElementCmpWithoutField > BSONElementSet;
     typedef std::multiset< BSONElement, BSONElementCmpWithoutField > BSONElementMSet;
+
+    class BSONObjIterator;
+    class Ordering;
 
     /**
        C++ representation of a "BSON" object -- that is, an extended JSON-style
@@ -94,8 +97,6 @@ namespace mongo {
 
         /** Construct an empty BSONObj -- that is, {}. */
         BSONObj();
-
-        static BSONObj make( const Record* r );
 
         ~BSONObj() { 
             _objdata = 0; // defensive
@@ -522,11 +523,26 @@ namespace mongo {
     StringBuilder& operator<<( StringBuilder &s, const BSONElement &e );
 
 
-    struct BSONArray : BSONObj {
-        // Don't add anything other than forwarding constructors!!!
-        BSONArray(): BSONObj() {}
-        explicit BSONArray(const BSONObj& obj): BSONObj(obj) {}
-    };
+struct BSONArray : BSONObj
+{
+    // Don't add anything other than forwarding constructors!!!
+    BSONArray(): BSONObj() {}
+    explicit BSONArray(const BSONObj& obj): BSONObj(obj) {}
+};
+
+class BSONObjCmp
+{
+public:
+    BSONObjCmp( const BSONObj &order = BSONObj() ) : _order( order ) {}
+    bool operator()( const BSONObj &l, const BSONObj &r ) const {
+        return l.woCompare( r, _order ) < 0;
+    }
+    BSONObj order() const { return _order; }
+private:
+    BSONObj _order;
+};
+
+typedef std::set<BSONObj,BSONObjCmp> BSONObjSet;
 
 }
 

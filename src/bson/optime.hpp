@@ -19,7 +19,7 @@
 #ifndef BSON_OPTIME_HPP
 #define BSON_OPTIME_HPP
 
-#include "bson/util/misc.h"
+#include "bson/misc.hpp"
 
 #include <boost/thread/condition.hpp>
 

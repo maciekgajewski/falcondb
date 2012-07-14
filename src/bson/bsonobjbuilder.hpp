@@ -28,7 +28,7 @@
 
 #include "bson/bsonelement.hpp"
 #include "bson/bsonobj.hpp"
-#include "bson/bsonmisc.h"
+#include "bson/size_tracker.hpp"
 
 namespace mongo {
 
