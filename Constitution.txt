@@ -7,14 +7,14 @@ Project constitution.
 This is to be a high-performance, high troughput, opensource, document store database
 with excellent data-mining capabilities.
 
-Database stores BSON objects organized in collections.
+Database stores JSON-style objects organized in collections.
 
 
 
 == Programing language and technology
 
 * C++11 for the core product. JavaScript as a (one of) embedded language.
-* CMake is the building system
+* CMake is the build system
 * GCC >= 4.6 is the primary compiler, others could be supported
 * x86_64 Linux is the primary target OS, others could be supported
 
