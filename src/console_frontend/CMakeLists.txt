@@ -6,7 +6,6 @@ add_library(console_frontend
 
 target_link_libraries(console_frontend
     utils
-    bson
 
     boost_system
     boost_thread

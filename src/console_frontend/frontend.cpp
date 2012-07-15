@@ -53,6 +53,8 @@ frontend::frontend(interfaces::engine& engine)
         [this](const arg_list& al) { handle_list(al); });
     _dispatcher.add_command("remove", "remove DATABASE KEY", "Remove document with _id=KEY from db",
         [this](const arg_list& al) { handle_remove(al); });
+    _dispatcher.add_command("showdbs", "showdbs", "List databases",
+        [this](const arg_list&) { handle_showdbs(); });
 }
 
 void frontend::execute()
@@ -125,12 +127,12 @@ const std::string& frontend::require_arg(const command_dispatcher::arg_list& al,
     return al[idx];
 }
 
-void frontend::post_command(const std::string& db_name, const std::string& command, bson_object param)
+void frontend::post_command(const std::string& db_name, const std::string& command, const document& param)
 {
     interfaces::database_ptr db = _engine.get_database(db_name);
 
     db->post(command, param,
-             [this, command](const interfaces::error_message& error, const bson_object_list& data)
+             [this, command](const interfaces::error_message& error, const document_list& data)
              {
                 result_handler(command, error, data);
             });
@@ -149,14 +151,16 @@ void frontend::handle_quit(const frontend::arg_list &al)
 void frontend::handle_create_db(const frontend::arg_list& al)
 {
     _engine.create_database(require_arg(al, 0));
+    std::cout << "ok" << std::endl;
 }
 
 void frontend::handle_drop_db(const frontend::arg_list& al)
 {
     _engine.drop_database(require_arg(al, 0));
+    std::cout << "ok" << std::endl;
 }
 
-void frontend::result_handler(const std::string& operation, const interfaces::error_message& err, const bson_object_list& data)
+void frontend::result_handler(const std::string& operation, const interfaces::error_message& err, const document_list& data)
 {
     if (err)
     {
@@ -169,7 +173,7 @@ void frontend::result_handler(const std::string& operation, const interfaces::er
         else
         {
             std::cout << data.size() << " documents returned" << std::endl;
-            std::copy(data.begin(), data.end(), std::ostream_iterator<bson_object>(std::cout, "\n"));
+            std::copy(data.begin(), data.end(), std::ostream_iterator<document>(std::cout, "\n"));
             std::cout << std::endl;
         }
     }
@@ -179,8 +183,8 @@ void frontend::result_handler(const std::string& operation, const interfaces::er
 void frontend::handle_insert(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
-    bson_object document = json_to_bson(require_arg(al, 1));
-    post_command(db_name, "insert", document);
+    document doc = document::from_json(require_arg(al, 1));
+    post_command(db_name, "insert", doc);
 }
 
 void frontend::handle_list(const frontend::arg_list& al)
@@ -192,8 +196,17 @@ void frontend::handle_list(const frontend::arg_list& al)
 void frontend::handle_remove(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
-    bson_object document = json_to_bson(require_arg(al, 1));
-    post_command(db_name, "remove", document);
+    document doc = document::from_json(require_arg(al, 1));
+    post_command(db_name, "remove", doc);
+}
+
+void frontend::handle_showdbs()
+{
+    std::cout << "Databases: " << std::endl;
+    for(const std::string& db_name : _engine.get_databases())
+    {
+        std::cout << " * " << db_name << std::endl;
+    }
 }
 
 }}

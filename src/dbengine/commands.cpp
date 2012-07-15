@@ -19,76 +19,74 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "dbengine/commands.hpp"
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/random_generator.hpp>
+
 namespace falcondb { namespace dbengine {
 namespace commands {
 
 ////////////////////////////////////////////////////
 /// insert
 
-static void insert_with_id(const interfaces::database_backend_ptr& storage, const bson_object& obj)
+static void insert_with_id(const interfaces::database_backend_ptr& storage, const document& obj)
 {
-    assert(obj.hasField("_id"));
+    assert(obj.has_field("_id"));
 
-    mongo::BSONElement id = obj.getField("_id");
-    range key(id.value(), id.valuesize());
-    range data(obj.objdata(), obj.objsize());
+    document key = obj.get<document>("_id");
+    std::string key_data = key.to_storage();
+    std::string document_data = obj.to_storage();
 
-    storage->add(key, data);
+    storage->add(key_data, document_data);
 }
 
-void insert(
-    const bson_object& param,
+void insert(const document& param,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage)
 {
     // does the object has _id field?
-    if (!param.hasField("_id"))
-    {
-        // generate
-        mongo::OID id;
-        id.init();
-
-        mongo::BSONObjBuilder builder;
-        builder.append("_id", id);
-        builder.appendElements(param);
-        insert_with_id(storage, builder.obj());
-    }
-    else
+    if (param.has_field("_id"))
     {
         insert_with_id(storage, param);
     }
+    else
+    {
+        // generate
+        boost::uuids::random_generator gen;
+        boost::uuids::uuid id = gen();
 
-    handler(boost::none, bson_object_list());
+        document copy = param;
+        copy.append("_id", id);
+
+        insert_with_id(storage, copy);
+    }
+
+    handler(boost::none, document_list());
 }
 
 ////////////////////////////////////////////////////
 /// list
 
-void list(
-    const bson_object& param,
+void list(const document& param,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage)
 {
-    bson_object_list result;
+    document_list result;
     storage->for_each(
         [&](const range& key)
         {
-            //list.push_back(key.to_string());
             std::string data = storage->get(key);
-            bson_object obj(data.c_str());
-            result.push_back(obj.copy());
+            result.push_back(document::from_storage(data));
         });
 
     handler(boost::none, result);
 }
 
-void remove(
-    const bson_object& param,
+void remove(const document& param,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage)
 {
-    storage->del(range(param.objdata(), param.objsize()));
-    handler(boost::none, bson_object_list());
+    storage->del(param.to_storage());
+    handler(boost::none, document_list());
 }
 
 

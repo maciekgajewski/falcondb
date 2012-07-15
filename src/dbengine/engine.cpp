@@ -112,6 +112,12 @@ interfaces::database_ptr engine::get_database(const std::string& db_name)
 
 void engine::create_database(const std::string& db_name)
 {
+    // does the db already exists?
+    if (_databases.find(db_name) != _databases.end())
+    {
+        throw exception("Dastabase ", db_name, " already exists");
+    }
+
     namespace bfs = boost::filesystem3;
     bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
 
@@ -121,13 +127,27 @@ void engine::create_database(const std::string& db_name)
     }
 
     bfs::create_directory(new_db_path);
-    _storage_backend.create_database(new_db_path.generic_string());
+    interfaces::database_backend_ptr backend = _storage_backend.create_database(new_db_path.generic_string());
+    _databases.insert(std::make_pair(db_name, backend));
 }
 
 void engine::drop_database(const std::string& db_name)
 {
-    // TODO
-    throw exception("drop_database not implemented");
+    // does the db exists?
+    auto it = _databases.find(db_name);
+    if (it == _databases.end())
+    {
+        throw exception("Dastabase ", db_name, " does not exists");
+    }
+    _databases.erase(it);
+
+    namespace bfs = boost::filesystem3;
+    bfs::path db_path = bfs::path(_config.data_dir) / db_name;
+
+    if (bfs::exists(db_path))
+    {
+        bfs::remove_all(db_path);
+    }
 }
 
 } }

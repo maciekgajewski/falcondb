@@ -28,9 +28,8 @@ database_impl::database_impl(const interfaces::database_backend_ptr& storage, co
 {
 }
 
-bool database_impl::post(
-    const std::string& command,
-    const bson_object& params,
+bool database_impl::post(const std::string& command,
+    const document& params,
     const interfaces::result_handler& result)
 {
     _processor.post(command, params, result, _storage);

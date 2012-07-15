@@ -49,7 +49,7 @@ public:
     // posts command for execution
     void post(
         const std::string& command,
-        const bson_object& params,
+        const document& params,
         const interfaces::result_handler& result,
         const interfaces::database_backend_ptr& storage);
 
@@ -67,7 +67,7 @@ private:
 
     static void handler_wrapper(
         const std::string& command,
-        const bson_object& params,
+        const document& params,
         const interfaces::result_handler& result,
         const interfaces::database_backend_ptr& storage,
         const interfaces::command_handler& handler);
