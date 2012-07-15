@@ -20,7 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_DOCUMENT_HPP
 #define FALCONDB_DOCUMENT_HPP
 
-#include "3rdparty/libjson/libjson.h"
+#include "utils/exception.hpp"
+
+#include <jsoncpp/json/json.h>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -38,53 +40,62 @@ class document
 public:
 
     /// creates null document
-    document() : _node() {}
+    document() : _internal() {}
     ~document() { }
 
     document(const document& other)
-    : _node(other._node)
+    : _internal(other._internal)
     { }
 
     document(document&& rvalue)
     {
-        _node.swap(rvalue._node);
+        _internal.swap(rvalue._internal);
     }
 
     // field access
 
     bool has_field(const std::string& name) const
     {
-        return _node.find(name) != _node.end();
+        return _internal.isMember(name);
     }
 
     template<typename T>
-    T get(const std::string& field_name) const
-    {
-        return (T)_node.at(field_name);
-    }
+    T get(const std::string& field_name) const;
 
     // field manipulation
     template<typename T>
     void append(const std::string& field_name, const T& value)
     {
-        _node.push_back(JSONNode(field_name, value));
+        _internal[field_name] = value; // rely on the existence of compatible constructor
     }
 
     // json i/o
 
     std::string to_json() const
     {
-        return _node.write();
+        Json::FastWriter writer;
+        return writer.write(_internal);
     }
 
     static document from_json(const std::string& json_data)
     {
-        return document(libjson::parse(json_data));
+        Json::Reader reader;
+        Json::Value val;
+        if (!reader.parse(json_data, val, false))
+        {
+            throw exception("Error parsing json: ", reader.getFormattedErrorMessages());
+        }
+
+        return document(std::move(val));
     }
 
     // storage i/o
 
-    std::string to_storage() const { return to_json(); }
+    std::string to_storage() const
+    {
+        return to_json();
+    }
+
     static document from_storage(const std::string& storage_data)
     {
         return from_json(storage_data);
@@ -92,24 +103,44 @@ public:
 
 private:
 
-    document(const JSONNode& node) : _node(node) { }
+    document(const Json::Value& internal) : _internal(internal) { }
+    document(Json::Value&& internal)
+    {
+        _internal.swap(internal);
+    }
+
+    friend std::ostream& operator << (std::ostream& s, const document& d);
 
     void boo();
 
-    JSONNode _node;
+    Json::Value _internal;
 };
 
 typedef std::vector<document> document_list;
 
 inline std::ostream& operator << (std::ostream& s, const document& d)
 {
-    return s << d.to_json();
+    Json::FastWriter writer;
+    return s << writer.write(d._internal);
+}
+
+template<>
+inline document document::get<document>(const std::string& field_name) const
+{
+    if(has_field(field_name))
+    {
+        return document(_internal.get(field_name, Json::Value()));
+    }
+    else
+    {
+        throw exception("no filed named ", field_name);
+    }
 }
 
 template<>
 inline void document::append<boost::uuids::uuid>(const std::string& field_name, const boost::uuids::uuid& value)
 {
-    _node.push_back(JSONNode(field_name, to_string(value)));
+    _internal[field_name] = to_string(value);
 }
 
 } // namespace falcondb

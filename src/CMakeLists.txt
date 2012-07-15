@@ -14,7 +14,6 @@ set(CMAKE_BUILD_TYPE Debug)
 add_subdirectory(dbengine)
 add_subdirectory(interfaces)
 add_subdirectory(document)
-add_subdirectory(3rdparty)
 
 # storage backends
 add_subdirectory(backend_nessdb)
