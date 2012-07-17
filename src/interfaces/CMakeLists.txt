@@ -3,4 +3,5 @@ add_custom_target(interfaces
     engine.hpp
     storage_backend.hpp
     document_storage.hpp
+    index.hpp
 )
