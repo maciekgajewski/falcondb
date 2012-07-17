@@ -17,23 +17,29 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "dbengine/database_impl.hpp"
+#ifndef FALCONDB_DBENGINE_COMMAND_CONTEXT_HPP
+#define FALCONDB_DBENGINE_COMMAND_CONTEXT_HPP
 
-#include "dbengine/command_processor.hpp"
+#include "dbengine/document_storage.hpp"
+
+#include "interfaces/command_context.hpp"
 
 namespace falcondb { namespace dbengine {
 
-database_impl::database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor)
-    : _storage(storage), _processor(processor)
+class command_context : public interfaces::command_context
 {
-}
+public:
+    command_context(const document_storage& data_storage);
 
-bool database_impl::post(const std::string& command,
-    const document& params,
-    const interfaces::result_handler& result)
-{
-    _processor.post(command, params, result, _storage);
-    return true;
-}
+    // interface
+
+    virtual interfaces::document_storage& get_data_storage();
+
+private:
+
+    document_storage _data_storage;
+};
 
 } }
+
+#endif // FALCONDB_DBENGINE_COMMAND_CONTEXT_HPP

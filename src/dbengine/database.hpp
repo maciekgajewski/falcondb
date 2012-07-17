@@ -27,10 +27,10 @@ namespace falcondb { namespace dbengine {
 
 class command_processor;
 
-class database_impl : public interfaces::database
+class database : public interfaces::database
 {
 public:
-    database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor);
+    database(const interfaces::database_backend_ptr& storage, command_processor& processor);
 
     virtual bool post(
         const std::string& command,

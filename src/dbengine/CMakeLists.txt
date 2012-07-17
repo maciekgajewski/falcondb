@@ -1,8 +1,10 @@
 add_library(engine
     engine.cpp engine.hpp
-    database_impl.cpp database_impl.hpp
+    database.cpp database.hpp
     command_processor.cpp command_processor.hpp
+    command_context.cpp command_context.hpp
     commands.cpp commands.hpp
+    document_storage.cpp document_storage.hpp
 )
 
 target_link_libraries(engine

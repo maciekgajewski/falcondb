@@ -55,7 +55,7 @@ void command_processor::post(
     const std::string& command,
     const document& params,
     const interfaces::result_handler& result,
-    const interfaces::database_backend_ptr& storage)
+    const dbengine::command_context& context)
 {
     rwmutex::scoped_read_lock lock(_command_handlers_mutex);
 
@@ -66,18 +66,18 @@ void command_processor::post(
     }
 
     const interfaces::command_handler& handler = it->second;
-    _io_service.post([=](){ handler_wrapper(command, params, result, storage, handler); });
+    _io_service.post([=](){ handler_wrapper(command, params, result, context, handler); });
 }
 
 void command_processor::handler_wrapper(const std::string& command,
     const document& params,
     const interfaces::result_handler& result,
-    const interfaces::database_backend_ptr& storage,
+    dbengine::command_context context,
     const interfaces::command_handler& handler)
 {
     try
     {
-        handler(params, result, storage);
+        handler(params, result, context);
     }
     catch(const std::exception& e)
     {

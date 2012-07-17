@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "dbengine/engine.hpp"
-#include "dbengine/database_impl.hpp"
+#include "dbengine/database.hpp"
 #include "dbengine/commands.hpp"
 
 #include "utils/exception.hpp"
@@ -106,7 +106,7 @@ interfaces::database_ptr engine::get_database(const std::string& db_name)
     }
     else
     {
-        return std::make_shared<database_impl>(it->second, std::ref(_processor));
+        return std::make_shared<database>(it->second, std::ref(_processor));
     }
 }
 

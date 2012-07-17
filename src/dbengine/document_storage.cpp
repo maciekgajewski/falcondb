@@ -17,34 +17,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
-#define FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
-
-#include "interfaces/engine.hpp"
-#include "interfaces/command_context.hpp"
+#include "dbengine/document_storage.hpp"
 
 namespace falcondb { namespace dbengine {
-namespace commands {
 
-/// upsert object into collection. _id is added to the object if absent
-void insert(const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
-
-// returns the entire content of the collection in no particular order
-void list(
-    const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
-
-// removes object which _id is equal to param
-void remove(const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
-
-
-
+document_storage::document_storage(const interfaces::database_backend_ptr& raw_storage, const std::string& ns)
+    : _raw_storage(raw_storage), _ns(ns)
+{
 }
-} }
 
-#endif
+void document_storage::write(const falcondb::document& key, const falcondb::document& doc)
+{
+    std::string key_data = _ns + key.to_storage();
+    std::string doc_data = doc.to_storage();
+
+    _raw_storage->add(key_data, doc_data);
+}
+
+document document_storage::read(const document& key)
+{
+    std::string key_data = _ns + key.to_storage();
+    std::string doc_data = _raw_storage->get(key_data);
+    return document::from_storage(doc_data);
+}
+
+void document_storage::del(const document& key)
+{
+    std::string key_data = _ns + key.to_storage();
+    _raw_storage->del(key_data);
+}
+
+} }

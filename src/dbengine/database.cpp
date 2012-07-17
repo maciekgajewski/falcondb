@@ -17,34 +17,29 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
-#define FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
+#include "dbengine/database.hpp"
 
-#include "interfaces/engine.hpp"
-#include "interfaces/command_context.hpp"
+#include "dbengine/command_processor.hpp"
+#include "dbengine/command_context.hpp"
+#include "dbengine/document_storage.hpp"
 
 namespace falcondb { namespace dbengine {
-namespace commands {
 
-/// upsert object into collection. _id is added to the object if absent
-void insert(const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
-
-// returns the entire content of the collection in no particular order
-void list(
-    const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
-
-// removes object which _id is equal to param
-void remove(const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
-
-
-
+database::database(const interfaces::database_backend_ptr& storage, command_processor& processor)
+    : _storage(storage), _processor(processor)
+{
 }
-} }
 
-#endif
+bool database::post(const std::string& command,
+    const document& params,
+    const interfaces::result_handler& result)
+{
+    // build context for the command
+    document_storage data_storage(_storage, "data");
+    command_context context(data_storage);
+
+    _processor.post(command, params, result, context);
+    return true;
+}
+
+} }

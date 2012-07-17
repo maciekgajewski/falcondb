@@ -34,16 +34,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 namespace falcondb { namespace interfaces {
 
 class database;
-class collection;
-class database_backend;
+class command_context;
 
-typedef std::shared_ptr<database_backend> database_backend_ptr;
 typedef std::shared_ptr<database> database_ptr;
 
 typedef boost::optional<std::string> error_message;
 typedef std::function<void (const error_message& error, const document_list& result)> result_handler;
-typedef std::function<void (const document&, const result_handler&, const database_backend_ptr&)> command_handler;
+typedef std::function<void (const document&, const result_handler&, command_context&)> command_handler;
 
+/// API exposed toward frontends.
 class engine
 {
 public:

@@ -17,34 +17,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
-#define FALCONDB_DBENGINE_COMMANDS_COMMANDS_HPP
+#ifndef FALCONDB_DBENGINE_DOCUMENT_STORAGE_HPP
+#define FALCONDB_DBENGINE_DOCUMENT_STORAGE_HPP
 
-#include "interfaces/engine.hpp"
-#include "interfaces/command_context.hpp"
+#include "interfaces/document_storage.hpp"
+#include "interfaces/storage_backend.hpp"
 
 namespace falcondb { namespace dbengine {
-namespace commands {
 
-/// upsert object into collection. _id is added to the object if absent
-void insert(const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
+/// Simple implementation of serializing storage.
+/// Adds namespace prefix to each key after serialization
+class document_storage : public interfaces::document_storage
+{
+public:
+    document_storage(const interfaces::database_backend_ptr& raw_storage, const std::string& ns);
 
-// returns the entire content of the collection in no particular order
-void list(
-    const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
+    // document_storage
 
-// removes object which _id is equal to param
-void remove(const document& param,
-    const interfaces::result_handler& handler,
-    interfaces::command_context& context);
+    virtual void write(const document& key, const document& doc);
+    virtual document read(const document& key);
+    virtual void del(const document& key);
+
+private:
+
+    interfaces::database_backend_ptr _raw_storage;
+    const std::string _ns;
+};
 
 
-
-}
-} }
+} } // ns
 
 #endif
