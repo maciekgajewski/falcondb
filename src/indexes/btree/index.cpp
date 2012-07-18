@@ -17,14 +17,28 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "index.hpp"
+#include "indexes/btree/index.hpp"
 
-namespace falcondb {
-namespace index_btree {
+namespace falcondb { namespace index_btree {
 
 index::index()
 {
 }
 
-} // namespace index_btree
-} // namespace falcondb
+void index::insert(const document& storage_key, const document& doc)
+{
+}
+
+void index::update(const document& old_doc, const document& new_doc)
+{
+}
+
+void index::del(const document& doc)
+{
+}
+
+std::unique_ptr<interfaces::index_iterator> index::find(const document& range)
+{
+}
+
+} }

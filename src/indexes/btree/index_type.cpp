@@ -17,14 +17,25 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "index_type.hpp"
+#include "indexes/btree/index_type.hpp"
 
-namespace falcondb {
-namespace index_btree {
+namespace falcondb { namespace index_btree {
 
 index_type::index_type()
 {
 }
 
-} // namespace index_btree
-} // namespace falcondb
+std::unique_ptr<interfaces::index> index_type::load_index(
+    interfaces::document_storage& index_storage,
+    const document& index_description)
+{
+}
+
+document index_type::create_index(
+    const document& index_definition,
+    interfaces::index_iterator& documents,
+    interfaces::document_storage& index_storage)
+{
+}
+
+} }
