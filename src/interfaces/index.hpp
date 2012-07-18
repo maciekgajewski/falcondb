@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace interfaces {
 
+class document_storage;
+
 /// Iterator returned by index
 class index_iterator
 {
@@ -52,8 +54,27 @@ public:
     /// Removes document from index
     virtual void del(const document& doc) = 0;
 
-    /// ????
-    virtual std::unique_ptr<index_iterator> find(const document& e) = 0;
+    /// Creates iterator on certain range.
+    virtual std::unique_ptr<index_iterator> find(const document& range) = 0;
+};
+
+/// Index type
+class index_type
+{
+public:
+
+    /// Loads index from storage, which has it's root stored under specific key
+    virtual std::unique_ptr<index> load_index(
+        document_storage& index_storage,
+        const document& index_description) = 0;
+
+    // Creates index on all elements from the iterator.
+    // The index is stored in the index storage. The description has to be stored
+    // and is required to load the index
+    virtual document create_index(
+        const document& index_definition,
+        index_iterator& documents,
+        document_storage& index_storage) = 0;
 };
 
 } } // namespaces
