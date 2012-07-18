@@ -16,6 +16,8 @@
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <boost/version.hpp>
+
 #define BOOST_SPIRIT_THREADSAFE
 #if BOOST_VERSION >= 103800
 #define BOOST_SPIRIT_USE_OLD_NAMESPACE

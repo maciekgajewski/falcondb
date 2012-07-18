@@ -29,8 +29,7 @@ namespace falcondb { namespace backend_nessdb {
 
 database::database(const std::string& path)
 {
-    std::size_t buffer_pool_size = 16*1024*1024;
-    _db = ::db_open(buffer_pool_size, path.c_str(), 1);
+    _db = ::db_open(path.c_str(), 1);
 }
 
 database::~database()
