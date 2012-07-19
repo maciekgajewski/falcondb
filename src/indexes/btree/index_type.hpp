@@ -17,12 +17,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_INDEX_BTREE_INDEX_TYPE_HPP
-#define FALCONDB_INDEX_BTREE_INDEX_TYPE_HPP
+#ifndef FALCONDB_INDEXES_BTREE_INDEX_TYPE_HPP
+#define FALCONDB_INDEXES_BTREE_INDEX_TYPE_HPP
 
 #include "interfaces/index.hpp"
 
-namespace falcondb { namespace index_btree {
+namespace falcondb { namespace indexes { namespace btree {
 
 class index_type : public interfaces::index_type
 {
@@ -39,6 +39,6 @@ public:
         interfaces::document_storage& index_storage);
 };
 
-} }
+} } }
 
 #endif

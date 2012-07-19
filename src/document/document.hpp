@@ -69,6 +69,13 @@ public:
         _internal[field_name] = value; // rely on the existence of compatible constructor
     }
 
+    // other
+
+    bool is_null() const
+    {
+        _internal.isNull();
+    }
+
     // json i/o
 
     std::string to_json() const

@@ -17,31 +17,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "indexes/btree/index.hpp"
+#ifndef FALCONDB_INDEXES_BTREE_INDEX_ITERATOR_HPP
+#define FALCONDB_INDEXES_BTREE_INDEX_ITERATOR_HPP
+
+#include "interfaces/index.hpp"
 
 namespace falcondb { namespace indexes { namespace btree {
 
-index::index(interfaces::document_storage& storage, const document& definition, const document& root)
-:
-    _storage(storage), _definition(definition), _root(root)
+class index_iterator : public interfaces::index_iterator
 {
-}
+public:
+    index_iterator();
 
-void index::insert(const document& storage_key, const document& doc)
-{
-}
+    virtual bool has_next();
 
-void index::update(const document& old_doc, const document& new_doc)
-{
-}
-
-void index::del(const document& doc)
-{
-}
-
-std::unique_ptr<interfaces::index_iterator> index::find(const document& range)
-{
-    return nullptr;
-}
+    virtual document next();
+};
 
 } } }
+
+#endif

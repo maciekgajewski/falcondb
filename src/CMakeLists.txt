@@ -23,7 +23,7 @@ add_subdirectory(backend_leveldb)
 add_subdirectory(console_frontend)
 
 # indexes
-add_subdirecotry(indexes)
+add_subdirectory(indexes)
 
 # apps
 add_subdirectory(ifalcon)

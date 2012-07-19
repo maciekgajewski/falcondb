@@ -19,7 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "indexes/btree/index_type.hpp"
 
-namespace falcondb { namespace index_btree {
+#include "indexes/btree/index.hpp"
+
+#include <cassert>
+
+namespace falcondb { namespace indexes { namespace btree {
 
 index_type::index_type()
 {
@@ -29,6 +33,13 @@ std::unique_ptr<interfaces::index> index_type::load_index(
     interfaces::document_storage& index_storage,
     const document& index_description)
 {
+    document index_root = index_description.get<document>("root");
+    document index_definition = index_description.get<document>("definition");
+
+    assert(!index_root.is_null());
+    assert(!index_definition.is_null());
+
+    return new index(index_storage, index_definition, index_root);
 }
 
 document index_type::create_index(
@@ -38,4 +49,4 @@ document index_type::create_index(
 {
 }
 
-} }
+} } }

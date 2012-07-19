@@ -17,17 +17,22 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_INDEX_BTREE_INDEX_HPP
-#define FALCONDB_INDEX_BTREE_INDEX_HPP
+#ifndef FALCONDB_INDEXES_BTREE_INDEX_HPP
+#define FALCONDB_INDEXES_BTREE_INDEX_HPP
 
 #include "interfaces/index.hpp"
 
-namespace falcondb { namespace index_btree {
+namespace falcondb { namespace indexes { namespace btree {
 
 class index : public interfaces::index
 {
 public:
-    index();
+    index(
+        interfaces::document_storage& storage,
+        const document& definition,
+        const document& root);
+
+    // interface
 
     virtual void insert(const document& storage_key, const document& doc);
 
@@ -36,8 +41,15 @@ public:
     virtual void del(const document& doc);
 
     virtual std::unique_ptr<interfaces::index_iterator> find(const document& range);
+
+private:
+
+    interfaces::document_storage& _storage;
+    const document _root;
+    const document _definition;
+
 };
 
-} }
+} } }
 
 #endif
