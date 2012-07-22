@@ -1,10 +1,31 @@
+/*
+FalconDB, a database
+Copyright (C) 2012 Kamil Zbrog <kamil.zbrog at gmail dot com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
 #include "connection.hpp"
 
 #include "message.hpp"
 
-#include "bson/bsonobjbuilder.h"
+#include "bson/bsonobjbuilder.hpp"
+#include "bson/json.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include <boost/assign/list_of.hpp>
 
@@ -193,11 +214,19 @@ void connection::handle_db_query(const message::pointer& msg)
         try {
             interfaces::database_ptr db = _engine.get_database(query_msg.get_ns());
 
-            db->post("list", query,
-                     [this, msg](const interfaces::error_message& error, const bson_object_list& data)
+            db->post("list", document::from_json(query.jsonString()),
+                     [this, msg](const interfaces::error_message& error, const document_list& data)
                      {
-                        if (!error) send_reply(msg, data);
-                        else {
+                        bson_object_list object_list;
+                        for(const document& doc : data) {
+                            std::string jsonString = doc.to_json();
+                            boost::algorithm::trim(jsonString);
+                            ::mongo::BSONObj obj = ::mongo::fromjson(jsonString);
+                            object_list.push_back(obj);
+                        }
+                        if (!error) {
+                           send_reply(msg, object_list);
+                        }  else {
                             std::cerr << "Error listing db " << std::endl;
                         }
                      });
@@ -230,18 +259,21 @@ void connection::handle_query_msg(const message::pointer& msg)
     }
 }
 
-void connection::post_command(const std::string& db_name, const std::string& command, bson_object param)
+void connection::post_command(const std::string& db_name, const std::string& command, const document& param)
 {
     interfaces::database_ptr db = _engine.get_database(db_name);
 
     db->post(command, param,
-             [this, command](const interfaces::error_message& error, const bson_object_list& data)
+             [this, command](const interfaces::error_message& error, const document_list& data)
              {
                 result_handler(command, error, data);
             });
 }
 
-void connection::result_handler(const std::string& operation, const interfaces::error_message& err, const bson_object_list& data)
+void connection::result_handler(
+    const std::string& operation,
+    const interfaces::error_message& err,
+    const document_list& data)
 {
     if (err)
     {
@@ -254,7 +286,7 @@ void connection::result_handler(const std::string& operation, const interfaces::
         else
         {
             std::cout << data.size() << " documents returned" << std::endl;
-            std::copy(data.begin(), data.end(), std::ostream_iterator<bson_object>(std::cout, "\n"));
+            std::copy(data.begin(), data.end(), std::ostream_iterator<document>(std::cout, "\n"));
             std::cout << std::endl;
         }
     }
@@ -273,7 +305,11 @@ void connection::handle_insert_msg(const message::pointer& msg)
     }
 
     while (dbmsg.has_more()) {
-        post_command(ns, "insert", dbmsg.next_obj());
+        std::string jsonString = dbmsg.next_obj().jsonString() ;
+        post_command(
+            ns,
+            "insert",
+            document::from_json(jsonString));
     }
 }
 

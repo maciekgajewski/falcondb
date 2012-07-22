@@ -1,6 +1,6 @@
 /*
 FalconDB, a database
-Copyright (C) 2012 Maciej Gajewski <maciej.gajewski0 at gmail dot com>
+Copyright (C) 2012 Kamil Zbrog <kamil.zbrog at gmail dot com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -22,12 +22,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "utils/range.hpp"
 
-#include "bson/bsonobj.h"
+#include "bson/bsonobj.hpp"
 
 #include <sstream>
 #include <memory>
 
 namespace falcondb { namespace frontend { namespace mongo {
+
+typedef ::mongo::BSONObj bson_object;
+typedef std::vector<bson_object> bson_object_list;
 
 struct coder
 {
@@ -80,7 +83,6 @@ struct header
 
     header _header;
     std::string _body;
-
 
     typedef std::shared_ptr<message> pointer;
 };

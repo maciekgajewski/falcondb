@@ -1,6 +1,6 @@
 /*
 FalconDB, a database
-Copyright (C) 2012 Maciej Gajewski <maciej.gajewski0 at gmail dot com>
+Copyright (C) 2012 Kamil Zbrog <kamil.zbrog at gmail dot com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

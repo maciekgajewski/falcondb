@@ -1,7 +1,7 @@
 add_library(frontend_mongo
     frontend.cpp frontend.hpp
     connection.cpp connection.hpp
-    message.cpp message.hpp message.tpp
+    message.hpp
 )
 
 target_link_libraries(frontend_mongo
@@ -9,5 +9,6 @@ target_link_libraries(frontend_mongo
     bson
 
     ${Boost_LIBRARIES}
+    jsoncpp
     pthread
 )
