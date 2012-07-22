@@ -22,8 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "dbengine/commands.hpp"
 
 #include "utils/exception.hpp"
-
-#include <boost/filesystem.hpp>
+#include "utils/filesystem.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -46,18 +45,16 @@ engine::~engine()
 
 void engine::run()
 {
-    namespace bfs = boost::filesystem3;
-
     std::cout << "initializing databases from " << _config.data_dir << std::endl;
 
-    bfs::path data_dir_path(_config.data_dir);
+    filesystem::path data_dir_path(_config.data_dir);
 
-    if (bfs::exists(data_dir_path))
+    if (filesystem::exists(data_dir_path))
     {
-        bfs::directory_iterator it(data_dir_path);
-        for( ;it != bfs::directory_iterator(); ++it)
+        filesystem::directory_iterator it(data_dir_path);
+        for( ;it != filesystem::directory_iterator(); ++it)
         {
-            if (it->status().type() == bfs::directory_file)
+            if (it->status().type() == filesystem::directory_file)
             {
                 std::cout << "trying " << it->path() << " ... ";
                 try
@@ -81,7 +78,7 @@ void engine::run()
     else
     {
         std::cout << "Creating data directory " << data_dir_path << std::endl;
-        bfs::create_directory(data_dir_path);
+        filesystem::create_directory(data_dir_path);
     }
     _processor.run();
 }
@@ -112,15 +109,14 @@ interfaces::database_ptr engine::get_database(const std::string& db_name)
 
 void engine::create_database(const std::string& db_name)
 {
-    namespace bfs = boost::filesystem3;
-    bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
+    filesystem::path new_db_path = filesystem::path(_config.data_dir) / db_name;
 
-    if (bfs::exists(new_db_path))
+    if (filesystem::exists(new_db_path))
     {
         throw exception("File ", new_db_path, " already exists");
     }
 
-    bfs::create_directory(new_db_path);
+    filesystem::create_directory(new_db_path);
     _storage_backend.create_database(new_db_path.generic_string());
 }
 

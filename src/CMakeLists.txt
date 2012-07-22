@@ -2,7 +2,7 @@ project(FalconDB)
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmakeModules)
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED system thread)
 find_package(LevelDB)
 find_package(NessDB) 
 
@@ -35,9 +35,11 @@ endif()
 
 # frontends
 add_subdirectory(console_frontend)
+add_subdirectory(frontend)
 
 # apps
 add_subdirectory(ifalcon)
+add_subdirectory(mongofalcon)
 
 # general-purpose utilities
 add_subdirectory(bson)
