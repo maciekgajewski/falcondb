@@ -47,14 +47,14 @@ void engine::run()
 {
     std::cout << "initializing databases from " << _config.data_dir << std::endl;
 
-    filesystem::path data_dir_path(_config.data_dir);
+    bfs::path data_dir_path(_config.data_dir);
 
-    if (filesystem::exists(data_dir_path))
+    if (bfs::exists(data_dir_path))
     {
-        filesystem::directory_iterator it(data_dir_path);
-        for( ;it != filesystem::directory_iterator(); ++it)
+        bfs::directory_iterator it(data_dir_path);
+        for( ;it != bfs::directory_iterator(); ++it)
         {
-            if (it->status().type() == filesystem::directory_file)
+            if (it->status().type() == bfs::directory_file)
             {
                 std::cout << "trying " << it->path() << " ... ";
                 try
@@ -78,7 +78,7 @@ void engine::run()
     else
     {
         std::cout << "Creating data directory " << data_dir_path << std::endl;
-        filesystem::create_directory(data_dir_path);
+        bfs::create_directory(data_dir_path);
     }
     _processor.run();
 }
@@ -115,14 +115,14 @@ void engine::create_database(const std::string& db_name)
         throw exception("Dastabase ", db_name, " already exists");
     }
 
-    filesystem::path new_db_path = bfs::path(_config.data_dir) / db_name;
+    bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
 
-    if (filesystem::exists(new_db_path))
+    if (bfs::exists(new_db_path))
     {
         throw exception("File ", new_db_path, " already exists");
     }
 
-    filesystem::create_directory(new_db_path);
+    bfs::create_directory(new_db_path);
     interfaces::database_backend_ptr backend = _storage_backend.create_database(new_db_path.generic_string());
     _databases.insert(std::make_pair(db_name, backend));
 }
@@ -137,7 +137,6 @@ void engine::drop_database(const std::string& db_name)
     }
     _databases.erase(it);
 
-    namespace bfs = boost::filesystem3;
     bfs::path db_path = bfs::path(_config.data_dir) / db_name;
 
     if (bfs::exists(db_path))

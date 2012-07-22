@@ -26,9 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 namespace falcondb {
 
 #if BOOST_VERSION > 104900
-namespace filesystem = boost::filesystem;
+namespace bfs = boost::filesystem;
 #else
-namespace filesystem = boost::filesystem3;
+namespace bfs = boost::filesystem3;
 #endif
 
 }
