@@ -84,6 +84,7 @@ void list(const document& param,
     while(it->has_next())
     {
         document storage_key = it->next();
+        std::cout << "list, storage key: " << storage_key << std::endl;
         document doc = context.get_data_storage().read(storage_key);
         result.push_back(doc);
     }
@@ -94,6 +95,13 @@ void remove(const document& param,
     const interfaces::result_handler& handler,
     interfaces::command_context& context)
 {
+    // remove from indexes
+    document doc = context.get_data_storage().read(param);
+    for(const interfaces::index::unique_ptr& index : context.get_indexes())
+    {
+        index->del(doc);
+    }
+
     context.get_data_storage().del(param); // the param is the key
     handler(boost::none, document_list());
 }

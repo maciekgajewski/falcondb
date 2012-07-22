@@ -37,8 +37,16 @@ void document_storage::write(const falcondb::document& key, const falcondb::docu
 document document_storage::read(const document& key)
 {
     std::string key_data = _ns + key.to_storage();
-    std::string doc_data = _raw_storage->get(key_data);
-    return document::from_storage(doc_data);
+    try
+    {
+        std::string doc_data = _raw_storage->get(key_data);
+        return document::from_storage(doc_data);
+    }
+    catch(const std::exception& e)
+    {
+        // add more useful info to the exception
+        throw exception("Error reading key ", key_data, " from storage: ", e.what());
+    }
 }
 
 void document_storage::del(const document& key)

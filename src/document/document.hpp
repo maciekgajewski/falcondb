@@ -52,7 +52,7 @@ public:
 
     //void operator=(const document_const_iterator& other);
 
-    void operator ++ () { _index++; }
+    document_const_iterator& operator ++ () { _index++; return *this; }
     void operator += (difference_type d) { _index += d; }
     difference_type operator-(const document_const_iterator& other) { return _index - other._index; }
 
@@ -189,6 +189,8 @@ public:
     }
 
     const_iterator insert(const const_iterator& pos, document& element);
+    const_iterator erase(const const_iterator& first, const const_iterator& last);
+    std::vector<document> to_vector() const;
 
     // other
 

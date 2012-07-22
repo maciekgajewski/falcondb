@@ -21,23 +21,40 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb {
 
-document::const_iterator document::insert(const document::const_iterator& pos, document& element)
+std::vector<document> document::to_vector() const
 {
-    // implement the operation in terms of std::vector insert.
-    // TODO the array-document should simply be implemented as vector
     std::vector<document> as_vector;
     as_vector.reserve(size()+1);
     for( std::size_t i = 0; i < size(); ++i)
     {
         as_vector.push_back((*this)[i]); // the original Json::Value iterators are useless
     }
+    return as_vector;
+}
+
+document::const_iterator document::insert(const document::const_iterator& pos, document& element)
+{
+    // implement the operation in terms of std::vector insert.
+    // TODO the array-document should simply be implemented as vector
+    std::vector<document> as_vector = to_vector();
 
     std::vector<document>::iterator vector_pos = as_vector.begin() + pos._index;
     as_vector.insert(vector_pos, element);
 
     swap(from_array(as_vector));
-
     return document_const_iterator(this, pos._index);
+}
+
+document::const_iterator document::erase(const const_iterator& first, const const_iterator& last)
+{
+    std::vector<document> as_vector = to_vector();
+    std::vector<document>::iterator vector_first =  as_vector.begin() + first._index;
+    std::vector<document>::iterator vector_last =  as_vector.begin() + last._index;
+
+    std::vector<document>::iterator r = as_vector.erase(vector_first, vector_last);
+
+    swap(from_array(as_vector));
+    return document_const_iterator(this, std::distance(as_vector.begin(), r));
 }
 
 bool document::operator<(const document& other) const

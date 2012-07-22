@@ -50,22 +50,27 @@ void index::insert(const document& storage_key, const document& doc)
 {
     document index_key = extract_index_key(doc);
 
-    // enter the actula recursive algo
+    // enter the actual recursive algo
     tree_insert(_root, index_key, storage_key);
 
 }
 
 void index::update(const document& old_doc, const document& new_doc)
 {
+    // TODO
+    assert(false);
 }
 
 void index::del(const document& doc)
 {
+    document index_key = extract_index_key(doc);
+
+    tree_remove(_root, index_key);
 }
 
 std::unique_ptr<interfaces::index_iterator> index::find(const document& range)
 {
-     document root_doc = _storage.read(_root);
+    document root_doc = _storage.read(_root);
     return std::unique_ptr<interfaces::index_iterator>(new index_iterator(root_doc, 0, _storage));
 }
 
@@ -134,6 +139,45 @@ void index::tree_insert(const document& node_key, const document& key, const doc
 
     }
     // insert into interior node
+    else
+    {
+        // TODO implement
+        assert(false);
+    }
+}
+
+void index::tree_remove(const document& node_key, const document& key)
+{
+    document node = _storage.read(node_key);
+
+    // remove from leaf node
+    if(node.get<std::string>("type") == "leaf")
+    {
+        document data = node.get<document>("data");
+
+        document search;
+        search.append("key", key);
+
+        auto range = std::equal_range(
+            data.begin(), data.end(),
+            search,
+            [this](const document& a, const document& b)
+            {
+                return compare_index_keys(a.get<document>("key"), b.get<document>("key"));
+            });
+
+        assert(range.first != range.second);
+        data.erase(range.first, range.second);
+
+        node.append("data", data); // TODO there should be an ability to do in-place update
+        _storage.write(node_key, node);
+
+        if (data.size() < ITEMS_PER_LEAF/2 )
+        {
+            // consolidate nodes or what?
+        }
+    }
+    // remove from interior node
     else
     {
         // TODO implement

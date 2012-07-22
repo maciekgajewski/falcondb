@@ -65,6 +65,7 @@ private:
     // tree ops
 
     void tree_insert(const document& node_key, const document& key, const document& value);
+    void tree_remove(const document& node_key, const document& key);
 
     interfaces::document_storage& _storage;
     const document _definition;
