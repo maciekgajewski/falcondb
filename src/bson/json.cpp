@@ -17,6 +17,7 @@
 */
 
 #include <boost/version.hpp>
+
 #define BOOST_SPIRIT_THREADSAFE
 #if BOOST_VERSION >= 103800
 #define BOOST_SPIRIT_USE_OLD_NAMESPACE

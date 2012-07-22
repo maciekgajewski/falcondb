@@ -22,8 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "dbengine/commands.hpp"
 
 #include "utils/exception.hpp"
-
-#include <boost/filesystem.hpp>
+#include "utils/filesystem.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -46,8 +45,6 @@ engine::~engine()
 
 void engine::run()
 {
-    namespace bfs = boost::filesystem3;
-
     std::cout << "initializing databases from " << _config.data_dir << std::endl;
 
     bfs::path data_dir_path(_config.data_dir);
@@ -121,7 +118,6 @@ void engine::create_database(const std::string& db_name)
         throw exception("Dastabase ", db_name, " already exists");
     }
 
-    namespace bfs = boost::filesystem3;
     bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
 
     if (bfs::exists(new_db_path))
@@ -145,7 +141,6 @@ void engine::drop_database(const std::string& db_name)
     }
     _databases.erase(it);
 
-    namespace bfs = boost::filesystem3;
     bfs::path db_path = bfs::path(_config.data_dir) / db_name;
 
     if (bfs::exists(db_path))

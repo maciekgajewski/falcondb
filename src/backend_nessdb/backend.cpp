@@ -21,8 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "backend_nessdb/database.hpp"
 
 #include "utils/exception.hpp"
+#include "utils/filesystem.hpp"
 
-#include <boost/filesystem.hpp>
 
 namespace falcondb { namespace backend_nessdb {
 
@@ -37,7 +37,7 @@ backend::~backend()
 std::shared_ptr<interfaces::database_backend> backend::open_database(const std::string& path)
 {
     // ness dosn't do any checking, lets do some chedcking by ourselves
-    if (boost::filesystem3::is_directory(path))
+    if (filesystem::is_directory(path))
     {
         return std::shared_ptr<interfaces::database_backend>(new database(path));
     }
@@ -49,7 +49,7 @@ std::shared_ptr<interfaces::database_backend> backend::open_database(const std::
 
 std::shared_ptr<interfaces::database_backend> backend::create_database(const std::string& path)
 {
-    if (!boost::filesystem3::exists(path))
+    if (!filesystem::exists(path))
     {
         return std::shared_ptr<interfaces::database_backend>(new database(path));
     }

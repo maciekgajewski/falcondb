@@ -4,4 +4,5 @@ add_library(utils
     exception.cpp exception.hpp
     tscclock.hpp
     rwmutex.cpp rwmutex.hpp
+    filesystem.hpp
 )
