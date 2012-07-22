@@ -36,7 +36,7 @@ public:
     /// Checks if subsequent call to 'next' will succeed
     virtual bool has_next() = 0;
 
-    /// Returns document storage key for the next document
+    /// Returns document storage key for the next document, moves the iterator
     virtual document next() = 0;
 };
 
@@ -74,7 +74,8 @@ public:
     virtual document create_index(
         const document& index_definition,
         index_iterator& documents,
-        document_storage& index_storage) = 0;
+        document_storage& index_storage,
+        document_storage& data_storage) = 0;
 };
 
 } } // namespaces

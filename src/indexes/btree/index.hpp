@@ -27,10 +27,19 @@ namespace falcondb { namespace indexes { namespace btree {
 class index : public interfaces::index
 {
 public:
+
+    // creates index, loads content
     index(
         interfaces::document_storage& storage,
         const document& definition,
         const document& root);
+
+    // creates empty index
+    index(
+        interfaces::document_storage& storage,
+        const document& definition);
+
+    document get_root() const { return _root; }
 
     // interface
 
@@ -44,9 +53,11 @@ public:
 
 private:
 
+    static document generate_key();
+
     interfaces::document_storage& _storage;
-    const document _root;
     const document _definition;
+    const document _root;
 
 };
 

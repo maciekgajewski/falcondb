@@ -52,6 +52,9 @@ public:
         _internal.swap(rvalue._internal);
     }
 
+    // thsi one should be private, but its used by range-based for
+    document(const Json::Value& internal) : _internal(internal) { }
+
     // field access
 
     bool has_field(const std::string& name) const
@@ -66,14 +69,26 @@ public:
     template<typename T>
     void append(const std::string& field_name, const T& value)
     {
-        _internal[field_name] = value; // rely on the existence of compatible constructor
+        _internal[field_name] = Json::Value(value); // rely on the existence of compatible constructor
+    }
+
+    // conversion to/from sinple values
+
+    template<typename T>
+    T as() const;
+
+    template<typename T>
+    static
+    document from(const T& value)
+    {
+        return document(Json::Value(value)); // rely on the existence of compatible constructor
     }
 
     // other
 
     bool is_null() const
     {
-        _internal.isNull();
+        return _internal.isNull();
     }
 
     // json i/o
@@ -108,9 +123,17 @@ public:
         return from_json(storage_data);
     }
 
+    // iteration
+    typedef Json::Value::iterator iterator;
+    typedef Json::Value::const_iterator const_iterator;
+
+    iterator begin() { return _internal.begin(); }
+    iterator end() { return _internal.end(); }
+    const_iterator begin() const { return _internal.begin(); }
+    const_iterator end() const { return _internal.end(); }
+
 private:
 
-    document(const Json::Value& internal) : _internal(internal) { }
     document(Json::Value&& internal)
     {
         _internal.swap(internal);
@@ -145,10 +168,33 @@ inline document document::get<document>(const std::string& field_name) const
 }
 
 template<>
-inline void document::append<boost::uuids::uuid>(const std::string& field_name, const boost::uuids::uuid& value)
+inline
+void document::append<boost::uuids::uuid>(const std::string& field_name, const boost::uuids::uuid& value)
 {
     _internal[field_name] = to_string(value);
 }
+
+template<>
+inline
+void document::append<document>(const std::string& field_name, const document& value)
+{
+    _internal[field_name] = value._internal;
+}
+
+template<>
+inline
+int document::as() const
+{
+    return _internal.asInt();
+}
+
+template<>
+inline
+document document::from(const boost::uuids::uuid& uuid)
+{
+    return document(Json::Value(to_string(uuid)));
+}
+
 
 } // namespace falcondb
 

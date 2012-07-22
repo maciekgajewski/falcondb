@@ -24,19 +24,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace indexes { namespace btree {
 
+/// Implments 'index type' for btree indexes
 class index_type : public interfaces::index_type
 {
 public:
     index_type();
 
+    // interface
+
     virtual std::unique_ptr<interfaces::index> load_index(
         interfaces::document_storage& index_storage,
         const document& index_description);
 
-    virtual document create_index(
-        const document& index_definition,
+    virtual document create_index(const document& index_definition,
         interfaces::index_iterator& documents,
-        interfaces::document_storage& index_storage);
+        interfaces::document_storage& index_storage,
+        interfaces::document_storage& data_storage);
+
+    // other
+
+    /// Throws if defintio is invalid
+    static void verify_definition(const document& definition);
 };
 
 } } }

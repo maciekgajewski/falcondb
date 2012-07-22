@@ -19,12 +19,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "indexes/btree/index.hpp"
 
+#include <boost/uuid/random_generator.hpp>
+
 namespace falcondb { namespace indexes { namespace btree {
 
 index::index(interfaces::document_storage& storage, const document& definition, const document& root)
-:
-    _storage(storage), _definition(definition), _root(root)
+:   _storage(storage), _definition(definition), _root(root)
 {
+}
+
+index::index(interfaces::document_storage& storage, const document& definition)
+:    _storage(storage), _definition(definition), _root(generate_key())
+{
+    // TODO intialize root with empty page
 }
 
 void index::insert(const document& storage_key, const document& doc)
@@ -42,6 +49,12 @@ void index::del(const document& doc)
 std::unique_ptr<interfaces::index_iterator> index::find(const document& range)
 {
     return nullptr;
+}
+
+document index::generate_key()
+{
+    boost::uuids::random_generator gen;
+    return document::from(gen());
 }
 
 } } }
