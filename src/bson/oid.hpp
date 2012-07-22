@@ -19,8 +19,9 @@
 
 #include <string>
 
-#include "bson/util/misc.h"
 #include "bson/hex.h"
+#include "bson/date.hpp"
+#include "bson/string_builder.hpp"
 
 namespace mongo {
 

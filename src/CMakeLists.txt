@@ -24,6 +24,7 @@ endif()
 # db core
 add_subdirectory(dbengine)
 add_subdirectory(interfaces)
+add_subdirectory(document)
 
 # storage backends
 if(COMPILE_NESSDB_BACKEND)
@@ -43,6 +44,7 @@ add_subdirectory(mongofalcon)
 
 # general-purpose utilities
 add_subdirectory(bson)
+add_subdirectory(bson_test)
 add_subdirectory(utils)
 add_subdirectory(threads)
 

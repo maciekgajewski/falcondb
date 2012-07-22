@@ -1,8 +1,4 @@
-/* @file misc.h
-*/
-
-/*
- *    Copyright 2009 10gen Inc.
+/*    Copyright 2009 10gen Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,13 +14,13 @@
  */
 
 #pragma once
+#ifndef BSON_MISC_HPP
+#define BSON_MISC_HPP
 
-#include <ctime>
-#include <limits>
-#include <string>
-#include <cassert>
+#include <memory>
 
 namespace mongo {
+
 
     inline void time_t_to_String(time_t t, char *buf) {
 #if defined(_WIN32)
@@ -70,33 +66,6 @@ namespace mongo {
         return buf;
     }
 
-    struct Date_t {
-        // TODO: make signed (and look for related TODO's)
-        unsigned long long millis;
-        Date_t(): millis(0) {}
-        Date_t(unsigned long long m): millis(m) {}
-        operator unsigned long long&() { return millis; }
-        operator const unsigned long long&() const { return millis; }
-        void toTm (tm *buf) {
-            time_t dtime = toTimeT();
-#if defined(_WIN32)
-            gmtime_s(buf, &dtime);
-#else
-            gmtime_r(&dtime, buf);
-#endif
-        }
-        std::string toString() const {
-            char buf[64];
-            time_t_to_String(toTimeT(), buf);
-            return buf;
-        }
-        time_t toTimeT() const {
-            // cant use uassert from bson/util
-            assert((long long)millis >= 0); // TODO when millis is signed, delete
-            assert(((long long)millis/1000) < (std::numeric_limits<time_t>::max)());
-            return millis / 1000;
-        }
-    };
 
     // Like strlen, but only scans up to n bytes.
     // Returns -1 if no '0' found.
@@ -107,22 +76,6 @@ namespace mongo {
         return -1;
     }
 
-    inline bool isNumber( char c ) {
-        return c >= '0' && c <= '9';
-    }
-
-    inline unsigned stringToNum(const char *str) {
-        unsigned x = 0;
-        const char *p = str;
-        while( 1 ) {
-            if( !isNumber(*p) ) {
-                if( *p == 0 && p != str )
-                    break;
-                throw 0;
-            }
-            x = x * 10 + *p++ - '0';
-        }
-        return x;
-    }
-
 }
+
+#endif // BSON_MISC_HPP

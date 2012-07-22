@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "console_frontend/command_dispatcher.hpp"
 
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <readline/history.h>
 
@@ -41,9 +42,11 @@ void command_dispatcher::add_command(
 void command_dispatcher::tokenize_and_execute(const std::string& commandline)
 {
     // tokenize
-    boost::escaped_list_separator<char> sep("\\", " \t", "'\"");
-    boost::tokenizer<boost::escaped_list_separator<char>> tok(commandline, sep);
-    boost::tokenizer<boost::escaped_list_separator<char>>::iterator begin = tok.begin();
+    //boost::escaped_list_separator<char> sep("\\", " \t", "");
+    //boost::tokenizer<boost::escaped_list_separator<char>> tok(commandline, sep);
+    boost::char_separator<char> sep(" \t");
+    boost::tokenizer<boost::char_separator<char>> tok(commandline, sep);
+    auto begin = tok.begin();
     if (begin == tok.end())
     {
         // empty command line, do nothing
@@ -69,7 +72,7 @@ void command_dispatcher::tokenize_and_execute(const std::string& commandline)
         catch(const std::exception& e)
         {
             std::cout << std::endl;
-            std::cout << "Error executing " << commandline << " : " << e.what() << std::endl;
+            std::cout << "Error executing " << boost::algorithm::join(arguments, " ") << " : " << e.what() << std::endl;
             std::cout << "quick help: " << it->second.synopsis << " - " << it->second.description << std::endl;
         }
     }

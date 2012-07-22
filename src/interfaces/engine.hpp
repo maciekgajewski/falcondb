@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_INTERFACES_ENGINE_HPP
 #define FALCONDB_INTERFACES_ENGINE_HPP
 
-#include "bson/bson.hpp"
+#include "document/document.hpp"
 
 #include <boost/optional.hpp>
 
@@ -41,8 +41,8 @@ typedef std::shared_ptr<database_backend> database_backend_ptr;
 typedef std::shared_ptr<database> database_ptr;
 
 typedef boost::optional<std::string> error_message;
-typedef std::function<void (const error_message& error, const bson_object_list& result)> result_handler;
-typedef std::function<void (const bson_object&, const result_handler&, const database_backend_ptr&)> command_handler;
+typedef std::function<void (const error_message& error, const document_list& result)> result_handler;
+typedef std::function<void (const document&, const result_handler&, const database_backend_ptr&)> command_handler;
 
 class engine
 {
@@ -64,7 +64,7 @@ public:
     /// \param handler completion handler, called in one of engine threads
     virtual bool post(
         const std::string& command,
-        const bson_object& params,
+        const document& params,
         const result_handler& result) = 0;
 };
 

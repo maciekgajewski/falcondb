@@ -53,7 +53,7 @@ void command_processor::register_command(const std::string& command, const inter
 
 void command_processor::post(
     const std::string& command,
-    const bson_object& params,
+    const document& params,
     const interfaces::result_handler& result,
     const interfaces::database_backend_ptr& storage)
 {
@@ -66,13 +66,11 @@ void command_processor::post(
     }
 
     const interfaces::command_handler& handler = it->second;
-    bson_object params_copy = params.copy();
-    _io_service.post([=](){ handler_wrapper(command, params_copy, result, storage, handler); });
+    _io_service.post([=](){ handler_wrapper(command, params, result, storage, handler); });
 }
 
-void command_processor::handler_wrapper(
-    const std::string& command,
-    const bson_object& params,
+void command_processor::handler_wrapper(const std::string& command,
+    const document& params,
     const interfaces::result_handler& result,
     const interfaces::database_backend_ptr& storage,
     const interfaces::command_handler& handler)
@@ -83,7 +81,7 @@ void command_processor::handler_wrapper(
     }
     catch(const std::exception& e)
     {
-        result(std::string(e.what()), bson_object_list());
+        result(std::string(e.what()), document_list());
     }
 }
 

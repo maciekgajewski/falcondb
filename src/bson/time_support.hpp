@@ -21,7 +21,7 @@
 #include <string>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "bson/util/misc.h"  // Date_t
+#include "bson/date.hpp"  // Date_t
 
 namespace mongo {
 

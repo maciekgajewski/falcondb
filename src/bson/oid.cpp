@@ -17,10 +17,9 @@
 
 #include <boost/functional/hash.hpp>
 
-#include "bson/util/atomic_word.h"
-#include "bson/bsonobjbuilder.h"
+#include "bson/bsonobjbuilder.hpp"
 #include "bson/oid.hpp"
-#include "bson/util/atomic_int.h"
+#include "bson/atomic.hpp"
 #include "bson/nonce.hpp"
 
 BOOST_STATIC_ASSERT( sizeof(mongo::OID) == 12 );
@@ -110,7 +109,8 @@ namespace mongo {
     }
 
     void OID::init() {
-        static AtomicUInt inc = (unsigned) Security::getNonce();
+        static AtomicUInt inc;
+        inc = (unsigned) Security::getNonce();
 
         {
             unsigned t = (unsigned) time(0);
@@ -145,7 +145,7 @@ namespace mongo {
         }
         
         {
-            unsigned long long nextNumber = _initSequential_sequence.fetchAndAdd(1);
+            uint64_t nextNumber = _initSequential_sequence.fetch_add(1);
             unsigned char* numberData = reinterpret_cast<unsigned char*>(&nextNumber);
             for ( int i=0; i<8; i++ ) {
                 data[4+i] = numberData[7-i];
@@ -153,7 +153,7 @@ namespace mongo {
         }
     }
 
-    void OID::init( string s ) {
+    void OID::init( std::string s ) {
         assert( s.size() == 24 );
         const char *p = s.c_str();
         for( int i = 0; i < 12; i++ ) {
@@ -186,7 +186,7 @@ namespace mongo {
         return time;
     }
 
-    const string BSONObjBuilder::numStrs[] = {
+    const std::string BSONObjBuilder::numStrs[] = {
         "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",  "9",
         "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
         "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",

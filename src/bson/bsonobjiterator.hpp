@@ -16,10 +16,13 @@
  */
 
 #pragma once
+#ifndef BSON_OBJITERATOR_HPP
+#define BSON_OBJITERATOR_HPP
 
 #include <boost/preprocessor/cat.hpp> // like the ## operator but works with __LINE__
+#include <boost/lexical_cast.hpp>
 
-#include "bson/bsonobj.h"
+#include "bson/bsonobj.hpp"
 
 namespace mongo {
 
@@ -39,7 +42,7 @@ namespace mongo {
         */
         BSONObjIterator(const BSONObj& jso) {
             int sz = jso.objsize();
-            if ( MONGO_unlikely(sz == 0) ) {
+            if ( sz == 0 ) {
                 _pos = _theend = 0;
                 return;
             }
@@ -142,7 +145,7 @@ namespace mongo {
             BSONElement e = i.next();
             const char *f = e.fieldName();
             try {
-                unsigned u = stringToNum(f);
+                unsigned u = boost::lexical_cast<unsigned>(f);
                 assert( u < 1000000 );
                 if( u >= v.size() )
                     v.resize(u+1);
@@ -179,4 +182,6 @@ namespace mongo {
              false) ;                                         \
             /*nothing*/ )
 
-}
+} // namespace
+
+#endif // BSON_OBJITERATOR_HPP

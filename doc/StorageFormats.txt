@@ -1,0 +1,4 @@
+Interesting paper
+
+qconsf.com/dl/qcon-sanfran-2011/slides/SastryMalladi_DealingWithPerformanceChallengesOptimizedSerializationTechniques.pdf
+

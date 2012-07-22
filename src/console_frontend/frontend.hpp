@@ -57,11 +57,11 @@ private:
     /// returns arg at position idx, throws exception if no such argument
     static const std::string& require_arg(const command_dispatcher::arg_list& al, std::size_t idx);
 
-    void post_command(const std::string& db_name, const std::string& command, bson_object param = bson_object());
+    void post_command(const std::string& db_name, const std::string& command, const document& param = document());
 
     void result_handler(const std::string& operation,
         const interfaces::error_message& err,
-        const bson_object_list& data);
+        const document_list& data);
 
     void handle_quit(const arg_list& al);
     void handle_create_db(const arg_list& al);
@@ -69,6 +69,7 @@ private:
     void handle_insert(const arg_list& al);
     void handle_list(const arg_list& al);
     void handle_remove(const arg_list& al);
+    void handle_showdbs();
 };
 
 }}

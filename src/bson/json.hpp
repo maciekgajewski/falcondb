@@ -1,5 +1,3 @@
-/** @file json.h */
-
 /**
 *    Copyright (C) 2008 10gen Inc.
 *
@@ -20,7 +18,7 @@
 
 #include <string>
 
-#include "bson/bsonobj.h"
+#include "bson/bsonobj.hpp"
 
 namespace mongo {
 

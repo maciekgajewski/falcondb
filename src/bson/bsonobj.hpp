@@ -16,6 +16,8 @@
  */
 
 #pragma once
+#ifndef BSON_OBJ_HPP
+#define BSON_OBJ_HPP
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/noncopyable.hpp>
@@ -24,15 +26,17 @@
 #include <string>
 #include <vector>
 
-#include "bson/bsonelement.h"
-#include "bson/stringdata.h"
-#include "bson/util/atomic_int.h"
-#include "bson/util/builder.h"
+#include "bson/bsonelement.hpp"
+#include "bson/date.hpp"
+#include "bson/atomic.hpp"
 
 namespace mongo {
 
     typedef std::set< BSONElement, BSONElementCmpWithoutField > BSONElementSet;
     typedef std::multiset< BSONElement, BSONElementCmpWithoutField > BSONElementMSet;
+
+    class BSONObjIterator;
+    class Ordering;
 
     /**
        C++ representation of a "BSON" object -- that is, an extended JSON-style
@@ -93,8 +97,6 @@ namespace mongo {
 
         /** Construct an empty BSONObj -- that is, {}. */
         BSONObj();
-
-        static BSONObj make( const Record* r );
 
         ~BSONObj() { 
             _objdata = 0; // defensive
@@ -465,7 +467,7 @@ namespace mongo {
         public:
             char data[4]; // start of object
 
-            void zero() { refCount.zero(); }
+            void zero() { refCount.store(0); }
 
             // these are called automatically by boost::intrusive_ptr
             friend void intrusive_ptr_add_ref(Holder* h) { h->refCount++; }
@@ -521,10 +523,27 @@ namespace mongo {
     StringBuilder& operator<<( StringBuilder &s, const BSONElement &e );
 
 
-    struct BSONArray : BSONObj {
-        // Don't add anything other than forwarding constructors!!!
-        BSONArray(): BSONObj() {}
-        explicit BSONArray(const BSONObj& obj): BSONObj(obj) {}
-    };
+struct BSONArray : BSONObj
+{
+    // Don't add anything other than forwarding constructors!!!
+    BSONArray(): BSONObj() {}
+    explicit BSONArray(const BSONObj& obj): BSONObj(obj) {}
+};
+
+class BSONObjCmp
+{
+public:
+    BSONObjCmp( const BSONObj &order = BSONObj() ) : _order( order ) {}
+    bool operator()( const BSONObj &l, const BSONObj &r ) const {
+        return l.woCompare( r, _order ) < 0;
+    }
+    BSONObj order() const { return _order; }
+private:
+    BSONObj _order;
+};
+
+typedef std::set<BSONObj,BSONObjCmp> BSONObjSet;
 
 }
+
+#endif // BSON_OBJ_HPP

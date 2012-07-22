@@ -34,7 +34,7 @@ public:
 
     virtual bool post(
         const std::string& command,
-        const bson_object& params,
+        const document& params,
         const interfaces::result_handler& result);
 
 private:

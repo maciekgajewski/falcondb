@@ -17,23 +17,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "dbengine/database_impl.hpp"
+#include <atomic>
 
-#include "dbengine/command_processor.hpp"
+#pragma once
+#ifndef BSON_ATOMIC_HPP
+#define BSON_ATOMIC_HPP
 
-namespace falcondb { namespace dbengine {
-
-database_impl::database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor)
-    : _storage(storage), _processor(processor)
+namespace mongo
 {
+
+typedef std::atomic_uint AtomicUInt;
+typedef std::atomic<uint64_t> AtomicUInt64;
+// TODO needed support for C++98, possibly using boost.atomic
+
 }
 
-bool database_impl::post(const std::string& command,
-    const document& params,
-    const interfaces::result_handler& result)
-{
-    _processor.post(command, params, result, _storage);
-    return true;
-}
+#endif // BSON_ATOMIC_HPP
 
-} }

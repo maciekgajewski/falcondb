@@ -17,7 +17,7 @@
  *    limitations under the License.
  */
 
-#include "bson/jsobj.hpp"
+#include "bson/lex_num_cmp.hpp"
 
 #include <limits>
 #include <cmath>
@@ -26,42 +26,28 @@
 #include <boost/static_assert.hpp>
 
 #include "bson/oid.hpp"
-#include "bson/util/atomic_int.h"
-//#include "bson/jsobjmanipulator.h"
+#include "bson/bsonelement.ipp"
+#include "bson/bsonobj.ipp"
 #include "bson/json.hpp"
-//#include "bson/nonce.h"
 #include "bson/float_utils.h"
 #include "bson/base64.hpp"
-#include "bson/embedded_builder.h"
-//#include "mongo/util/md5.hpp"
-//#include "mongo/util/mongoutils/str.h"
-#include "bson/optime.h"
-//#include "mongo/util/startup_test.h"
-//#include "mongo/util/stringutils.h"
+#include "bson/embedded_builder.hpp"
+#include "bson/optime.hpp"
 
 
 // make sure our assumptions are valid
-BOOST_STATIC_ASSERT( sizeof(short) == 2 );
-BOOST_STATIC_ASSERT( sizeof(int) == 4 );
-BOOST_STATIC_ASSERT( sizeof(long long) == 8 );
 BOOST_STATIC_ASSERT( sizeof(double) == 8 );
 BOOST_STATIC_ASSERT( sizeof(mongo::Date_t) == 8 );
 BOOST_STATIC_ASSERT( sizeof(mongo::OID) == 12 );
+
+using namespace bson;
 
 namespace mongo {
 
     BSONElement eooElement;
 
-    GENOIDLabeler GENOID;
-
-    DateNowLabeler DATENOW;
-    NullLabeler BSONNULL;
-
-    MinKeyLabeler MINKEY;
-    MaxKeyLabeler MAXKEY;
-
     // need to move to bson/, but has dependency on base64 so move that to bson/util/ first.
-    inline string BSONElement::jsonString( JsonStringFormat format, bool includeFieldNames, int pretty ) const {
+    inline std::string BSONElement::jsonString( JsonStringFormat format, bool includeFieldNames, int pretty ) const {
         BSONType t = type();
         int sign;
         if ( t == Undefined )
@@ -73,7 +59,7 @@ namespace mongo {
         switch ( type() ) {
         case mongo::String:
         case Symbol:
-            s << '"' << escape( string(valuestr(), valuestrsize()-1) ) << '"';
+            s << '"' << escape( std::string(valuestr(), valuestrsize()-1) ) << '"';
             break;
         case NumberLong:
             s << _numberLong();
@@ -337,61 +323,9 @@ namespace mongo {
         return fe.getGtLtOp();
     }
 
-    FieldCompareResult compareDottedFieldNames( const string& l , const string& r ,
-                                               const LexNumCmp& cmp ) {
-        static int maxLoops = 1024 * 1024;
-
-        size_t lstart = 0;
-        size_t rstart = 0;
-
-        for ( int i=0; i<maxLoops; i++ ) {
-
-            size_t a = l.find( '.' , lstart );
-            size_t b = r.find( '.' , rstart );
-
-            size_t lend = a == string::npos ? l.size() : a;
-            size_t rend = b == string::npos ? r.size() : b;
-
-            const string& c = l.substr( lstart , lend - lstart );
-            const string& d = r.substr( rstart , rend - rstart );
-
-            int x = cmp.cmp( c.c_str(), d.c_str() );
-
-            if ( x < 0 )
-                return LEFT_BEFORE;
-            if ( x > 0 )
-                return RIGHT_BEFORE;
-
-            lstart = lend + 1;
-            rstart = rend + 1;
-
-            if ( lstart >= l.size() ) {
-                if ( rstart >= r.size() )
-                    return SAME;
-                return RIGHT_SUBFIELD;
-            }
-            if ( rstart >= r.size() )
-                return LEFT_SUBFIELD;
-        }
-
-        //log() << "compareDottedFieldNames ERROR  l: " << l << " r: " << r << "  TOO MANY LOOPS" << endl;
-        assert(0);
-        return SAME; // will never get here
-    }
-
     /* BSONObj ------------------------------------------------------------*/
 
-    /*
-    string BSONObj::md5() const {
-        md5digest d;
-        md5_state_t st;
-        md5_init(&st);
-        md5_append( &st , (const md5_byte_t*)_objdata , objsize() );
-        md5_finish(&st, d);
-        return digestToString( d );
-    }*/
-
-    string BSONObj::jsonString( JsonStringFormat format, int pretty ) const {
+    std::string BSONObj::jsonString( JsonStringFormat format, int pretty ) const {
 
         if ( isEmpty() ) return "{}";
 
@@ -538,7 +472,7 @@ namespace mongo {
         if ( other.isEmpty() )
             return 1;
 
-        assert(false); // 10060 ,  "woSortOrder needs a non-empty sortKey" , ! sortKey.isEmpty() );
+        assert(! sortKey.isEmpty()); // 10060 ,  "woSortOrder needs a non-empty sortKey" ,  );
 
         BSONObjIterator i(sortKey);
         while ( 1 ) {
@@ -583,7 +517,7 @@ namespace mongo {
         if ( e.eoo() ) {
             const char *p = strchr(name.data(), '.');
             if ( p ) {
-                string left(name.data(), p-name.data());
+                std::string left(name.data(), p-name.data());
                 const char* next = p+1;
                 BSONElement e = obj->getField( left.c_str() );
 
@@ -640,7 +574,7 @@ namespace mongo {
         BSONElement sub;
 
         if ( p ) {
-            sub = getField( string(name, p-name) );
+            sub = getField( std::string(name, p-name) );
             name = p + 1;
         }
         else {
@@ -874,29 +808,16 @@ namespace mongo {
         return true;
     }
 
-    /*
-    void BSONObj::dump() const {
-        out() << hex;
-        const char *p = objdata();
-        for ( int i = 0; i < objsize(); i++ ) {
-            out() << i << '\t' << ( 0xff & ( (unsigned) *p ) );
-            if ( *p >= 'A' && *p <= 'z' )
-                out() << '\t' << *p;
-            out() << endl;
-            p++;
-        }
-    }*/
-
-    void nested2dotted(BSONObjBuilder& b, const BSONObj& obj, const string& base) {
+    void nested2dotted(BSONObjBuilder& b, const BSONObj& obj, const std::string& base) {
         BSONObjIterator it(obj);
         while (it.more()) {
             BSONElement e = it.next();
             if (e.type() == Object) {
-                string newbase = base + e.fieldName() + ".";
+                std::string newbase = base + e.fieldName() + ".";
                 nested2dotted(b, e.embeddedObject(), newbase);
             }
             else {
-                string newbase = base + e.fieldName();
+                std::string newbase = base + e.fieldName();
                 b.appendAs(e, newbase);
             }
         }
@@ -943,153 +864,7 @@ namespace mongo {
     } minkeydata;
     BSONObj minKey((const char *) &minkeydata);
 
-    /*
-        struct JSObj0 {
-            JSObj0() {
-                totsize = 5;
-                eoo = EOO;
-            }
-            int totsize;
-            char eoo;
-        } js0;
-    */
 #pragma pack()
-
-#if 0
-    struct BsonUnitTest : public StartupTest {
-        void testRegex() {
-
-            BSONObjBuilder b;
-            b.appendRegex("x", "foo");
-            BSONObj o = b.done();
-
-            BSONObjBuilder c;
-            c.appendRegex("x", "goo");
-            BSONObj p = c.done();
-
-            assert( !o.binaryEqual( p ) );
-            assert( o.woCompare( p ) < 0 );
-
-        }
-        void testoid() {
-            OID id;
-            id.init();
-            //            sleepsecs(3);
-
-            OID b;
-            // goes with sleep above...
-            // b.init();
-            // assert( memcmp(id.getData(), b.getData(), 12) < 0 );
-
-            b.init( id.str() );
-            assert( b == id );
-        }
-
-        void testbounds() {
-            BSONObj l , r;
-            {
-                BSONObjBuilder b;
-                b.append( "x" , std::numeric_limits<long long>::max() );
-                l = b.obj();
-            }
-            {
-                BSONObjBuilder b;
-                b.append( "x" , std::numeric_limits<double>::max() );
-                r = b.obj();
-            }
-            assert( l.woCompare( r ) < 0 );
-            assert( r.woCompare( l ) > 0 );
-            {
-                BSONObjBuilder b;
-                b.append( "x" , std::numeric_limits<int>::max() );
-                l = b.obj();
-            }
-            assert( l.woCompare( r ) < 0 );
-            assert( r.woCompare( l ) > 0 );
-        }
-
-        void testorder() {
-            {
-                BSONObj x,y,z;
-                { BSONObjBuilder b; b.append( "x" , (long long)2 ); x = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (int)3 ); y = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (long long)4 ); z = b.obj(); }
-                assert( x.woCompare( y ) < 0 );
-                assert( x.woCompare( z ) < 0 );
-                assert( y.woCompare( x ) > 0 );
-                assert( z.woCompare( x ) > 0 );
-                assert( y.woCompare( z ) < 0 );
-                assert( z.woCompare( y ) > 0 );
-            }
-
-            {
-                BSONObj ll,d,i,n,u;
-                { BSONObjBuilder b; b.append( "x" , (long long)2 ); ll = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (double)2 ); d = b.obj(); }
-                { BSONObjBuilder b; b.append( "x" , (int)2 ); i = b.obj(); }
-                { BSONObjBuilder b; b.appendNull( "x" ); n = b.obj(); }
-                { BSONObjBuilder b; u = b.obj(); }
-
-                assert( ll.woCompare( u ) == d.woCompare( u ) );
-                assert( ll.woCompare( u ) == i.woCompare( u ) );
-                BSONObj k = BSON( "x" << 1 );
-                assert( ll.woCompare( u , k ) == d.woCompare( u , k ) );
-                assert( ll.woCompare( u , k ) == i.woCompare( u , k ) );
-
-                assert( u.woCompare( ll ) == u.woCompare( d ) );
-                assert( u.woCompare( ll ) == u.woCompare( i ) );
-                assert( u.woCompare( ll , k ) == u.woCompare( d , k ) );
-                assert( u.woCompare( ll , k ) == u.woCompare( d , k ) );
-
-                assert( i.woCompare( n ) == d.woCompare( n ) );
-
-                assert( ll.woCompare( n ) == d.woCompare( n ) );
-                assert( ll.woCompare( n ) == i.woCompare( n ) );
-                assert( ll.woCompare( n , k ) == d.woCompare( n , k ) );
-                assert( ll.woCompare( n , k ) == i.woCompare( n , k ) );
-
-                assert( n.woCompare( ll ) == n.woCompare( d ) );
-                assert( n.woCompare( ll ) == n.woCompare( i ) );
-                assert( n.woCompare( ll , k ) == n.woCompare( d , k ) );
-                assert( n.woCompare( ll , k ) == n.woCompare( d , k ) );
-            }
-
-            {
-                BSONObj l,r;
-                { BSONObjBuilder b; b.append( "x" , "eliot" ); l = b.obj(); }
-                { BSONObjBuilder b; b.appendSymbol( "x" , "eliot" ); r = b.obj(); }
-                assert( l.woCompare( r ) == 0 );
-                assert( r.woCompare( l ) == 0 );
-            }
-        }
-
-        void run() {
-            testRegex();
-            BSONObjBuilder A,B,C;
-            A.append("x", 2);
-            B.append("x", 2.0);
-            C.append("x", 2.1);
-            BSONObj a = A.done();
-            BSONObj b = B.done();
-            BSONObj c = C.done();
-            assert( !a.binaryEqual( b ) ); // comments on operator==
-            int cmp = a.woCompare(b);
-            assert( cmp == 0 );
-            cmp = a.woCompare(c);
-            assert( cmp < 0 );
-            testoid();
-            testbounds();
-            testorder();
-        }
-    } bson_unittest;
-#endif
-    Labeler::Label GT( "$gt" );
-    Labeler::Label GTE( "$gte" );
-    Labeler::Label LT( "$lt" );
-    Labeler::Label LTE( "$lte" );
-    Labeler::Label NE( "$ne" );
-    Labeler::Label NIN( "$nin" );
-    Labeler::Label BSIZE( "$size" );
 
     void BSONObjBuilder::appendMinForType( const StringData& fieldName , int t ) {
         switch ( t ) {
@@ -1205,26 +980,13 @@ namespace mongo {
         assert(false);
     }
 
-    bool fieldsMatch(const BSONObj& lhs, const BSONObj& rhs) {
-        BSONObjIterator l(lhs);
-        BSONObjIterator r(rhs);
-
-        while (l.more() && r.more()){
-            if (strcmp(l.next().fieldName(), r.next().fieldName())) {
-                return false;
-            }
-        }
-
-        return !(l.more() || r.more()); // false if lhs and rhs have diff nFields()
-    }
-
     /** Compare two bson elements, provided as const char *'s, by field name. */
     class BSONIteratorSorted::ElementFieldCmp {
     public:
         ElementFieldCmp( bool isArray );
         bool operator()( const char *s1, const char *s2 ) const;
     private:
-        LexNumCmp _cmp;
+        lex_num_cmp _cmp;
     };
     
     BSONIteratorSorted::ElementFieldCmp::ElementFieldCmp( bool isArray ) :
@@ -1259,7 +1021,7 @@ namespace mongo {
     BSONIteratorSorted( array, ElementFieldCmp( true ) ) {
     }
 
-    bool BSONObjBuilder::appendAsNumber( const StringData& fieldName , const string& data ) {
+    bool BSONObjBuilder::appendAsNumber( const StringData& fieldName , const std::string& data ) {
         if ( data.size() == 0 || data == "-" || data == ".")
             return false;
 
@@ -1295,7 +1057,7 @@ namespace mongo {
         }
 
         try {
-            long long num = boost::lexical_cast<long long>( data );
+            int64_t num = boost::lexical_cast<int64_t>( data );
             append( fieldName , num );
             return true;
         }
