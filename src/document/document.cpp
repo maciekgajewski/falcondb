@@ -21,11 +21,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb {
 
-void document::boo()
+document::const_iterator document::insert(const document::const_iterator& pos, document& element)
 {
-    std::cout << "boo";
+    // implement the operation in terms of std::vector insert.
+    // TODO the array-document should simply be implemented as vector
+    std::vector<document> as_vector;
+    as_vector.reserve(size()+1);
+    for( std::size_t i = 0; i < size(); ++i)
+    {
+        as_vector.push_back((*this)[i]); // the original Json::Value iterators are useless
+    }
+
+    std::vector<document>::iterator vector_pos = as_vector.begin() + pos._index;
+    as_vector.insert(vector_pos, element);
+
+    swap(from_array(as_vector));
+
+    return document_const_iterator(this, pos._index);
 }
 
-// TODO remove this file if not needed
+bool document::operator<(const document& other) const
+{
+    return _internal < other._internal;
+}
 
 } // namespace falcondb

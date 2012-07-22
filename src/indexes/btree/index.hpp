@@ -53,7 +53,16 @@ public:
 
 private:
 
+    /// Reducec document to an array containing values related to fields specified in index definition
+    document extract_index_key(const document& doc);
+    bool compare_index_keys(const document& a, const document& b) const;
+
     static document generate_key();
+    static document create_leaf();
+
+    // tree ops
+
+    void tree_insert(document& node, const document& key, const document& value);
 
     interfaces::document_storage& _storage;
     const document _definition;

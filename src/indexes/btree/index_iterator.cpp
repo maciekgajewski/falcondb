@@ -19,20 +19,36 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "indexes/btree/index_iterator.hpp"
 
+#include "interfaces/document_storage.hpp"
+
 namespace falcondb { namespace indexes { namespace btree {
 
-index_iterator::index_iterator()
+index_iterator::index_iterator(const document& leaf_node, std::size_t index, interfaces::document_storage& storage)
+:   _leaf_node(leaf_node), _index(index), _storage(storage)
 {
 }
 
 bool index_iterator::has_next()
 {
-    return false;
+    document data = _leaf_node.get<document>("data");
+    return _index < data.size() || _leaf_node.has_field("next");
 }
 
 document index_iterator::next()
 {
-    return document();
+    _index ++;
+    document data = _leaf_node.get<document>("data");
+    if (_index < data.size())
+    {
+        return data[_index];
+    }
+    else
+    {
+        _index = 0;
+        document next_key = _leaf_node.get<document>("next");
+        _leaf_node = _storage.read(next_key);
+        return _leaf_node.get<document>("data")[0];
+    }
 }
 
 } } }

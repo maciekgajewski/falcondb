@@ -32,12 +32,49 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb {
 
+class document;
+
+/// Document iterator, used to iterate array document
+class document_const_iterator
+{
+public:
+    document_const_iterator(const document* parent, std::size_t index)
+    : _parent(parent), _index(index)
+    { }
+
+    typedef document value_type;
+    typedef std::size_t difference_type;
+    typedef document* pointer;
+    typedef document& reference;
+    typedef std::random_access_iterator_tag iterator_category;
+
+    document operator*();
+
+    //void operator=(const document_const_iterator& other);
+
+    void operator ++ () { _index++; }
+    void operator += (difference_type d) { _index += d; }
+    difference_type operator-(const document_const_iterator& other) { return _index - other._index; }
+
+    bool operator != (document_const_iterator& other) const { return _index != other._index; }
+    bool operator == (document_const_iterator& other) const { return _index == other._index; }
+private:
+
+    const document* _parent;
+    std::size_t _index;
+
+    friend class document;
+};
+
 /// Wrapper around document library
 /// We need only very minimalistic set of operation to perform on a document,
 /// this makes easy to create an abstraction to hide the actual implementation behind.
 class document
 {
 public:
+
+    //typedef document_iterator iterator;
+    typedef document_const_iterator const_iterator;
 
     /// creates null document
     document() : _internal() {}
@@ -52,7 +89,17 @@ public:
         _internal.swap(rvalue._internal);
     }
 
-    // thsi one should be private, but its used by range-based for
+    void swap(document& another)
+    {
+        _internal.swap(another._internal);
+    }
+
+    void swap(document&& another)
+    {
+        _internal.swap(another._internal);
+    }
+
+    // this one should be private, but its used by range-based for
     document(const Json::Value& internal) : _internal(internal) { }
 
     // field access
@@ -64,6 +111,22 @@ public:
 
     template<typename T>
     T get(const std::string& field_name) const;
+
+    template<typename T>
+    T get_dotted(const std::string& dotted_name) const
+    {
+        std::size_t dot_pos = dotted_name.find_first_of('.');
+        if (dot_pos == std::string::npos)
+        {
+            return this->get<T>(dotted_name); // not so dotted after all
+        }
+        else
+        {
+            std::string before_dot = dotted_name.substr(0, dot_pos);
+            std::string after_dot = dotted_name.substr(dot_pos+1);
+            return get<document>(before_dot).get_dotted<T>(after_dot);
+        }
+    }
 
     // field manipulation
     template<typename T>
@@ -84,12 +147,59 @@ public:
         return document(Json::Value(value)); // rely on the existence of compatible constructor
     }
 
+    // array
+
+    static
+    inline
+    document empty_array()
+    {
+        return Json::Value(Json::arrayValue);
+    }
+
+    /// Append to array
+    template<typename T>
+    void append(const T& v)
+    {
+        _internal.append(v);
+    }
+
+    template<typename T>
+    static
+    document from_array(const std::vector<T>& array)
+    {
+        document d = empty_array();
+        for( const T& item: array)
+        {
+            d.append(item); // rely on the existence of compatible constructor
+        }
+        return d;
+    }
+
+    std::size_t size() const
+    {
+        return _internal.size();
+    }
+
+    document operator[](std::size_t idx) const
+    {
+        return _internal[static_cast<Json::Value::ArrayIndex>(idx)];
+    }
+
+    const_iterator insert(const const_iterator& pos, document& element);
+
     // other
 
     bool is_null() const
     {
         return _internal.isNull();
     }
+
+    std::vector<std::string> field_names() const
+    {
+        return _internal.getMemberNames();
+    }
+
+    bool operator<(const document& other) const;
 
     // json i/o
 
@@ -124,13 +234,11 @@ public:
     }
 
     // iteration
-    typedef Json::Value::iterator iterator;
-    typedef Json::Value::const_iterator const_iterator;
 
-    iterator begin() { return _internal.begin(); }
-    iterator end() { return _internal.end(); }
-    const_iterator begin() const { return _internal.begin(); }
-    const_iterator end() const { return _internal.end(); }
+    //iterator begin() { return document_iterator(*this, 0); }
+    //iterator end() { return document_iterator(*this, size()); }
+    const_iterator begin() const { return document_const_iterator(this, 0); }
+    const_iterator end() const { return document_const_iterator(this, size()); }
 
 private:
 
@@ -140,8 +248,6 @@ private:
     }
 
     friend std::ostream& operator << (std::ostream& s, const document& d);
-
-    void boo();
 
     Json::Value _internal;
 };
@@ -195,6 +301,23 @@ document document::from(const boost::uuids::uuid& uuid)
     return document(Json::Value(to_string(uuid)));
 }
 
+template<>
+inline
+void document::append<document>(const document& v)
+{
+    _internal.append(v._internal);
+}
+
+inline document document_const_iterator::operator*()
+{
+    return (*_parent)[_index];
+}
+
+//inline void document_const_iterator::operator=(const document_const_iterator& other)
+//{
+//    _parent = other._parent;
+//    _index = other._index;
+//}
 
 } // namespace falcondb
 

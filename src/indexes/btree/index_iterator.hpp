@@ -27,11 +27,18 @@ namespace falcondb { namespace indexes { namespace btree {
 class index_iterator : public interfaces::index_iterator
 {
 public:
-    index_iterator();
+    index_iterator(const document& leaf_node, std::size_t index, interfaces::document_storage& storage);
 
     virtual bool has_next();
 
     virtual document next();
+
+private:
+
+    document _leaf_node;
+    std::size_t _index;
+    interfaces::document_storage& _storage;
+
 };
 
 } } }
