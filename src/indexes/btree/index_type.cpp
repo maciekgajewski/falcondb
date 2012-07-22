@@ -43,7 +43,7 @@ std::unique_ptr<interfaces::index> index_type::load_index(
     return std::unique_ptr<interfaces::index>(new index(index_storage, index_definition, index_root));
 }
 
-document index_type::create_index(
+interfaces::index_type::create_result index_type::create_index(
     const document& index_definition,
     interfaces::index_iterator& documents,
     interfaces::document_storage& index_storage,
@@ -66,7 +66,7 @@ document index_type::create_index(
     index_description.append("root", new_index->get_root());
     index_description.append("definition", index_definition);
 
-    return document();
+    return create_result{ index_description, std::move(new_index) };
 }
 
 void index_type::verify_definition(const document& definition)

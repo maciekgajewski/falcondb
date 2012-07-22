@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_INTERFACES_COMMAND_CONTEXT_HPP
 #define FALCONDB_INTERFACES_COMMAND_CONTEXT_HPP
 
+#include "interfaces/index.hpp"
+
 namespace falcondb { namespace interfaces {
 
 class document_storage;
@@ -31,6 +33,7 @@ public:
 
     /// Main data storage. Can be used to access document data
     virtual document_storage& get_data_storage() = 0;
+    virtual std::vector<index::unique_ptr>& get_indexes() = 0;
 };
 
 

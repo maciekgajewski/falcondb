@@ -110,7 +110,10 @@ public:
     }
 
     template<typename T>
-    T get(const std::string& field_name) const;
+    T get(const std::string& field_name) const
+    {
+        return document(_internal[field_name]).as<T>();
+    }
 
     template<typename T>
     T get_dotted(const std::string& dotted_name) const
@@ -292,6 +295,13 @@ inline
 int document::as() const
 {
     return _internal.asInt();
+}
+
+template<>
+inline
+std::string document::as() const
+{
+    return _internal.asString();
 }
 
 template<>

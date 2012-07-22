@@ -29,15 +29,20 @@ namespace falcondb { namespace dbengine {
 class command_context : public interfaces::command_context
 {
 public:
-    command_context(const document_storage& data_storage);
+    command_context(
+        const document_storage& data_storage,
+        std::vector<interfaces::index::unique_ptr>& indexes
+        );
 
     // interface
 
     virtual interfaces::document_storage& get_data_storage();
+    virtual std::vector<interfaces::index::unique_ptr>& get_indexes();
 
 private:
 
     document_storage _data_storage;
+    std::vector<interfaces::index::unique_ptr>& _indexes;
 };
 
 } }

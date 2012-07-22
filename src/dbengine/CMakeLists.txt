@@ -9,6 +9,7 @@ add_library(engine
 
 target_link_libraries(engine
     utils
+    index_btree
 
     boost_filesystem
 )

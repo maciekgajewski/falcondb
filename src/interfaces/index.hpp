@@ -45,6 +45,9 @@ class index
 {
 public:
 
+    typedef std::shared_ptr<index> shared_ptr;
+    typedef std::unique_ptr<index> unique_ptr;
+
     /// Inserts document into index
     virtual void insert(const document& storage_key, const document& doc) = 0;
 
@@ -63,6 +66,14 @@ class index_type
 {
 public:
 
+    typedef std::shared_ptr<index_type> pointer;
+
+    struct create_result
+    {
+        document index_description;
+        std::unique_ptr<index> new_index;
+    };
+
     /// Loads index from storage, which has it's root stored under specific key
     virtual std::unique_ptr<index> load_index(
         document_storage& index_storage,
@@ -71,7 +82,7 @@ public:
     // Creates index on all elements from the iterator.
     // The index is stored in the index storage. The description has to be stored
     // and is required to load the index
-    virtual document create_index(
+    virtual create_result create_index(
         const document& index_definition,
         index_iterator& documents,
         document_storage& index_storage,

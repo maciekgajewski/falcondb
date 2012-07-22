@@ -21,14 +21,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace dbengine {
 
-command_context::command_context(const document_storage& data_storage)
-    : _data_storage(data_storage)
+command_context::command_context(
+        const document_storage& data_storage,
+        std::vector<interfaces::index::unique_ptr>& indexes
+        )
+    : _data_storage(data_storage), _indexes(indexes)
 {
 }
 
 interfaces::document_storage& command_context::get_data_storage()
 {
     return _data_storage;
+}
+
+std::vector<interfaces::index::unique_ptr>&  command_context::get_indexes()
+{
+    return _indexes;
 }
 
 } }

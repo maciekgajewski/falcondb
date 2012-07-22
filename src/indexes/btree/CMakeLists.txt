@@ -6,5 +6,6 @@ add_library(index_btree
 
 target_link_libraries(index_btree
     utils
+    document
 
 )

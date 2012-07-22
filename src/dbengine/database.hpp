@@ -22,6 +22,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "interfaces/engine.hpp"
 #include "interfaces/storage_backend.hpp"
+#include "interfaces/index.hpp"
+
+#include "dbengine/document_storage.hpp"
 
 namespace falcondb { namespace dbengine {
 
@@ -41,6 +44,12 @@ private:
 
     interfaces::database_backend_ptr _storage;
     command_processor& _processor;
+    document _meta_data;
+
+    std::vector<interfaces::index::unique_ptr> _indexes;
+    document_storage _index_storage;
+
+    interfaces::index_type::pointer _default_index_type;
 
 };
 
