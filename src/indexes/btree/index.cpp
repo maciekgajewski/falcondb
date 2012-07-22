@@ -42,13 +42,16 @@ index::index(interfaces::document_storage& storage, const document& definition)
     _storage.write(_root, root_doc);
 }
 
+index::~index()
+{
+}
+
 void index::insert(const document& storage_key, const document& doc)
 {
     document index_key = extract_index_key(doc);
-    document root_doc = _storage.read(_root);
 
     // enter the actula recursive algo
-    tree_insert(root_doc, index_key, storage_key);
+    tree_insert(_root, index_key, storage_key);
 
 }
 
@@ -95,8 +98,10 @@ document index::create_leaf()
     return leaf;
 }
 
-void index::tree_insert(document& node, const document& key, const document& value)
+void index::tree_insert(const document& node_key, const document& key, const document& value)
 {
+    document node = _storage.read(node_key);
+
     // insert into leaf node
     if(node.get<std::string>("type") == "leaf")
     {
@@ -104,20 +109,22 @@ void index::tree_insert(document& node, const document& key, const document& val
         // will fit?
         if (data.size() < ITEMS_PER_LEAF)
         {
+            document new_element;
+            new_element.append("key", key);
+            new_element.append("value", value);
+
             document::const_iterator it = std::lower_bound(
                 data.begin(), data.end(),
-                value,
+                new_element,
                 [this](const document& a, const document& b)
                 {
                     return compare_index_keys(a.get<document>("key"), b.get<document>("key"));
                 });
 
-            document new_element;
-            new_element.append("key", key);
-            new_element.append("value", value);
             data.insert(it, new_element);
 
             node.append("data", data); // TODO there should be an ability to do in-place update
+            _storage.write(node_key, node);
         }
         else
         {

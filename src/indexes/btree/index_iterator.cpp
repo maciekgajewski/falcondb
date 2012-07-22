@@ -36,18 +36,17 @@ bool index_iterator::has_next()
 
 document index_iterator::next()
 {
-    _index ++;
     document data = _leaf_node.get<document>("data");
     if (_index < data.size())
     {
-        return data[_index];
+        return data[_index++].get<document>("value");
     }
     else
     {
         _index = 0;
         document next_key = _leaf_node.get<document>("next");
         _leaf_node = _storage.read(next_key);
-        return _leaf_node.get<document>("data")[0];
+        return _leaf_node.get<document>("data")[0].get<document>("value");
     }
 }
 

@@ -39,6 +39,8 @@ public:
         interfaces::document_storage& storage,
         const document& definition);
 
+    virtual ~index();
+
     document get_root() const { return _root; }
 
     // interface
@@ -62,7 +64,7 @@ private:
 
     // tree ops
 
-    void tree_insert(document& node, const document& key, const document& value);
+    void tree_insert(const document& node_key, const document& key, const document& value);
 
     interfaces::document_storage& _storage;
     const document _definition;

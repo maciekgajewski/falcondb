@@ -37,6 +37,12 @@ static void insert_with_id(interfaces::command_context& context, const document&
     document key = doc.get<document>("_id");
 
     context.get_data_storage().write(key, doc);
+
+    // update indexes
+    for( const interfaces::index::unique_ptr& i : context.get_indexes())
+    {
+        i->insert(key, doc);
+    }
 }
 
 void insert(const document& param,
@@ -70,18 +76,18 @@ void list(const document& param,
     const interfaces::result_handler& handler,
     interfaces::command_context& context)
 {
-    /* TODO port to indexes
-    document_list result;
-    storage->for_each(
-        [&](const range& key)
-        {
-            std::string data = storage->get(key);
-            result.push_back(document::from_storage(data));
-        });
+    // use main index interator to list the dataset
+    interfaces::index::unique_ptr& main_index = context.get_indexes()[0];
+    const interfaces::index_iterator::unique_ptr& it = main_index->find(document());
 
+    document_list result;
+    while(it->has_next())
+    {
+        document storage_key = it->next();
+        document doc = context.get_data_storage().read(storage_key);
+        result.push_back(doc);
+    }
     handler(boost::none, result);
-    */
-    handler(std::string("list not implemented"), document_list());
 }
 
 void remove(const document& param,

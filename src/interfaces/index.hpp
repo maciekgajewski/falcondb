@@ -33,6 +33,8 @@ class index_iterator
 {
 public:
 
+    typedef std::unique_ptr<index_iterator> unique_ptr;
+
     /// Checks if subsequent call to 'next' will succeed
     virtual bool has_next() = 0;
 
@@ -48,6 +50,8 @@ public:
     typedef std::shared_ptr<index> shared_ptr;
     typedef std::unique_ptr<index> unique_ptr;
 
+    virtual ~index() {};
+
     /// Inserts document into index
     virtual void insert(const document& storage_key, const document& doc) = 0;
 
@@ -58,7 +62,7 @@ public:
     virtual void del(const document& doc) = 0;
 
     /// Creates iterator on certain range.
-    virtual std::unique_ptr<index_iterator> find(const document& range) = 0;
+    virtual index_iterator::unique_ptr find(const document& range) = 0;
 };
 
 /// Index type

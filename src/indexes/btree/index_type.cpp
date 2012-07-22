@@ -79,9 +79,10 @@ void index_type::verify_definition(const document& definition)
     // options are optional, no need to check
 
     // feilds has top be a flat doc with non-zero integers
-    for(const document& field : fields)
+    std::vector<std::string> field_names = fields.field_names();
+    for(const std::string& field : field_names)
     {
-        if (field.as<int>() == 0)
+        if (fields.get<int>(field) == 0)
             throw exception("field can not be 0");
     }
 }

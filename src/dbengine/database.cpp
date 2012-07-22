@@ -72,6 +72,8 @@ database::database(const interfaces::database_backend_ptr& storage, command_proc
 
         document_storage data_storage(_storage, "data");
 
+        std::cout << "creating main index: " << definition.to_json() << std::endl;
+
         interfaces::index_type::create_result result = _default_index_type->create_index(
             definition,
             it,
