@@ -37,7 +37,7 @@ backend::~backend()
 std::shared_ptr<interfaces::database_backend> backend::open_database(const std::string& path)
 {
     // ness dosn't do any checking, lets do some chedcking by ourselves
-    if (filesystem::is_directory(path))
+    if (bfs::is_directory(path))
     {
         return std::shared_ptr<interfaces::database_backend>(new database(path));
     }
@@ -49,7 +49,7 @@ std::shared_ptr<interfaces::database_backend> backend::open_database(const std::
 
 std::shared_ptr<interfaces::database_backend> backend::create_database(const std::string& path)
 {
-    if (!filesystem::exists(path))
+    if (!bfs::exists(path))
     {
         return std::shared_ptr<interfaces::database_backend>(new database(path));
     }
