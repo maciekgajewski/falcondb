@@ -83,7 +83,7 @@ public:
         Json::Value val;
         if (!reader.parse(json_data, val, false))
         {
-            throw exception("Error parsing json: ", reader.getFormattedErrorMessages());
+            throw exception("Error parsing json: ", reader.getFormatedErrorMessages());
         }
 
         return document(std::move(val));

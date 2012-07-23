@@ -6,6 +6,12 @@ find_package(Boost REQUIRED system thread)
 find_package(LevelDB)
 find_package(NessDB) 
 
+include_directories(${Boost_INCLUDE_DIR})
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${Boost_LIBRARY_DIRS}")
+
+message(STATUS "Boost include dir ${Boost_INCLUDE_DIR}")
+message(STATUS "Boost library dir ${Boost_LIBRARY_DIRS}")
+
 # project-wide setup
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++0x -Wall")
 include_directories(${CMAKE_SOURCE_DIR})

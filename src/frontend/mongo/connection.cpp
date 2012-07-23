@@ -94,23 +94,24 @@ bson_object_list connection::handle_admin_command(query_message &query_msg)
         builder.append("you",  _socket.remote_endpoint().address().to_string());
     } else if (command == "listDatabases") {
         std::vector<std::string> databases = _engine.get_databases();
-        ::mongo::BSONArrayBuilder arrayBuilder;
+        std::set<std::string> dbs;
         for (const std::string& database: databases) {
+            dbs.insert(database.substr(0, database.find_first_of('.')));
+        }
+
+        ::mongo::BSONArrayBuilder arrayBuilder;
+        for (const std::string& database: dbs) {
 
             ::mongo::BSONObjBuilder builder;
 
-            std::size_t dot_pos = database.find_first_of('.');
-            if (dot_pos != std::string::npos) {
-                builder.append("name", database.substr(0, dot_pos));
-            } else {
-                builder.append("name", database);
-            }
-
+            builder.append("name", database);
             builder.append("sizeOnDisk", 1);
             builder.append("empty", true);
 
             arrayBuilder.append(builder.obj());
         }
+
+
         builder.appendArray("databases", arrayBuilder.obj());
         builder.append("totalSize", double(1));
         builder.append("ok", double(1));
