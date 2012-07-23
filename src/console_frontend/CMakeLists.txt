@@ -6,9 +6,7 @@ add_library(console_frontend
 
 target_link_libraries(console_frontend
     utils
-
-    boost_system
-    boost_thread
+    ${Boost_LIBRARIES}
     pthread
     readline
 )
