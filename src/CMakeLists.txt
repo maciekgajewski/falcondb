@@ -51,3 +51,5 @@ add_subdirectory(bson_test)
 add_subdirectory(utils)
 add_subdirectory(threads)
 
+#other
+add_subdirectory(new_doc)
