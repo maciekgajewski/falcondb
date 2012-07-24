@@ -2,7 +2,7 @@ project(FalconDB)
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmakeModules)
 
-find_package(Boost REQUIRED system thread)
+find_package(Boost REQUIRED system thread date_time)
 find_package(LevelDB)
 find_package(NessDB) 
 
