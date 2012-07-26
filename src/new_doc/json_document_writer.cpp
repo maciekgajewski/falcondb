@@ -32,5 +32,43 @@ std::string json_writer::encode_to_json(const std::string& s)
     return std::string("\"") + s + std::string("\"");
 }
 
+json_writer::array_writer json_writer::write_array(std::size_t /*size*/, const std::string&)
+{
+    return array_writer(*this);
+}
+
+json_writer::map_writer json_writer::write_map(std::size_t /*size*/, const std::string&)
+{
+    return map_writer(*this);
+}
+
+detail::json_array_writer::map_writer detail::json_array_writer::write_map(std::size_t size, const std::string& field_name)
+{
+    _parent._out << field_name << ": ";
+    _sep = " , ";
+    return _parent.write_map(size, field_name);
+}
+
+detail::json_array_writer::array_writer detail::json_array_writer::write_array(std::size_t size, const std::string& field_name)
+{
+    _parent._out << field_name << ": ";
+    _sep = " , ";
+    return _parent.write_array(size, field_name);
+}
+
+detail::json_map_writer::map_writer detail::json_map_writer::write_map(std::size_t size, const std::string& field_name)
+{
+    _parent._out << _sep << field_name << ": ";
+    _sep = " , ";
+    return _parent.write_map(size, field_name);
+}
+
+detail::json_map_writer::array_writer detail::json_map_writer::write_array(std::size_t size, const std::string& field_name)
+{
+    _parent._out << _sep << field_name << ": ";
+    _sep = " , ";
+    return _parent.write_array(size, field_name);
+}
+
 }
 

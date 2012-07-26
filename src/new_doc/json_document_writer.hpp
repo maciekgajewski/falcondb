@@ -28,6 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb {
 
+namespace detail {
+    class json_array_writer;
+    class json_map_writer;
+}
+
 /// Wrtier implements basic writing
 class json_writer
 {
@@ -44,6 +49,13 @@ public:
         write_scalar(to_iso_string(pt), std::string());
     }
 
+    // bool
+    void write_scalar(bool b, const std::string&)
+    {
+        if (b) _out << "true";
+        else _out << "false";
+    }
+
     /// arithmetic type - convert to string
     template<typename T>
     void write_scalar(
@@ -54,73 +66,13 @@ public:
         _out << t;
     }
 
-    // array wrtier
-    class array_writer
-    {
-    public:
+    friend class detail::json_array_writer;
+    friend class detail::json_map_writer;
+    typedef detail::json_array_writer array_writer;
+    typedef detail::json_map_writer map_writer;
 
-        array_writer(json_writer& parent)
-        : _parent(parent)
-        {
-            _parent._out << "[ ";
-        }
-
-        ~array_writer()
-        {
-            _parent._out << " ]";
-        }
-
-        template<typename T>
-        void write_scalar(const T& t, const std::string&)
-        {
-            _parent._out << _sep;
-            _parent.write_scalar(t, std::string());
-            _sep = " , ";
-        }
-    private:
-        json_writer& _parent;
-        std::string _sep;
-    };
-    friend class array_writer;
-
-    array_writer write_array(std::size_t /*size*/, const std::string&)
-    {
-        return array_writer(*this);
-    }
-
-    // map writer
-    class map_writer
-    {
-    public:
-
-        map_writer(json_writer& parent)
-        : _parent(parent)
-        {
-            _parent._out << "{ ";
-        }
-
-        ~map_writer()
-        {
-            _parent._out << " }";
-        }
-
-        template<typename T>
-        void write_scalar(const T& t, const std::string& field_name)
-        {
-            _parent._out << _sep << field_name << ": ";
-            _parent.write_scalar(t, std::string());
-            _sep = " , ";
-        }
-    private:
-        json_writer& _parent;
-        std::string _sep;
-    };
-    friend class map_writer;
-
-    map_writer write_map(std::size_t /*size*/, const std::string&)
-    {
-        return map_writer(*this);
-    }
+    array_writer write_array(std::size_t /*size*/, const std::string&);
+    map_writer write_map(std::size_t /*size*/, const std::string&);
 
 private:
 
@@ -129,6 +81,80 @@ private:
 
     std::ostream& _out;
 };
+
+namespace detail {
+
+class json_array_writer
+{
+public:
+
+    typedef json_writer::map_writer map_writer;
+    typedef json_writer::array_writer array_writer;
+
+    json_array_writer(json_writer& parent)
+    : _parent(parent)
+    {
+        _parent._out << "[ ";
+    }
+
+    ~json_array_writer()
+    {
+        _parent._out << " ]";
+    }
+
+    template<typename T>
+    void write_scalar(const T& t, const std::string&)
+    {
+        _parent._out << _sep;
+        _parent.write_scalar(t, std::string());
+        _sep = " , ";
+    }
+
+    map_writer write_map(std::size_t size, const std::string& field_name);
+    array_writer write_array(std::size_t size, const std::string& field_name);
+
+private:
+
+    json_writer& _parent;
+    std::string _sep;
+};
+
+class json_map_writer
+{
+public:
+
+    typedef json_writer::map_writer map_writer;
+    typedef json_writer::array_writer array_writer;
+
+    json_map_writer(json_writer& parent)
+    : _parent(parent)
+    {
+        _parent._out << "{ ";
+    }
+
+    ~json_map_writer()
+    {
+        _parent._out << " }";
+    }
+
+    template<typename T>
+    void write_scalar(const T& t, const std::string& field_name)
+    {
+        _parent._out << _sep << field_name << ": ";
+        _parent.write_scalar(t, std::string());
+        _sep = " , ";
+    }
+
+    map_writer write_map(std::size_t size, const std::string& field_name);
+    array_writer write_array(std::size_t size, const std::string& field_name);
+
+private:
+
+    json_writer& _parent;
+    std::string _sep;
+};
+
+} // detail
 
 }
 

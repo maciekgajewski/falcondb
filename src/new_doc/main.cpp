@@ -78,6 +78,24 @@ void maps()
     test_output("scalar map string:hello, int:7", dsm);
 }
 
+void nested()
+{
+    // array of maps
+    typedef std::map<std::string, double> md_t;
+    typedef std::vector<md_t> mdv_t;
+
+    mdv_t mdv = { {std::make_pair("pi", 3.1415), std::make_pair("e", 2.718)},
+        {std::make_pair("wieght", 124.2), std::make_pair("height", 200)} };
+    test_output("vector of maps of doubles", mdv);
+
+    // map of arrays
+    typedef std::vector<bool> vb_t;
+    typedef std::map<std::string, vb_t> vbm_t;
+
+    vbm_t vbm = { std::make_pair("boolseq1", vb_t{true, false, true, false}), std::make_pair("boolseq2", vb_t{true, true}) };
+    test_output("map of vectors of bools", vbm);
+}
+
 int main(int argc, char** argv)
 {
     std::cout << "scalars" << std::endl << std::endl;
@@ -88,4 +106,7 @@ int main(int argc, char** argv)
 
     std::cout << "maps" << std::endl << std::endl;
     maps();
+
+    std::cout << "nested types" << std::endl << std::endl;
+    nested();
 }
