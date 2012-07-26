@@ -36,17 +36,20 @@ public:
     json_writer(std::ostream& out);
 
     /// string - just encode
-    void write_scalar(const std::string& s) { _out << encode_to_json(s); }
+    void write_scalar(const std::string& s, const std::string&) { _out << encode_to_json(s); }
 
     // ptime - convert to iso string
-    void write_scalar(const boost::posix_time::ptime& pt)
+    void write_scalar(const boost::posix_time::ptime& pt, const std::string&)
     {
-        write_scalar(to_iso_string(pt));
+        write_scalar(to_iso_string(pt), std::string());
     }
 
     /// arithmetic type - convert to string
     template<typename T>
-    void write_scalar(const T& t, typename boost::enable_if<boost::is_arithmetic<T> >::type* dummy = nullptr)
+    void write_scalar(
+        const T& t,
+        const std::string&,
+        typename boost::enable_if<boost::is_arithmetic<T> >::type* dummy = nullptr)
     {
         _out << t;
     }
@@ -68,10 +71,10 @@ public:
         }
 
         template<typename T>
-        void write_scalar(const T& t)
+        void write_scalar(const T& t, const std::string&)
         {
             _parent._out << _sep;
-            _parent.write_scalar(t);
+            _parent.write_scalar(t, std::string());
             _sep = " , ";
         }
     private:
@@ -80,9 +83,43 @@ public:
     };
     friend class array_writer;
 
-    array_writer write_array(std::size_t /*size*/)
+    array_writer write_array(std::size_t /*size*/, const std::string&)
     {
         return array_writer(*this);
+    }
+
+    // map writer
+    class map_writer
+    {
+    public:
+
+        map_writer(json_writer& parent)
+        : _parent(parent)
+        {
+            _parent._out << "{ ";
+        }
+
+        ~map_writer()
+        {
+            _parent._out << " }";
+        }
+
+        template<typename T>
+        void write_scalar(const T& t, const std::string& field_name)
+        {
+            _parent._out << _sep << field_name << ": ";
+            _parent.write_scalar(t, std::string());
+            _sep = " , ";
+        }
+    private:
+        json_writer& _parent;
+        std::string _sep;
+    };
+    friend class map_writer;
+
+    map_writer write_map(std::size_t /*size*/, const std::string&)
+    {
+        return map_writer(*this);
     }
 
 private:

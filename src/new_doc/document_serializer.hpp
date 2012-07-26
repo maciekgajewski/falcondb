@@ -26,10 +26,10 @@ namespace falcondb {
 
 /// Writer requirements:
 ///
-/// Top level writer should have 3 methods:
-/// * void writer::wrtie_scalar(const T& v)
-/// * writer::array_wrtier wrtier::write_array(std::size_t)
-/// * writer::map_writer wrtier::write_map(std::size_t)
+/// writer should have 3 methods:
+/// * void writer::wrtie_scalar(const T& v, const std::string& key)
+/// * writer::array_wrtier wrtier::write_array(std::size_t, const std::string& key)
+/// * writer::map_writer wrtier::write_map(std::size_t, const std::string& key)
 ///
 /// Array wrtier:
 /// - the same as top-level wrtier
@@ -58,7 +58,7 @@ public:
     static void write(writer_type& writer, const T& val)
     {
         document_serializer serializer(writer);
-        serializer.do_write(val);
+        serializer.do_write(val, std::string());
     }
 
 // TODO how to make these private?
@@ -67,47 +67,62 @@ public:
     // actual writing
 
     // writes single scalar
-    void do_write(const document_scalar& s)
+    void do_write(const document_scalar& s, const std::string& field_name)
     {
-        boost::apply_visitor(scalar_visitor(this->_writer), s);
+        boost::apply_visitor(scalar_visitor(this->_writer, field_name), s);
     }
 
     // writes any form of document
-    void do_write(const document& d)
+    void do_write(const document& d, const std::string& field_name)
     {
         // TODO
     }
 
     // writes simple array
     template<typename T>
-    void do_write(const std::vector<T>& array)
+    void do_write(const std::vector<T>& array, const std::string& field_name)
     {
-        typename writer_type::array_writer aw = _writer.write_array(array.size());
+        typename writer_type::array_writer aw = _writer.write_array(array.size(), field_name);
         document_serializer<typename writer_type::array_writer> nested(aw);
         for( const T& i : array )
         {
-            nested.do_write(i);
+            nested.do_write(i, std::string());
         }
+    }
+
+    // writes simple map
+    template<typename T>
+    void do_write(const std::map<std::string, T>& m, const std::string& field_name)
+    {
+        typename writer_type::map_writer mw = _writer.write_map(m.size(), field_name);
+        document_serializer<typename writer_type::map_writer> nested(mw);
+        for( auto pair : m )
+        {
+            nested.do_write(pair.second, pair.first);
+        }
+
     }
 
     /// writes simple/unknown types (will fail at compile tiem if wrtier does not support it)
     template<typename T>
-    void do_write(const T& t)
+    void do_write(const T& t, const std::string& field_name)
     {
-        _writer.write_scalar(t);
+        _writer.write_scalar(t, field_name);
     }
 
     struct scalar_visitor : public boost::static_visitor<>
     {
-        scalar_visitor(writer_type& w) : _writer(w) { }
+        scalar_visitor(writer_type& w, const std::string& fn)
+        : _writer(w), _field_name(fn)  { }
 
         template<typename T>
         void operator()(const T& t) const
         {
-            _writer.write_scalar(t);
+            _writer.write_scalar(t, _field_name);
         }
 
         writer_type& _writer;
+        const std::string& _field_name;
     };
 
     //////////
