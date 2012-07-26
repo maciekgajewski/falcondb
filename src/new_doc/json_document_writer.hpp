@@ -35,24 +35,54 @@ public:
 
     json_writer(std::ostream& out);
 
-    // document bpoundaries
-    void begin() {}
-    void end() {}
-
     /// string - just encode
-    void write(const std::string& s) { _out << encode_to_json(s); }
+    void write_scalar(const std::string& s) { _out << encode_to_json(s); }
 
     // ptime - convert to iso string
-    void write(const boost::posix_time::ptime& pt)
+    void write_scalar(const boost::posix_time::ptime& pt)
     {
-        write(to_iso_string(pt));
+        write_scalar(to_iso_string(pt));
     }
 
     /// arithmetic type - convert to string
     template<typename T>
-    void write(const T& t, typename boost::enable_if<boost::is_arithmetic<T> >::type* dummy = nullptr)
+    void write_scalar(const T& t, typename boost::enable_if<boost::is_arithmetic<T> >::type* dummy = nullptr)
     {
         _out << t;
+    }
+
+    // array wrtier
+    class array_writer
+    {
+    public:
+
+        array_writer(json_writer& parent)
+        : _parent(parent)
+        {
+            _parent._out << "[ ";
+        }
+
+        ~array_writer()
+        {
+            _parent._out << " ]";
+        }
+
+        template<typename T>
+        void write_scalar(const T& t)
+        {
+            _parent._out << _sep;
+            _parent.write_scalar(t);
+            _sep = " , ";
+        }
+    private:
+        json_writer& _parent;
+        std::string _sep;
+    };
+    friend class array_writer;
+
+    array_writer write_array(std::size_t /*size*/)
+    {
+        return array_writer(*this);
     }
 
 private:

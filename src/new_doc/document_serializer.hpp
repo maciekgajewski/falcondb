@@ -24,6 +24,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb {
 
+/// Writer requirements:
+///
+/// Top level writer should have 3 methods:
+/// * void writer::wrtie_scalar(const T& v)
+/// * writer::array_wrtier wrtier::write_array(std::size_t)
+/// * writer::map_writer wrtier::write_map(std::size_t)
+///
+/// Array wrtier:
+/// - the same as top-level wrtier
+///
+/// Map wrtier:
+/// * void writer::wrtie_scalar(const std::string& key, const T& v)
+/// * writer::array_wrtier wrtier::write_array(const std::string& key, std::size_t)
+/// * writer::map_writer wrtier::write_map(const std::string& key, std::size_t)
+///
+
+
 /// The document serializer accepts documents in various forms, including
 /// variant types, tuples and containers, breaks them down to fundamental types
 /// and passes them to writer for actual writing
@@ -32,6 +49,11 @@ class document_serializer
 {
 public:
 
+    document_serializer(writer_type& writer)
+    : _writer(writer)
+    {
+    }
+
     template<typename T>
     static void write(writer_type& writer, const T& val)
     {
@@ -39,22 +61,40 @@ public:
         serializer.do_write(val);
     }
 
-private:
+// TODO how to make these private?
 
     //////////////
     // actual writing
 
+    // writes single scalar
     void do_write(const document_scalar& s)
     {
         boost::apply_visitor(scalar_visitor(this->_writer), s);
     }
 
+    // writes any form of document
+    void do_write(const document& d)
+    {
+        // TODO
+    }
+
+    // writes simple array
+    template<typename T>
+    void do_write(const std::vector<T>& array)
+    {
+        typename writer_type::array_writer aw = _writer.write_array(array.size());
+        document_serializer<typename writer_type::array_writer> nested(aw);
+        for( const T& i : array )
+        {
+            nested.do_write(i);
+        }
+    }
 
     /// writes simple/unknown types (will fail at compile tiem if wrtier does not support it)
     template<typename T>
     void do_write(const T& t)
     {
-        _writer.write(t);
+        _writer.write_scalar(t);
     }
 
     struct scalar_visitor : public boost::static_visitor<>
@@ -64,7 +104,7 @@ private:
         template<typename T>
         void operator()(const T& t) const
         {
-            _writer.write(t);
+            _writer.write_scalar(t);
         }
 
         writer_type& _writer;
@@ -72,17 +112,6 @@ private:
 
     //////////
     // other
-
-    document_serializer(writer_type& writer)
-    : _writer(writer)
-    {
-        _writer.begin();
-    }
-
-    ~document_serializer()
-    {
-        _writer.end();
-    }
 
     writer_type& _writer;
 };

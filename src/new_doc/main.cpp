@@ -31,7 +31,7 @@ void test_output(const std::string& name, const T& v)
 
 int main(int argc, char** argv)
 {
-    std::cout << "hello" << std::endl;
+    std::cout << "scalars" << std::endl << std::endl;
 
     std::uint32_t i = 223344;
     test_output("integer: " , i);
@@ -47,4 +47,17 @@ int main(int argc, char** argv)
 
     falcondb::document_scalar dt(boost::posix_time::second_clock::local_time());
     test_output("scalar with ptime: ", dt);
+
+    // arrays
+    std::cout << "arrays" << std::endl << std::endl;
+
+    std::vector<int> vi = {1, 2, 3};
+    test_output("vector<int>", vi);
+
+    std::vector<std::string> vs = {"A", "b", "C"};
+    test_output("vector<string>", vs);
+
+    std::vector<falcondb::document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
+    test_output("vector<document_scalar>", vds);
+
 }
