@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "new_doc/dynamic_document.hpp"
 
+#include <boost/utility/enable_if.hpp>
+
 namespace falcondb {
 
 /// Writer requirements:
@@ -39,6 +41,33 @@ namespace falcondb {
 /// * writer::array_wrtier wrtier::write_array(const std::string& key, std::size_t)
 /// * writer::map_writer wrtier::write_map(const std::string& key, std::size_t)
 ///
+
+namespace detail {
+
+// tuple unpacker
+template<unsigned I>
+struct tuple_unpacker
+{
+    template<class tuple_type, class serializer_type>
+    void operator()(const tuple_type& tuple, serializer_type& s)
+    {
+        s.do_write(std::get<std::tuple_size<tuple_type>::value - I>(tuple), std::string());
+        tuple_unpacker<I-1> next;
+        next(tuple, s);
+    }
+};
+
+template<>
+struct tuple_unpacker<1>
+{
+    template<class tuple_type, class serializer_type>
+    void operator()(const tuple_type& tuple, serializer_type& s)
+    {
+        s.do_write(std::get<std::tuple_size<tuple_type>::value - 1>(tuple), std::string());
+    }
+};
+
+}
 
 
 /// The document serializer accepts documents in various forms, including
@@ -92,16 +121,27 @@ public:
 
     // writes simple map
     template<typename T>
-    void do_write(const std::map<std::string, T>& m, const std::string& field_name)
+    void do_write(const std::map<std::string, T>& map, const std::string& field_name)
     {
-        typename writer_type::map_writer mw = _writer.write_map(m.size(), field_name);
+        typename writer_type::map_writer mw = _writer.write_map(map.size(), field_name);
         document_serializer<typename writer_type::map_writer> nested(mw);
-        for( auto pair : m )
+        for( auto pair : map )
         {
             nested.do_write(pair.second, pair.first);
         }
 
     }
+
+    // write tuple
+    template<typename ...Ts>
+    void do_write(const std::tuple<Ts...>& tuple, const std::string& field_name)
+    {
+        typename writer_type::array_writer aw = _writer.write_array(sizeof...(Ts), field_name);
+        document_serializer<typename writer_type::array_writer> nested(aw);
+        detail::tuple_unpacker<sizeof...(Ts)> unpacker;
+        unpacker(tuple, nested);
+    }
+
 
     /// writes simple/unknown types (will fail at compile tiem if wrtier does not support it)
     template<typename T>

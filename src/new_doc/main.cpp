@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <tuple>
 
 #include "new_doc/dynamic_document.hpp"
 #include "new_doc/document_serializer.hpp"
@@ -59,6 +60,10 @@ void arrays()
 
     std::vector<falcondb::document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
     test_output("vector<document_scalar>", vds);
+
+    // tuple
+    auto ti = std::make_tuple(1, 2, 3, 4);
+    test_output("tuple of ints", ti);
 }
 
 void maps()
