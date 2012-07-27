@@ -1,3 +1,9 @@
+#include "bson/bsonobjbuilder.hpp"
+
+#include "new_doc/dynamic_document.hpp"
+#include "new_doc/json_writer.hpp"
+#include "new_doc/json_parser.hpp"
+
 #include <boost/type_traits.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -6,8 +12,8 @@
 #include <sstream>
 #include <tuple>
 
-#include "new_doc/dynamic_document.hpp"
-#include "new_doc/json_document_writer.hpp"
+#include <ctime>
+
 
 template<typename T>
 std::string to_json(const T& t)
@@ -113,8 +119,24 @@ void document()
     test_output("document with map of vectors of bools", vbm);
 }
 
+template<typename T>
+void test_parse(const std::string& input)
+{
+    try
+    {
+        T res = falcondb::json_parser::parse(input);
+        std::cout << input << " => " << res << std::endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cout << "error parsing " << input << " : " << e.what() << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 int main(int argc, char** argv)
 {
+    /*
     std::cout << "scalars" << std::endl << std::endl;
     scalars();
 
@@ -129,4 +151,31 @@ int main(int argc, char** argv)
 
     std::cout << "full document" << std::endl << std::endl;
     document();
+    */
+
+    // let's have some bson!
+    mongo::BSONObjBuilder builder;
+    builder.append("string", "bubububu");
+    builder.append("double", 3.1415);
+    builder.appendArray("array", mongo::BSONArrayBuilder().append(1).append(2).append(3).arr());
+    builder.append("date", mongo::Date_t(std::time(NULL)));
+
+    mongo::BSONObj o = builder.obj();
+
+    std::string as_json = o.jsonString();
+    //std::cout << "bson as json: " << as_json << std::endl;
+
+    // parser
+    test_parse<falcondb::document_scalar>("123.45");
+    test_parse<falcondb::document_scalar>("123.45dfgdf");
+    test_parse<falcondb::document_scalar>("what?");
+    test_parse<falcondb::document_scalar>("55");
+    test_parse<falcondb::document_scalar>("-55");
+    test_parse<falcondb::document_scalar>("\"valid string\"");
+    test_parse<falcondb::document_scalar>("\"invalid string with\"quote\"");
+    test_parse<falcondb::document_scalar>("\"invalid string with\\backslash\"");
+    test_parse<falcondb::document_scalar>("\"valid string with\\\\backslash\"");
+    test_parse<falcondb::document_scalar>("\"valid string with\\\"quote\"");
+
+
 }
