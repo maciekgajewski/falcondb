@@ -51,6 +51,41 @@ typedef boost::make_recursive_variant< // will your eyes explode?
 typedef std::vector<document> document_array;
 typedef std::map<std::string, document> document_map;
 
+inline document document_from(const document_scalar& scalar)
+{
+    return document(scalar);
+}
+
+template<typename T>
+document document_from(const std::vector<T>& v)
+{
+    document_array variant_array;
+    variant_array.reserve(v.size());
+    std::copy(v.begin(), v.end(), std::back_inserter(variant_array));
+    return document(std::move(variant_array));
+}
+template<>
+inline
+document document_from<document>(const document_array& v)
+{
+    return document(v);
+}
+
+template<typename T>
+document document_from(const std::map<std::string, T>& m)
+{
+    document_map variant_map;
+    std::transform(
+        m.begin(),
+        m.end(),
+        std::inserter(variant_map, variant_map.end()),
+        [](const std::pair<std::string, T>& in)
+        {
+            return std::pair<std::string, document>(in.first, document_from(in.second));
+        });
+    return document(std::move(variant_map));
+}
+
 }
 
 #endif

@@ -21,9 +21,32 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb {
 
+namespace detail {
+
+struct visitor : public boost::static_visitor<>
+{
+    visitor(json_writer& writer) : _writer(writer) { }
+
+    template<typename T>
+    void operator()(const T& t)
+    {
+        _writer.write(t);
+    }
+
+    json_writer& _writer;
+};
+
+}
+
 json_writer::json_writer(std::ostream& out)
 : _out(out)
 {
+}
+
+void json_writer::write(const document_scalar& scalar)
+{
+    detail::visitor v(*this);
+    boost::apply_visitor(v, scalar);
 }
 
 std::string json_writer::encode_to_json(const std::string& s)
@@ -32,42 +55,10 @@ std::string json_writer::encode_to_json(const std::string& s)
     return std::string("\"") + s + std::string("\"");
 }
 
-json_writer::array_writer json_writer::write_array(std::size_t /*size*/, const std::string&)
+void json_writer::write(const document& doc)
 {
-    return array_writer(*this);
-}
-
-json_writer::map_writer json_writer::write_map(std::size_t /*size*/, const std::string&)
-{
-    return map_writer(*this);
-}
-
-detail::json_array_writer::map_writer detail::json_array_writer::write_map(std::size_t size, const std::string& field_name)
-{
-    _parent._out << field_name << ": ";
-    _sep = " , ";
-    return _parent.write_map(size, field_name);
-}
-
-detail::json_array_writer::array_writer detail::json_array_writer::write_array(std::size_t size, const std::string& field_name)
-{
-    _parent._out << field_name << ": ";
-    _sep = " , ";
-    return _parent.write_array(size, field_name);
-}
-
-detail::json_map_writer::map_writer detail::json_map_writer::write_map(std::size_t size, const std::string& field_name)
-{
-    _parent._out << _sep << field_name << ": ";
-    _sep = " , ";
-    return _parent.write_map(size, field_name);
-}
-
-detail::json_map_writer::array_writer detail::json_map_writer::write_array(std::size_t size, const std::string& field_name)
-{
-    _parent._out << _sep << field_name << ": ";
-    _sep = " , ";
-    return _parent.write_array(size, field_name);
+    detail::visitor v(*this);
+    boost::apply_visitor(v, doc);
 }
 
 }

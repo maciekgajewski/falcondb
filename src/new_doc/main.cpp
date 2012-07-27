@@ -7,7 +7,6 @@
 #include <tuple>
 
 #include "new_doc/dynamic_document.hpp"
-#include "new_doc/document_serializer.hpp"
 #include "new_doc/json_document_writer.hpp"
 
 template<typename T>
@@ -16,7 +15,7 @@ std::string to_json(const T& t)
     std::stringstream ss;
     falcondb::json_writer writer(ss);
 
-    falcondb::write_document(writer, t);
+    writer.write(t);
 
     return ss.str();
 }
@@ -47,7 +46,7 @@ void scalars()
     falcondb::document_scalar dt(boost::posix_time::second_clock::local_time());
     test_output("scalar with ptime", dt);
 
-    test_output("strinbg literal", "hello");
+    test_output("string literal", "hello");
 }
 
 void arrays()
@@ -62,8 +61,8 @@ void arrays()
     test_output("vector<document_scalar>", vds);
 
     // tuple
-    auto ti = std::make_tuple(1, 2, 3, 4);
-    test_output("tuple of ints", ti);
+    //auto ti = std::make_tuple(1, 2, 3, 4);
+    //test_output("tuple of ints", ti);
 }
 
 void maps()
@@ -96,6 +95,24 @@ void nested()
     test_output("map of vectors of bools", vbm);
 }
 
+void document()
+{
+    falcondb::document dsi = falcondb::document_from(3);
+    test_output("document with scalar", dsi);
+
+    std::vector<falcondb::document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
+    falcondb::document dav = falcondb::document_from(vds);
+    test_output("document with variant array", dav);
+
+    // map of arrays
+    typedef std::vector<bool> vb_t;
+    typedef std::map<std::string, vb_t> vbm_t;
+
+    vbm_t vbm = { std::make_pair("boolseq1", vb_t{true, false, true, false}), std::make_pair("boolseq2", vb_t{true, true}) };
+    falcondb::document vbmd = falcondb::document_from(vbm);
+    test_output("document with map of vectors of bools", vbm);
+}
+
 int main(int argc, char** argv)
 {
     std::cout << "scalars" << std::endl << std::endl;
@@ -109,4 +126,7 @@ int main(int argc, char** argv)
 
     std::cout << "nested types" << std::endl << std::endl;
     nested();
+
+    std::cout << "full document" << std::endl << std::endl;
+    document();
 }
