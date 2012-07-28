@@ -39,25 +39,27 @@ static void insert_with_id(const interfaces::database_backend_ptr& storage, cons
     storage->add(key_data, document_data);
 }
 
-void insert(const document& param,
+void insert(const document_list& params,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage)
 {
-    // does the object has _id field?
-    if (param.has_field("_id"))
-    {
-        insert_with_id(storage, param);
-    }
-    else
-    {
-        // generate
-        boost::uuids::random_generator gen;
-        boost::uuids::uuid id = gen();
+    for(const document& param: params) {
+        // does the object has _id field?
+        if (param.has_field("_id"))
+        {
+            insert_with_id(storage, param);
+        }
+        else
+        {
+            // generate
+            boost::uuids::random_generator gen;
+            boost::uuids::uuid id = gen();
 
-        document copy = param;
-        copy.append("_id", id);
+            document copy = param;
+            copy.append("_id", id);
 
-        insert_with_id(storage, copy);
+            insert_with_id(storage, copy);
+        }
     }
 
     handler(boost::none, document_list());
@@ -66,7 +68,7 @@ void insert(const document& param,
 ////////////////////////////////////////////////////
 /// list
 
-void list(const document& param,
+void list(const document_list& param,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage)
 {
@@ -81,12 +83,14 @@ void list(const document& param,
     handler(boost::none, result);
 }
 
-void remove(const document& param,
+void remove(const document_list& params,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage)
 {
-    storage->del(param.to_storage());
-    handler(boost::none, document_list());
+    for(const document& param: params) {
+        storage->del(param.to_storage());
+        handler(boost::none, document_list());
+    }
 }
 
 

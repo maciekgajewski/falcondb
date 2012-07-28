@@ -2,7 +2,7 @@ project(FalconDB)
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmakeModules)
 
-find_package(Boost REQUIRED system thread)
+find_package(Boost REQUIRED system thread unit_test_framework filesystem date_time)
 find_package(LevelDB)
 find_package(NessDB) 
 
@@ -11,11 +11,13 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${Boost_LIBRARY_DIRS}")
 
 message(STATUS "Boost include dir ${Boost_INCLUDE_DIR}")
 message(STATUS "Boost library dir ${Boost_LIBRARY_DIRS}")
+message(STATUS "Boost library ${Boost_LIBRARIES}")
 
 # project-wide setup
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++0x -Wall")
 include_directories(${CMAKE_SOURCE_DIR})
-set(CMAKE_BUILD_TYPE Debug)
+
+message(STATUS "CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 
 #####################
 # project components

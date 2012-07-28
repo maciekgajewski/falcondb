@@ -127,7 +127,10 @@ const std::string& frontend::require_arg(const command_dispatcher::arg_list& al,
     return al[idx];
 }
 
-void frontend::post_command(const std::string& db_name, const std::string& command, const document& param)
+void frontend::post_command(
+    const std::string& db_name,
+    const std::string& command,
+    const document_list& param)
 {
     interfaces::database_ptr db = _engine.get_database(db_name);
 
@@ -183,8 +186,9 @@ void frontend::result_handler(const std::string& operation, const interfaces::er
 void frontend::handle_insert(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
-    document doc = document::from_json(require_arg(al, 1));
-    post_command(db_name, "insert", doc);
+    document_list doc_list;
+    doc_list.push_back(document::from_json(require_arg(al, 1)));
+    post_command(db_name, "insert", doc_list);
 }
 
 void frontend::handle_list(const frontend::arg_list& al)
@@ -196,8 +200,9 @@ void frontend::handle_list(const frontend::arg_list& al)
 void frontend::handle_remove(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
-    document doc = document::from_json(require_arg(al, 1));
-    post_command(db_name, "remove", doc);
+    document_list doc_list;
+    doc_list.push_back(document::from_json(require_arg(al, 1)));
+    post_command(db_name, "remove", doc_list);
 }
 
 void frontend::handle_showdbs()

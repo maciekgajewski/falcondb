@@ -40,7 +40,7 @@ public:
 private:
 
     void start_accept();
-    void handle_accept(connection::pointer conn, const boost::system::error_code& error);
+    void handle_accept(const boost::system::error_code& error, const connection::pointer& conn);
 
     // data
     interfaces::engine& _engine;

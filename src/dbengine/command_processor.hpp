@@ -47,9 +47,8 @@ public:
     void register_command(const std::string& command, const interfaces::command_handler& handler);
 
     // posts command for execution
-    void post(
-        const std::string& command,
-        const document& params,
+    void post(const std::string& command,
+        const document_list& params,
         const interfaces::result_handler& result,
         const interfaces::database_backend_ptr& storage);
 
@@ -65,9 +64,8 @@ private:
     std::unique_ptr<boost::thread> _thread;
     std::unique_ptr<boost::asio::io_service::work> _work;
 
-    static void handler_wrapper(
-        const std::string& command,
-        const document& params,
+    static void handler_wrapper(const std::string& command,
+        const document_list& params,
         const interfaces::result_handler& result,
         const interfaces::database_backend_ptr& storage,
         const interfaces::command_handler& handler);

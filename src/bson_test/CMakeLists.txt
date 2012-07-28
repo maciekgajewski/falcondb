@@ -6,7 +6,4 @@ add_executable(bson_test
 
 target_link_libraries(bson_test
     bson
-
-    boost_unit_test_framework
-    boost_thread
 )

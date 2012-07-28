@@ -86,6 +86,9 @@ void engine::run()
 std::vector<std::string> engine::get_databases()
 {
     std::vector<std::string> result;
+
+    rwmutex::scoped_read_lock lock(_databases_mutex);
+
     std::transform(_databases.begin(), _databases.end(),
         std::back_inserter(result), [](const database_map::value_type& p) { return p.first; });
 
@@ -107,12 +110,17 @@ interfaces::database_ptr engine::get_database(const std::string& db_name)
     }
 }
 
-void engine::create_database(const std::string& db_name)
+interfaces::database_ptr engine::create_database(const std::string& db_name)
 {
     // does the db already exists?
-    if (_databases.find(db_name) != _databases.end())
     {
-        throw exception("Dastabase ", db_name, " already exists");
+        rwmutex::scoped_read_lock lock(_databases_mutex);
+
+        auto it = _databases.find(db_name);
+        if (it != _databases.end())
+        {
+            return std::make_shared<database_impl>(it->second, std::ref(_processor));
+        }
     }
 
     bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
@@ -124,7 +132,13 @@ void engine::create_database(const std::string& db_name)
 
     bfs::create_directory(new_db_path);
     interfaces::database_backend_ptr backend = _storage_backend.create_database(new_db_path.generic_string());
-    _databases.insert(std::make_pair(db_name, backend));
+
+    {
+        rwmutex::scoped_write_lock lock(_databases_mutex);
+        _databases.insert(std::make_pair(db_name, backend));
+    }
+
+    return std::make_shared<database_impl>(backend, std::ref(_processor));
 }
 
 void engine::drop_database(const std::string& db_name)

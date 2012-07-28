@@ -23,3 +23,4 @@ add_library(bson
     enums.hpp
     size_tracker.hpp
 )
+target_link_libraries(bson ${Boost_LIBRARIES})

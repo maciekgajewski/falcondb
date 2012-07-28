@@ -28,19 +28,19 @@ namespace commands {
 
 /// upsert object into collection. _id is added to the object if absent
 void insert(
-    const document& param,
+    const document_list& param,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage);
 
 // returns the entire content of the collection in no particular order
 void list(
-    const document& param,
+    const document_list& param,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage);
 
 // removes object which _id is equal to param
 void remove(
-    const document& param,
+    const document_list& param,
     const interfaces::result_handler& handler,
     const interfaces::database_backend_ptr& storage);
 

@@ -35,6 +35,7 @@
 #include "bson/base64.hpp"
 #include "bson/hex.h"
 #include "bson/optime.hpp"
+#include "bson/bsonobj.ipp"
 
 using namespace boost::spirit;
 

@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <iostream>
 #include <algorithm>
+#include <thread>
 
 namespace falcondb { namespace frontend { namespace mongo {
 
@@ -47,10 +48,13 @@ void server::start_accept()
     connection::pointer conn = boost::make_shared<connection>(*_io_service, _engine);
     _acceptor->async_accept(
         conn->socket(),
-        boost::bind(&server::handle_accept, this, conn, boost::asio::placeholders::error));
+        [this, conn](const boost::system::error_code &e)
+        {
+            this->handle_accept(e, conn);
+        });
 }
 
-void server::handle_accept(connection::pointer conn, const boost::system::error_code& error)
+void server::handle_accept(const boost::system::error_code& error, const connection::pointer &conn)
 {
     std::cout << "Connection accepted" << std::endl;
     if (!error)
@@ -65,20 +69,25 @@ void server::execute()
 {
     // setup asio
 
-    boost::asio::io_service io_service;
+    boost::asio::io_service io;
 
-    _io_service = &io_service;
+    _io_service = &io;
 
     using namespace boost::asio::ip;
 
-    tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 27017));
+    tcp::acceptor acceptor(io, tcp::endpoint(tcp::v4(), 27017));
 
     _acceptor = &acceptor;
 
     try
     {
-        start_accept();
-        io_service.run();
+        std::thread worker(
+            [this]() {
+                start_accept();
+                _io_service->run();
+            });
+        boost::asio::io_service::work w(io);
+        io.run();
     }
     catch(const std::exception& e)
     {

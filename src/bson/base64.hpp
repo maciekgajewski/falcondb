@@ -19,6 +19,7 @@
 
 #include <boost/scoped_array.hpp>
 #include <cstring>
+#include <sstream>
 
 namespace mongo {
     namespace base64 {

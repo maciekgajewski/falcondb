@@ -25,7 +25,8 @@
 #include <map>
 #include <limits>
 #include <cassert>
-
+#include "bson/bsonobjiterator.hpp"
+#include "bson/bsonobjbuilder.hpp"
 
 #if defined(_WIN32)
 #undef max

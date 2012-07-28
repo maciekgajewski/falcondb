@@ -42,14 +42,14 @@ typedef std::shared_ptr<database> database_ptr;
 
 typedef boost::optional<std::string> error_message;
 typedef std::function<void (const error_message& error, const document_list& result)> result_handler;
-typedef std::function<void (const document&, const result_handler&, const database_backend_ptr&)> command_handler;
+typedef std::function<void (const document_list&, const result_handler&, const database_backend_ptr&)> command_handler;
 
 class engine
 {
 public:
     virtual std::vector<std::string> get_databases() = 0;
     virtual database_ptr get_database(const std::string& db_name) = 0;
-    virtual void create_database(const std::string& db_name) = 0;
+    virtual database_ptr create_database(const std::string& db_name) = 0;
     virtual void drop_database(const std::string& db_name) = 0;
 };
 
@@ -64,7 +64,7 @@ public:
     /// \param handler completion handler, called in one of engine threads
     virtual bool post(
         const std::string& command,
-        const document& params,
+        const document_list& params,
         const result_handler& result) = 0;
 };
 

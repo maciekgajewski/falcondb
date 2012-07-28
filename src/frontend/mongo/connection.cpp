@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "message.hpp"
 
 #include "bson/bsonobjbuilder.hpp"
+#include "bson/bsonobj.ipp"
+#include "bson/bsonelement.ipp"
 #include "bson/json.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -51,7 +53,7 @@ void connection::start()
     boost::asio::async_read(
         _socket,
         boost::asio::buffer(const_cast<char*>(msg->_header.data()), message::header_length),
-        boost::bind(&connection::handle_read_header, shared_from_this(), boost::asio::placeholders::error, msg));
+        boost::bind(&connection::handle_read_header, shared_from_this(), boost::asio::placeholders::error(), msg));
 }
 
 void connection::handle_read_header(const boost::system::error_code& e, const message::pointer& msg)
@@ -65,17 +67,17 @@ void connection::handle_read_header(const boost::system::error_code& e, const me
         const message::header &header = msg->_header;
         std::string &body = msg->_body;
 
-        std::cerr << "Header read: " << header << std::endl;
+        std::cerr  << "Header read: " << header << std::endl;
 
         body.resize(header._msglen - sizeof(header));
 
-        std::cerr << "Reading body: " << body.size() << std::endl;
+        std::cerr  << "Reading body: " << body.size() << std::endl;
 
         boost::asio::async_read(
             _socket,
             boost::asio::buffer(const_cast<char*>(body.data()), body.size()),
-            boost::bind(&connection::handle_read_body, shared_from_this(), boost::asio::placeholders::error, msg));
-        }
+            boost::bind(&connection::handle_read_body, shared_from_this(), boost::asio::placeholders::error(), msg));
+    }
 }
 
 bson_object_list connection::handle_admin_command(query_message &query_msg)
@@ -85,7 +87,7 @@ bson_object_list connection::handle_admin_command(query_message &query_msg)
     ::mongo::BSONObj query = query_msg.next_obj();
     std::string command(query.firstElement().fieldName());
 
-    std::cerr << "admin command " << command << " request" << std::endl;
+    std::cerr  << "admin command " << command << " request" << std::endl;
 
     if (command == "replSetGetStatus") {
         builder.append("errmsg", "not running with --replSet");
@@ -126,7 +128,7 @@ bson_object_list connection::handle_db_command(const std::string& db_name, query
     ::mongo::BSONObj query = query_msg.next_obj();
 
     std::string command(query.firstElement().fieldName());
-    std::cerr << "db command " << command << " request" << std::endl;
+    std::cerr  << "db command " << query.toString() << std::endl;
 
     if (command == "getlasterror") {
         std::cerr << query.toString() << std::endl;
@@ -134,6 +136,8 @@ bson_object_list connection::handle_db_command(const std::string& db_name, query
         builder.append("connectionId", 1);
         builder.append("wtime", 0);
         builder.appendNull("err");
+        builder.append("ok", double(1));
+    } else if (command == "drop") {
         builder.append("ok", double(1));
     }
 
@@ -159,7 +163,7 @@ void connection::send_reply(const message::pointer& msg, const bson_object_list 
 
     stream.write(response._header.data(), message::header_length);
 
-    std::cerr << "sending response: " << response._header << std::endl;
+    std::cerr  << "sending response: " << response._header << std::endl;
 
     coder out(stream);
 
@@ -174,7 +178,7 @@ void connection::send_reply(const message::pointer& msg, const bson_object_list 
     boost::asio::async_write(
         _socket,
         boost::asio::buffer(stream.str()),
-        boost::bind(&connection::handle_write_msg, shared_from_this(), boost::asio::placeholders::error));
+        boost::bind(&connection::handle_write_msg, shared_from_this(), boost::asio::placeholders::error()));
 }
 
 void connection::handle_db_query(const message::pointer& msg)
@@ -189,6 +193,8 @@ void connection::handle_db_query(const message::pointer& msg)
     const std::string& database_name = ns_splited[0];
     const std::string& collection_name = ns_splited[1];
 
+    std::cerr  << "quering " << query_msg.get_ns() << std::endl;
+
     if (collection_name == "system") {
         assert(ns_splited.size() == 3);
         if (ns_splited[2] == "namespaces") {
@@ -196,7 +202,7 @@ void connection::handle_db_query(const message::pointer& msg)
 
             bson_object_list collections;
             for(const std::string& db_name : databases) {
-
+                std::cout << "db_name " << db_name << std::endl;
                 if( db_name.find(database_name + ".") == 0) {
                     ::mongo::BSONObjBuilder builder;
                     builder.append("name", db_name);
@@ -210,14 +216,17 @@ void connection::handle_db_query(const message::pointer& msg)
 
         if (query_msg.has_more()) query = query_msg.next_obj();
 
-        std::cerr << "Quering " << query_msg.get_ns() << " where " << query.toString() << std::endl;
+        std::cerr  << "Quering " << query_msg.get_ns() << " where " << query.toString() << std::endl;
 
         try {
             interfaces::database_ptr db = _engine.get_database(query_msg.get_ns());
 
-            db->post("list", document::from_json(query.jsonString()),
+            document_list doc_list;
+            doc_list.push_back(document::from_json(query.jsonString()));
+            db->post("list", doc_list,
                      [this, msg](const interfaces::error_message& error, const document_list& data)
                      {
+                        assert(data);
                         bson_object_list object_list;
                         for(const document& doc : data) {
                             std::string jsonString = doc.to_json();
@@ -228,11 +237,13 @@ void connection::handle_db_query(const message::pointer& msg)
                         if (!error) {
                            send_reply(msg, object_list);
                         }  else {
-                            std::cerr << "Error listing db " << std::endl;
+                            std::cerr  << "Error listing db " << std::endl;
                         }
                      });
         } catch (const std::exception &e) {
-            std::cerr << "Error during db query " << e.what() << std::endl;
+            std::cerr  << "Error during db query " << e.what() << std::endl;
+
+            send_reply(msg, bson_object_list());
         }
     }
 }
@@ -260,15 +271,19 @@ void connection::handle_query_msg(const message::pointer& msg)
     }
 }
 
-void connection::post_command(const std::string& db_name, const std::string& command, const document& param)
+void connection::post_command(
+    const interfaces::database_ptr& db,
+    const std::string& command,
+    const document_list& param)
 {
-    interfaces::database_ptr db = _engine.get_database(db_name);
+    assert(db);
 
+    connection::pointer shared_this = shared_from_this();
     db->post(command, param,
-             [this, command](const interfaces::error_message& error, const document_list& data)
+             [shared_this, command](const interfaces::error_message& error, const document_list& data)
              {
-                result_handler(command, error, data);
-            });
+                shared_this->result_handler(command, error, data);
+             });
 }
 
 void connection::result_handler(
@@ -278,11 +293,11 @@ void connection::result_handler(
 {
     if (err)
     {
-        std::cout << operation << " error: " << err << std::endl;
+        std::cout  << operation << " error: " << err << std::endl;
     }
     else
     {
-        std::cout << operation << " successfull" << std::endl;
+        std::cout  << operation << " successfull" << std::endl;
         if (data.empty()) std::cout << "no data returned" << std::endl;
         else
         {
@@ -300,17 +315,24 @@ void connection::handle_insert_msg(const message::pointer& msg)
     std::string ns(dbmsg.get_ns());
 
     try {
-        _engine.create_database(ns);
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
-    }
 
-    while (dbmsg.has_more()) {
-        std::string jsonString = dbmsg.next_obj().jsonString() ;
+        interfaces::database_ptr db = _engine.create_database(ns);
+        assert(db);
+
+        document_list doc_list;
+
+        while (dbmsg.has_more()) {
+            doc_list.push_back(document::from_json(dbmsg.next_obj().jsonString()));
+
+        }
+
         post_command(
-            ns,
+            db,
             "insert",
-            document::from_json(jsonString));
+            doc_list);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error during inserting " << e.what() << std::endl;
     }
 }
 
@@ -319,8 +341,6 @@ void connection::handle_read_body(const boost::system::error_code& e, const mess
     if (e) {
         std::cerr << "Error reading body: " << e << std::endl;
     } else {
-        std::cerr << "Body read: " << std::endl;
-
         switch (msg->_header._opCode)
         {
             case message::op_code::QUERY:
@@ -338,7 +358,7 @@ void connection::handle_read_body(const boost::system::error_code& e, const mess
 void connection::handle_write_msg(const boost::system::error_code& e)
 {
     if(e) {
-        std::cerr << "Error sending response " << e << std::endl;
+        std::cerr << "Error sending response " << e.message() << std::endl;
     } else {
         std::cerr << "Response sent" << std::endl;
     }

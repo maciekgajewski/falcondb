@@ -48,7 +48,7 @@ public:
 
     virtual std::vector<std::string> get_databases();
     virtual interfaces::database_ptr get_database(const std::string& db_name);
-    virtual void create_database(const std::string& db_name);
+    virtual interfaces::database_ptr create_database(const std::string& db_name);
     virtual void drop_database(const std::string& db_name);
 
 private:

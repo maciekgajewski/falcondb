@@ -53,7 +53,7 @@ void command_processor::register_command(const std::string& command, const inter
 
 void command_processor::post(
     const std::string& command,
-    const document& params,
+    const document_list& params,
     const interfaces::result_handler& result,
     const interfaces::database_backend_ptr& storage)
 {
@@ -70,7 +70,7 @@ void command_processor::post(
 }
 
 void command_processor::handler_wrapper(const std::string& command,
-    const document& params,
+    const document_list& params,
     const interfaces::result_handler& result,
     const interfaces::database_backend_ptr& storage,
     const interfaces::command_handler& handler)
@@ -81,7 +81,6 @@ void command_processor::handler_wrapper(const std::string& command,
     }
     catch(const std::exception& e)
     {
-        result(std::string(e.what()), document_list());
     }
 }
 

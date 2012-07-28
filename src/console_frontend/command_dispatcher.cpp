@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <boost/algorithm/string.hpp>
 
 #include <readline/history.h>
+#include <iostream>
 
 namespace falcondb { namespace console_frontend {
 

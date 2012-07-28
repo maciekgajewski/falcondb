@@ -55,7 +55,7 @@ private:
     bson_object_list handle_db_command(const std::string& db_name, query_message& query_msg);
     void handle_db_query(const message::pointer& msg);
 
-    void post_command(const std::string &db_name, const std::string& command, const document &param);
+    void post_command(const interfaces::database_ptr &db, const std::string& command, const document_list &param);
     void result_handler(const std::string& operation, const interfaces::error_message& err, const document_list& data);
     void send_reply(const message::pointer& msg, const bson_object_list& obj_list);
     void handle_db_query(const std::string& dbname, const message::pointer& msg, const query_message& query_msg);

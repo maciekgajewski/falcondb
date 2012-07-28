@@ -7,6 +7,5 @@ add_library(engine
 
 target_link_libraries(engine
     utils
-
-    boost_filesystem
+    ${Boost_LIBRARIES}
 )
