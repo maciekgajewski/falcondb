@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <boost/optional.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/variant/static_visitor.hpp>
 
 #define UU qi::unused_type, qi::unused_type
 
@@ -31,6 +33,7 @@ namespace falcondb {
 
 namespace qi = boost::spirit::qi;
 namespace phoenix = boost::phoenix;
+namespace fusion = boost::fusion;
 
 namespace detail {
 
@@ -64,14 +67,43 @@ private:
     qi::rule<iterator_type, document_scalar()> _start;
 };
 
+// modified variant which can be parsed
+typedef boost::variant<
+    std::string,
+    std::int64_t,
+    std::uint64_t,
+    double,
+    bool> parse_scalar;
+
+class parse_pair;
+
+typedef boost::make_recursive_variant< // will your eyes explode?
+    parse_scalar,
+    std::vector<boost::recursive_variant_>,
+    std::vector<parse_pair>
+    >::type parse_document;
+
+// for some reason std::pair doesn't work and fusion::vector makes some issues
+struct parse_pair
+{
+    std::string name;
+    parse_document value;
+};
+
+
+typedef std::vector<parse_document> parse_array;
+typedef std::vector<parse_pair> parse_map;
+
+
 template<typename iterator_type>
-class document_parser : public qi::grammar<iterator_type, document(), qi::ascii::space_type>
+class document_parser : public qi::grammar<iterator_type, parse_document(), qi::ascii::space_type>
 {
 public:
     document_parser() : document_parser::base_type(_document)
     {
         using namespace qi::labels;
         using phoenix::push_back;
+        using phoenix::at_c;
 
         _escape_chars.add("\\\"", '"')("\\\\", '\\');
         _double_quoted_string =
@@ -88,29 +120,81 @@ public:
             );
 
         _array = '[' >> _document[push_back(_val, _1)] % ',' >> ']';
-        /*
         _pair =
-            _double_quoted_string[ boost::phoenix::at_c<0>(qi::labels::_val) = boost::phoenix::argument<0>()]
+            _double_quoted_string
             >> ':'
-            >> _document[ boost::phoenix::at_c<1>(qi::labels::_val) = boost::phoenix::argument<0>()];
+            >> _document;
         _map = '{' >> _pair % ',' >> '}';
-        */
 
-        _document = _scalar | _array /*| _map*/;
+        _document = _scalar | _array | _map;
     }
 
 private:
+
+
     qi::symbols<char, char> _escape_chars;
     qi::rule<std::string::const_iterator, std::string()> _double_quoted_string;
-    qi::rule<iterator_type, document_scalar()> _scalar;
-    qi::rule<iterator_type, document_array(), qi::ascii::space_type> _array;
-    qi::rule<iterator_type, std::pair<std::string, document>(), qi::ascii::space_type> _pair;
-    qi::rule<iterator_type, document_map(), qi::ascii::space_type> _map;
-    qi::rule<iterator_type, document(), qi::ascii::space_type> _document;
+    qi::rule<iterator_type, parse_scalar()> _scalar;
+    qi::rule<iterator_type, parse_array(), qi::ascii::space_type> _array;
+    qi::rule<iterator_type, parse_pair(), qi::ascii::space_type> _pair;
+    qi::rule<iterator_type, parse_map(), qi::ascii::space_type> _map;
+    qi::rule<iterator_type, parse_document(), qi::ascii::space_type> _document;
 
 };
 
+// conversion from parser documents to falcon documents
+
+document convert_from_parser(const parse_document& );
+
+inline document_scalar convert_from_parser(const parse_scalar& s)
+{
+    return s; // variant automagic
 }
+
+inline document_array convert_from_parser(const parse_array& a)
+{
+    document_array result;
+    result.reserve(a.size());
+    std::transform(
+        a.begin(), a.end(),
+        std::back_inserter(result),
+        [](const parse_document& d) { return convert_from_parser(d); }
+        );
+    return result;
+}
+
+inline document_map convert_from_parser(const parse_map& m)
+{
+    document_map result;
+    for( auto p : m )
+    {
+        result.insert(std::make_pair(p.name, convert_from_parser(p.value)));
+    }
+    return result;
+}
+
+struct converter_from_parser : boost::static_visitor<document>
+{
+    template<typename T>
+    document operator() (const T& t) const { return convert_from_parser(t); }
+};
+
+inline document convert_from_parser(const parse_document& d)
+{
+    return boost::apply_visitor(converter_from_parser(), d);
+}
+
+}}
+
+// this needs to be in a global namespace
+BOOST_FUSION_ADAPT_STRUCT(
+    falcondb::detail::parse_pair,
+    (std::string, name)
+    (falcondb::detail::parse_document, value)
+)
+
+
+namespace falcondb {
 
 json_parser::json_parser()
 {
@@ -145,12 +229,12 @@ document json_parser::parse_doc(const std::string& in)
 
     detail::document_parser<std::string::const_iterator> doc_parser;
 
-    boost::optional<document> result;
+    boost::optional<detail::parse_document> result;
 
     qi::phrase_parse(
         first,
         last,
-        doc_parser[ [&result](const document& r, UU) { result = r; } ],
+        doc_parser[ [&result](const detail::parse_document& r, UU) { result = r; } ],
         qi::ascii::space
     );
 
@@ -159,7 +243,7 @@ document json_parser::parse_doc(const std::string& in)
         throw exception("error at: ",  std::string(first, last));
     }
 
-    return *result;
+    return detail::convert_from_parser(*result);
 }
 
 }
