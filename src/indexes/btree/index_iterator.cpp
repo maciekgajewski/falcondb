@@ -30,23 +30,23 @@ index_iterator::index_iterator(const document& leaf_node, std::size_t index, int
 
 bool index_iterator::has_next()
 {
-    document data = _leaf_node.get<document>("data");
-    return _index < data.size() || _leaf_node.has_field("next");
+    const document_array& data = _leaf_node.get_field_as_array("data");
+    return _index < data.size() || _leaf_node.as_map().find("next") != _leaf_node.as_map().end();
 }
 
 document index_iterator::next()
 {
-    document data = _leaf_node.get<document>("data");
+    const document_array& data = _leaf_node.get_field_as_array("data");
     if (_index < data.size())
     {
-        return data[_index++].get<document>("value");
+        return document(data[_index++]).get_field_as<document>("value");
     }
     else
     {
         _index = 0;
-        document next_key = _leaf_node.get<document>("next");
+        document next_key = _leaf_node.get_field_as<document>("next");
         _leaf_node = _storage.read(next_key);
-        return _leaf_node.get<document>("data")[0].get<document>("value");
+        return document(_leaf_node.get_field_as_array("data")[0]).get_field_as<document>("value");
     }
 }
 

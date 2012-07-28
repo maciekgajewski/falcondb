@@ -36,11 +36,8 @@ std::unique_ptr<interfaces::index> index_type::load_index(
     interfaces::document_storage& index_storage,
     const document& index_description)
 {
-    document index_root = index_description.get<document>("root");
-    document index_definition = index_description.get<document>("definition");
-
-    assert(!index_root.is_null());
-    assert(!index_definition.is_null());
+    document index_root = index_description.get_field_as<document>("root");
+    document index_definition = index_description.get_field_as<document>("definition");
 
     return std::unique_ptr<interfaces::index>(new index(index_storage, index_definition, index_root));
 }
@@ -64,27 +61,24 @@ interfaces::index_type::create_result index_type::create_index(
     }
 
 
-    document index_description;
-    index_description.append("root", new_index->get_root());
-    index_description.append("definition", index_definition);
+    document_map index_description;
+    index_description.insert(std::make_pair("root", new_index->get_root().as_any()));
+    index_description.insert(std::make_pair("definition", index_definition.as_any()));
 
-    return create_result{ index_description, std::move(new_index) };
+    return create_result{ document(document_any(index_description)), std::move(new_index) };
 }
 
 void index_type::verify_definition(const document& definition)
 {
-    document fields = definition.get<document>("fields");
-    if (fields.is_null())
-        throw exception("fields not defined");
+    const document_map& fields = definition.get_field_as_map("fields");
 
     //document options = definiton.get<document>("options");
     // options are optional, no need to check
 
-    // feilds has top be a flat doc with non-zero integers
-    std::vector<std::string> field_names = fields.field_names();
-    for(const std::string& field : field_names)
+    // feilds has to be a flat object with non-zero integers
+    for(auto field : fields)
     {
-        if (fields.get<int>(field) == 0)
+        if (boost::get<int>(field.second) == 0)
             throw exception("field can not be 0");
     }
 }

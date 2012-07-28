@@ -17,37 +17,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "document/document.hpp"
-#include "document/json_writer.hpp"
-#include "document/json_parser.hpp"
+#ifndef FALCONDB_NULL_TYPE_HPP
+#define FALCONDB_NULL_TYPE_HPP
 
-#include <sstream>
+#include <iostream>
 
 namespace falcondb {
 
-std::string document_wrapper::to_json() const
+struct null_type { };
+
+inline std::ostream& operator<<(std::ostream& o, const null_type&)
 {
-    std::ostringstream ss;
-    json_writer w(ss);
-    w.write(_any);
-    return ss.str();
+    return o << "null";
 }
 
-std::ostream& operator<<(std::ostream& o, const document_wrapper& d)
-{
-    json_writer w(o);
-    w.write(d.as_any());
-    return o;
 }
 
-document document::from_json(const std::string& s)
-{
-    return json_parser::parse_doc(s);
-}
-
-bool document_wrapper::operator < (const document_wrapper& other) const
-{
-    return false; // TODO
-}
-
-} // namespace
+#endif

@@ -57,18 +57,18 @@ private:
 
     /// Reduce document to an array containing values related to fields specified in index definition
     document_array extract_index_key(const document& doc);
-    bool compare_index_keys(const document& a, const document& b) const;
+    bool compare_index_keys(const document_array& a, const document_array& b) const;
 
     static document generate_key();
     static document create_leaf();
 
     // tree ops
 
-    void tree_insert(const document& node_key, const document& key, const document& value);
-    void tree_remove(const document& node_key, const document& key);
+    void tree_insert(const document& node_key, const document_array& key, const document& value);
+    void tree_remove(const document& node_key, const document_array& key);
 
     interfaces::document_storage& _storage;
-    const document _definition;
+    const std::map<std::string, int> _fields;
     const document _root;
 
 };

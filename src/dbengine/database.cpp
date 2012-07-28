@@ -35,7 +35,7 @@ class null_index_iterator : public interfaces::index_iterator
 public:
     virtual bool has_next() { return false; }
 
-    virtual document next() { assert(false); return document(); }
+    virtual document next() { assert(false); return document_scalar(null_type()); }
 };
 
 database::database(const interfaces::database_backend_ptr& storage, command_processor& processor)

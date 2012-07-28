@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <ostream>
 
@@ -52,7 +53,19 @@ public:
     // ptime - convert to iso string
     void write(const boost::posix_time::ptime& pt)
     {
-        _out << to_iso_string(pt);
+        _out << encode_to_json(to_iso_string(pt));
+    }
+
+    // uuid as string
+    void write(const boost::uuids::uuid& uuid)
+    {
+        _out << encode_to_json(to_string(uuid));
+    }
+
+    // null
+    void write(const null_type&)
+    {
+        _out << "null";
     }
 
     // bool
