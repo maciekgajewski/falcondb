@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "interfaces/document_storage.hpp"
 
+#include "utils/exception.hpp"
+
 #include <cassert>
 
 namespace falcondb { namespace indexes { namespace btree {

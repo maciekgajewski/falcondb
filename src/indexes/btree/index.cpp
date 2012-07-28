@@ -74,7 +74,7 @@ std::unique_ptr<interfaces::index_iterator> index::find(const document& range)
     return std::unique_ptr<interfaces::index_iterator>(new index_iterator(root_doc, 0, _storage));
 }
 
-document index::extract_index_key(const document& doc)
+document_array index::extract_index_key(const document& doc)
 {
     document fields = _definition.get<document>("fields");
     std::vector<std::string> field_names = fields.field_names();

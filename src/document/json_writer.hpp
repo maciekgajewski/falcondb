@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_JSON_DOCUMENT_WRITER_HPP
 #define FALCONDB_JSON_DOCUMENT_WRITER_HPP
 
-#include "new_doc/dynamic_document.hpp"
+#include "document/document.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/type_traits.hpp>
@@ -28,11 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <ostream>
 
-namespace falcondb_new_doc {
-
-
-
-
+namespace falcondb {
 
 namespace detail {
     class json_array_writer;
@@ -110,7 +106,7 @@ public:
     void write(const document_scalar& scalar);
 
     // variant everything
-    void write(const document& doc);
+    void write(const document_any& doc);
 
 private:
 

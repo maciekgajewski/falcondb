@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_DYNAMIC_DOCUMENT_HPP
 #define FALCONDB_DYNAMIC_DOCUMENT_HPP
 
-namespace falcondb {
+namespace falcondb_new_doc {
 
 // Variant types for storing dynamic documents, created from dynamic data types
 typedef boost::variant<

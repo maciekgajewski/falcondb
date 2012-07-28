@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "new_doc/json_parser.hpp"
+#include "document/json_parser.hpp"
 
 #include "utils/exception.hpp"
 
@@ -29,43 +29,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #define UU qi::unused_type, qi::unused_type
 
-namespace falcondb_new_doc {
+namespace falcondb {
 
 namespace qi = boost::spirit::qi;
 namespace phoenix = boost::phoenix;
 namespace fusion = boost::fusion;
 
 namespace detail {
-
-template<typename iterator_type>
-class scalar_parser : public qi::grammar<iterator_type, document_scalar()>
-{
-public:
-    scalar_parser() : scalar_parser::base_type(_start)
-    {
-
-        _escape_chars.add("\\\"", '"')("\\\\", '\\');
-        _double_quoted_string =
-            qi::lit('"') >>
-            *(_escape_chars | (qi::char_ - '\\' - '"')) >>
-            '"';
-
-        _start %=
-            ( _double_quoted_string
-            | qi::uint_parser<std::uint32_t>()
-            | qi::int_parser<std::int32_t>()
-            | qi::uint_parser<std::uint64_t>()
-            | qi::int_parser<std::int64_t>()
-            | qi::double_
-            | qi::bool_
-            );
-
-    }
-private:
-    qi::symbols<char, char> _escape_chars;
-    qi::rule<std::string::const_iterator, std::string()> _double_quoted_string;
-    qi::rule<iterator_type, document_scalar()> _start;
-};
 
 // modified variant which can be parsed
 typedef boost::variant<
@@ -144,7 +114,7 @@ private:
 
 // conversion from parser documents to falcon documents
 
-document convert_from_parser(const parse_document& );
+document_any convert_from_parser(const parse_document& );
 
 inline document_scalar convert_from_parser(const parse_scalar& s)
 {
@@ -173,13 +143,13 @@ inline document_map convert_from_parser(const parse_map& m)
     return result;
 }
 
-struct converter_from_parser : boost::static_visitor<document>
+struct converter_from_parser : boost::static_visitor<document_any>
 {
     template<typename T>
-    document operator() (const T& t) const { return convert_from_parser(t); }
+    document_any operator() (const T& t) const { return convert_from_parser(t); }
 };
 
-inline document convert_from_parser(const parse_document& d)
+inline document_any convert_from_parser(const parse_document& d)
 {
     return boost::apply_visitor(converter_from_parser(), d);
 }
@@ -196,33 +166,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace falcondb {
 
-json_parser::json_parser()
-{
-}
-
-document_scalar json_parser::parse(const std::string& in)
-{
-    std::string::const_iterator first = in.begin();
-    std::string::const_iterator last = in.end();
-
-    detail::scalar_parser<std::string::const_iterator> scalar_parser;
-
-    boost::optional<document_scalar> result;
-    qi::parse(
-        first,
-        last,
-        scalar_parser[ [&result](const document_scalar& r, UU) { result = r; } ]
-    );
-
-    if (first != last)
-    {
-        throw exception("error at: ",  std::string(first, last));
-    }
-
-    return *result;
-}
-
-document json_parser::parse_doc(const std::string& in)
+document_any json_parser::parse_doc(const std::string& in)
 {
     std::string::const_iterator first = in.begin();
     std::string::const_iterator last = in.end();

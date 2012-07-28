@@ -20,17 +20,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_JSON_PARSER_HPP
 #define FALCONDB_JSON_PARSER_HPP
 
-#include "new_doc/dynamic_document.hpp"
+#include "document/document.hpp"
 
-namespace falcondb_new_doc {
+namespace falcondb {
 
 class json_parser
 {
 public:
-    json_parser();
 
-    static document_scalar parse(const std::string& in);
-    static document parse_doc(const std::string& in);
+    static document_any parse_doc(const std::string& in);
 };
 
 } // namespace

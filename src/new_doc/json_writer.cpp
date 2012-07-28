@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "new_doc/json_writer.hpp"
 
-namespace falcondb {
+namespace falcondb_new_doc {
 
 namespace detail {
 

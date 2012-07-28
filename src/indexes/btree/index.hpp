@@ -55,8 +55,8 @@ public:
 
 private:
 
-    /// Reducec document to an array containing values related to fields specified in index definition
-    document extract_index_key(const document& doc);
+    /// Reduce document to an array containing values related to fields specified in index definition
+    document_array extract_index_key(const document& doc);
     bool compare_index_keys(const document& a, const document& b) const;
 
     static document generate_key();

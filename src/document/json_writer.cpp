@@ -17,22 +17,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_JSON_PARSER_HPP
-#define FALCONDB_JSON_PARSER_HPP
+#include "document/json_writer.hpp"
 
-#include "new_doc/dynamic_document.hpp"
+namespace falcondb {
 
-namespace falcondb_new_doc {
+namespace detail {
 
-class json_parser
+struct visitor : public boost::static_visitor<>
 {
-public:
-    json_parser();
+    visitor(json_writer& writer) : _writer(writer) { }
 
-    static document_scalar parse(const std::string& in);
-    static document parse_doc(const std::string& in);
+    template<typename T>
+    void operator()(const T& t)
+    {
+        _writer.write(t);
+    }
+
+    json_writer& _writer;
 };
 
-} // namespace
+}
 
-#endif
+json_writer::json_writer(std::ostream& out)
+: _out(out)
+{
+}
+
+void json_writer::write(const document_scalar& scalar)
+{
+    detail::visitor v(*this);
+    boost::apply_visitor(v, scalar);
+}
+
+std::string json_writer::encode_to_json(const std::string& s)
+{
+    // TODO add proper escaping
+    return std::string("\"") + s + std::string("\"");
+}
+
+void json_writer::write(const document_any& doc)
+{
+    detail::visitor v(*this);
+    boost::apply_visitor(v, doc);
+}
+
+}
+

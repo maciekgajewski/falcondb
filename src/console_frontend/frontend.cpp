@@ -183,7 +183,7 @@ void frontend::result_handler(const std::string& operation, const interfaces::er
 void frontend::handle_insert(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
-    document doc = document::from_json(require_arg(al, 1));
+    document doc = documents::from_json(require_arg(al, 1));
     post_command(db_name, "insert", doc);
 }
 
@@ -196,7 +196,7 @@ void frontend::handle_list(const frontend::arg_list& al)
 void frontend::handle_remove(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
-    document doc = document::from_json(require_arg(al, 1));
+    document doc = documents::from_json(require_arg(al, 1));
     post_command(db_name, "remove", doc);
 }
 

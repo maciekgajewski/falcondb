@@ -18,48 +18,32 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "document/document.hpp"
+#include "document/json_writer.hpp"
+#include "document/json_parser.hpp"
+
+#include <sstream>
 
 namespace falcondb {
 
-std::vector<document> document::to_vector() const
+std::string document::to_json(const document& d) const
 {
-    std::vector<document> as_vector;
-    as_vector.reserve(size()+1);
-    for( std::size_t i = 0; i < size(); ++i)
-    {
-        as_vector.push_back((*this)[i]); // the original Json::Value iterators are useless
-    }
-    return as_vector;
+    std::ostringstream ss;
+    json_writer w(ss);
+    w.write(any);
+    return ss.str();
 }
 
-document::const_iterator document::insert(const document::const_iterator& pos, document& element)
+std::ostream& operator<<(std::ostream& o, const document& d)
 {
-    // implement the operation in terms of std::vector insert.
-    // TODO the array-document should simply be implemented as vector
-    std::vector<document> as_vector = to_vector();
-
-    std::vector<document>::iterator vector_pos = as_vector.begin() + pos._index;
-    as_vector.insert(vector_pos, element);
-
-    swap(from_array(as_vector));
-    return document_const_iterator(this, pos._index);
+    json_writer w(o);
+    w.write(d.any);
+    return o;
 }
 
-document::const_iterator document::erase(const const_iterator& first, const const_iterator& last)
+document document::from_json(const std::string& s)
 {
-    std::vector<document> as_vector = to_vector();
-    std::vector<document>::iterator vector_first =  as_vector.begin() + first._index;
-    std::vector<document>::iterator vector_last =  as_vector.begin() + last._index;
-
-    std::vector<document>::iterator r = as_vector.erase(vector_first, vector_last);
-
-    swap(from_array(as_vector));
-    return document_const_iterator(this, std::distance(as_vector.begin(), r));
+    return json_parser::parse_doc(s);
 }
 
-bool document::operator<(const document& other) const
-{
-    return _internal < other._internal;
-}
 
-} // namespace falcondb
+} // namespace
