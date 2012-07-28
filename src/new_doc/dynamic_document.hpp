@@ -33,7 +33,6 @@ namespace falcondb {
 // Variant types for storing dynamic documents, created from dynamic data types
 typedef boost::variant<
     std::string,
-    const char*,
     std::int32_t,
     std::uint32_t,
     std::int64_t,

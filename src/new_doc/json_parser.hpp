@@ -30,6 +30,7 @@ public:
     json_parser();
 
     static document_scalar parse(const std::string& in);
+    static document parse_doc(const std::string& in);
 };
 
 } // namespace
