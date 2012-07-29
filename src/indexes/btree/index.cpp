@@ -89,7 +89,7 @@ document_list index::extract_index_key(const document& doc)
         auto it = as_map.find(field.first);
         if (it == as_map.end())
         {
-            result.push_back(document::null());
+            result.push_back(document_scalar::null());
         }
         else
         {
@@ -103,13 +103,13 @@ document_list index::extract_index_key(const document& doc)
 document index::generate_key()
 {
     boost::uuids::random_generator gen;
-    return document(gen());
+    return document_scalar::from(gen());
 }
 
 document index::create_leaf()
 {
     document_object leaf;
-    leaf.insert(std::make_pair("type", "leaf"));
+    leaf.insert(std::make_pair("type", document::from("leaf")));
     leaf.insert(std::make_pair("data", document_list()));
 
     return document(leaf);
@@ -120,29 +120,28 @@ void index::tree_insert(const document& node_key, const document_list& key, cons
     document_object node = _storage.read(node_key);
 
     // insert into leaf node
-    if(node.get_field("type").as_ == "leaf")
+    if(node.get_field("type").as_scalar().as<std::string>() == "leaf")
     {
-        document_list data = node.get_field_as_array("data");
+        document_list& data = node.get_field("data").as_list();
         // will fit?
         if (data.size() < ITEMS_PER_LEAF)
         {
             document_object new_element;
             new_element.insert(std::make_pair("key", key));
-            new_element.insert(std::make_pair("value", value.as_any()));
+            new_element.insert(std::make_pair("value", value));
 
             auto it = std::lower_bound(
                 data.begin(), data.end(),
                 new_element,
-                [this](const document_any& a, const document_any& b)
+                [this](const document& a, const document& b)
                 {
                     return compare_index_keys(
-                        document(a).get_field_as_array("key"),
-                        document(b).get_field_as_array("key"));
+                        a.as_object().get_field("key").as_list(),
+                        b.as_object().get_field("key").as_list());
                 });
 
-            data.insert(it, document_any(new_element));
+            data.insert(it, new_element);
 
-            node.as_map().find("data")->second =  data;
             _storage.write(node_key, node);
         }
         else
@@ -162,12 +161,12 @@ void index::tree_insert(const document& node_key, const document_list& key, cons
 
 void index::tree_remove(const document& node_key, const document_list& key)
 {
-    document node = _storage.read(node_key);
+    document_object node = _storage.read(node_key);
 
     // remove from leaf node
-    if(node.get_field_as<std::string>("type") == "leaf")
+    if(node.get_field("type").as_scalar().as<std::string>() == "leaf")
     {
-        document_list data = node.get_field_as_array("data");
+        document_list& data = node.get_field("data").as_list();
 
         document_object search;
         search.insert(std::make_pair("key", key));
@@ -175,17 +174,16 @@ void index::tree_remove(const document& node_key, const document_list& key)
         auto range = std::equal_range(
             data.begin(), data.end(),
             search,
-            [this](const document_any& a, const document_any& b)
+            [this](const document& a, const document& b)
             {
                 return compare_index_keys(
-                    document(a).get_field_as_array("key"),
-                    document(b).get_field_as_array("key"));
+                    a.as_object().get_field("key").as_list(),
+                    b.as_object().get_field("key").as_list());
             });
 
         assert(range.first != range.second);
         data.erase(range.first, range.second);
 
-        node.as_map().find("data")->second = data;
         _storage.write(node_key, node);
 
         if (data.size() < ITEMS_PER_LEAF/2 )
@@ -208,7 +206,7 @@ bool index::compare_index_keys(const document_list& a, const document_list& b) c
 
     for(std::size_t i = 0; i< a.size(); ++i)
     {
-        if (document_wrapper(a[i]) < document_wrapper(b[i])) return true;
+        if (a[i] < b[i]) return true;
     }
     return false;
 }

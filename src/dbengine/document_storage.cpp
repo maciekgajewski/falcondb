@@ -28,19 +28,19 @@ document_storage::document_storage(const interfaces::database_backend_ptr& raw_s
 
 void document_storage::write(const falcondb::document& key, const falcondb::document& doc)
 {
-    std::string key_data = _ns + key.to_storage();
-    std::string doc_data = doc.to_storage();
+    std::string key_data = _ns + key.to_json();
+    std::string doc_data = doc.to_json();
 
     _raw_storage->add(key_data, doc_data);
 }
 
 document document_storage::read(const document& key)
 {
-    std::string key_data = _ns + key.to_storage();
+    std::string key_data = _ns + key.to_json();
     try
     {
         std::string doc_data = _raw_storage->get(key_data);
-        return document::from_storage(doc_data);
+        return document::from_json(doc_data);
     }
     catch(const std::exception& e)
     {
@@ -51,7 +51,7 @@ document document_storage::read(const document& key)
 
 void document_storage::del(const document& key)
 {
-    std::string key_data = _ns + key.to_storage();
+    std::string key_data = _ns + key.to_json();
     _raw_storage->del(key_data);
 }
 

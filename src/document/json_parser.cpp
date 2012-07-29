@@ -146,7 +146,7 @@ inline document_object convert_from_parser(const parse_map& m)
 struct converter_from_parser : boost::static_visitor<document>
 {
     template<typename T>
-    document operator() (const T& t) const { return convert_from_parser(t); }
+    document operator() (const T& t) const { return detail::raw_document_any(convert_from_parser(t)); }
 };
 
 inline document convert_from_parser(const parse_document& d)

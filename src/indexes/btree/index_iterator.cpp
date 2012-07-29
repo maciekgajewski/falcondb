@@ -30,13 +30,15 @@ index_iterator::index_iterator(const document& leaf_node, std::size_t index, int
 
 bool index_iterator::has_next()
 {
-    const document_array& data = _leaf_node.get_field_as_array("data");
-    return _index < data.size() || _leaf_node.as_map().find("next") != _leaf_node.as_map().end();
+    //const document_list& data = _leaf_node.get_field_as_array("data");
+    //return _index < data.size() || _leaf_node.as_object().find("next") != _leaf_node.as_object().end();
+    return false;
 }
 
 document index_iterator::next()
 {
-    const document_array& data = _leaf_node.get_field_as_array("data");
+    /*
+    const document_list& data = _leaf_node.get_field_as_array("data");
     if (_index < data.size())
     {
         return document(data[_index++]).get_field_as<document>("value");
@@ -48,6 +50,8 @@ document index_iterator::next()
         _leaf_node = _storage.read(next_key);
         return document(_leaf_node.get_field_as_array("data")[0]).get_field_as<document>("value");
     }
+    */
+    return document::from(3);
 }
 
 } } }

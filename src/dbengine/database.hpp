@@ -44,7 +44,7 @@ private:
 
     interfaces::database_backend_ptr _storage;
     command_processor& _processor;
-    document _meta_data;
+    document_object _meta_data;
 
     std::vector<interfaces::index::unique_ptr> _indexes;
     document_storage _index_storage;

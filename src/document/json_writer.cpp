@@ -61,5 +61,11 @@ void json_writer::write(const detail::raw_document_any& doc)
     boost::apply_visitor(v, doc);
 }
 
+void json_writer::write(const document& doc)
+{
+    write(doc._v());
+}
+
+
 }
 

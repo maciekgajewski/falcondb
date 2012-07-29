@@ -27,23 +27,34 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 namespace falcondb {
 
 /// Provides some extra functinality on top of document_any
-class document : public detail::raw_document_any
+
+// TODO fix it to work!
+// looks like this: https://svn.boost.org/trac/boost/ticket/7120
+//class document : public detail::raw_document_any
+class document
 {
 public:
 
+    /**/
     document(const document_list& p);
     document(document_list&& p);
     document(const document_object& p);
     document(document_object&& p);
     document(const document_scalar& p);
     document(document_scalar&& p);
+    /**/
+
+    document(const detail::raw_document_any& v);
+    document(detail::raw_document_any&& v);
+    document(document&& d);
+    document(const document& d);
 
     // converters to variants (non-copying)
 
     const document_list& as_list() const;
     const document_object& as_object() const;
     const document_scalar& as_scalar() const;
-    document_list& as_array();
+    document_list& as_list();
     document_object& as_object() ;
     document_scalar& as_scalar();
 
@@ -63,6 +74,8 @@ public:
     template<typename T>
     static document from(const T& t);
 
+    // TODO add && versions of from(...)
+
     // smart - to-anything converter
     template<typename T>
     const T& as() const;
@@ -75,6 +88,12 @@ public:
     // other
 
     bool operator < (const document& other) const;
+
+    const detail::raw_document_any& _v() const { return _variant; }
+
+private:
+
+    detail::raw_document_any _variant;
 
 };
 

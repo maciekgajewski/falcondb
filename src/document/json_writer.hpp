@@ -121,6 +121,9 @@ public:
     // variant everything
     void write(const detail::raw_document_any& doc);
 
+    // doc
+    void write(const document& doc);
+
 private:
 
     /// encodes string to json string

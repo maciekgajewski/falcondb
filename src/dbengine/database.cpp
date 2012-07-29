@@ -48,9 +48,9 @@ database::database(const interfaces::database_backend_ptr& storage, command_proc
     try
     {
         std::string doc_data = _storage->get(key);
-        _meta_data = document::from_storage(doc_data);
+        _meta_data = document::from_json(doc_data);
 
-        document index_descriptions = _meta_data.get<document>("indexes");
+        document_list index_descriptions = _meta_data.get_field("indexes").as_list();
         for(const document& description : index_descriptions)
         {
             _indexes.push_back(_default_index_type->load_index(_index_storage, description));
@@ -60,13 +60,13 @@ database::database(const interfaces::database_backend_ptr& storage, command_proc
     {
         // so this is a new database
         // create main index
-        document fields;
-        fields.append("_id", 1);
-        document options;
-        options.append("unique", true);
-        document definition;
-        definition.append("fields", fields);
-        definition.append("options", options);
+        document_object fields;
+        fields.set_field("_id", 1);
+        document_object options;
+        options.set_field("unique", true);
+        document_object definition;
+        definition.set_field("fields", fields);
+        definition.set_field("options", options);
 
         null_index_iterator it;
 
@@ -83,10 +83,10 @@ database::database(const interfaces::database_backend_ptr& storage, command_proc
         _indexes.push_back(std::move(result.new_index));
 
         // create and store meta data
-        document index_descriptions = document::empty_array();
-        index_descriptions.append(result.index_description);
-        _meta_data.append("indexes", index_descriptions);
-        _storage->add(key, _meta_data.to_storage());
+        document_list index_descriptions;
+        index_descriptions.push_back(result.index_description);
+        _meta_data.set_field("indexes", index_descriptions);
+        _storage->add(key, _meta_data.to_json());
 
     }
 }

@@ -71,7 +71,7 @@ interfaces::index_type::create_result index_type::create_index(
 
 void index_type::verify_definition(const document& definition)
 {
-    const document_object& fields = definition.as_object().get_field("fields").as_object();
+    std::map<std::string, int> fields = definition.as_object().get_field("fields").as_object().to_map_of<int>();
 
     //document options = definiton.get<document>("options");
     // options are optional, no need to check
@@ -79,7 +79,7 @@ void index_type::verify_definition(const document& definition)
     // feilds has to be a flat object with non-zero integers
     for(auto field : fields)
     {
-        if (boost::get<int>(field.second) == 0)
+        if (field.second == 0)
             throw exception("field can not be 0");
     }
 }

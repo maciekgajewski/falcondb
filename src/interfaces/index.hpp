@@ -74,6 +74,12 @@ public:
 
     struct create_result
     {
+        /*
+        create_result(create_result&& o)
+        :
+            index_description(std::move(o.index_description)),
+            new_index(std::move(o.new_index))
+            {}*/
         document index_description;
         std::unique_ptr<index> new_index;
     };
