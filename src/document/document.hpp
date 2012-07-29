@@ -35,9 +35,8 @@ public:
     document(document_list&& p);
     document(const document_object& p);
     document(document_object&& p);
-    //document(const document_scalar& p);
-    //document(document_scalar&& p);
-    document(const detail::raw_document_any&);
+    document(const document_scalar& p);
+    document(document_scalar&& p);
 
     // converters to variants (non-copying)
 

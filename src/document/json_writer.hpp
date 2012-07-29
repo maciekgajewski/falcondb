@@ -116,7 +116,7 @@ public:
     }
 
     /// variant scalar
-    void write(const detail::raw_document_scalar& scalar);
+    void write(const document_scalar& scalar);
 
     // variant everything
     void write(const detail::raw_document_any& doc);
