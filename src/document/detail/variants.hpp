@@ -17,49 +17,29 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "document/json_writer.hpp"
+#ifndef FALCONDB_DETAIL_DOCUMENT_VARIANTS_HPP
+#define FALCONDB_DETAIL_DOCUMENT_VARIANTS_HPP
+
+#include "document/document_scalar.hpp"
+
 
 namespace falcondb {
 
+class document;
+class document_object;
+class document_list;
+
 namespace detail {
 
-struct visitor : public boost::static_visitor<>
-{
-    visitor(json_writer& writer) : _writer(writer) { }
+typedef boost::variant<
+    document_scalar,
+    boost::recursive_wrapper< document_list >,
+    boost::recursive_wrapper< document_object >
+    > raw_document_any;
 
-    template<typename T>
-    void operator()(const T& t)
-    {
-        _writer.write(t);
-    }
+typedef std::map<std::string, document> raw_document_map;
+typedef std::vector<document> raw_document_list;
 
-    json_writer& _writer;
-};
+}}
 
-}
-
-json_writer::json_writer(std::ostream& out)
-: _out(out)
-{
-}
-
-void json_writer::write(const detail::raw_document_scalar& scalar)
-{
-    detail::visitor v(*this);
-    boost::apply_visitor(v, scalar);
-}
-
-std::string json_writer::encode_to_json(const std::string& s)
-{
-    // TODO add proper escaping
-    return std::string("\"") + s + std::string("\"");
-}
-
-void json_writer::write(const detail::raw_document_any& doc)
-{
-    detail::visitor v(*this);
-    boost::apply_visitor(v, doc);
-}
-
-}
-
+#endif

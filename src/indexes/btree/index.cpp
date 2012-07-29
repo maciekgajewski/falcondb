@@ -32,14 +32,14 @@ static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
 
 index::index(interfaces::document_storage& storage, const document& definition, const document& root)
 :   _storage(storage),
-    _fields(definition.get_field_as<document>("fields").as_map_of<int>()),
+    _fields(definition.as_object().get_field("fields").as_object().to_map_of<int>()),
     _root(root)
 {
 }
 
 index::index(interfaces::document_storage& storage, const document& definition)
 :   _storage(storage),
-    _fields(definition.get_field_as<document>("fields").as_map_of<int>()),
+    _fields(definition.as_object().get_field("fields").as_object().to_map_of<int>()),
     _root(generate_key())
 {
     document root_doc = create_leaf();
@@ -52,7 +52,7 @@ index::~index()
 
 void index::insert(const document& storage_key, const document& doc)
 {
-    document_array index_key = extract_index_key(doc);
+    document_list index_key = extract_index_key(doc);
 
     // enter the actual recursive algo
     tree_insert(_root, index_key, storage_key);
@@ -67,7 +67,7 @@ void index::update(const document& old_doc, const document& new_doc)
 
 void index::del(const document& doc)
 {
-    document_array index_key = extract_index_key(doc);
+    document_list index_key = extract_index_key(doc);
 
     tree_remove(_root, index_key);
 }
@@ -78,10 +78,10 @@ std::unique_ptr<interfaces::index_iterator> index::find(const document& range)
     return std::unique_ptr<interfaces::index_iterator>(new index_iterator(root_doc, 0, _storage));
 }
 
-document_array index::extract_index_key(const document& doc)
+document_list index::extract_index_key(const document& doc)
 {
-    const document_map& as_map = doc.as_map();
-    document_array result;
+    const document_object& as_map = doc.as_object();
+    document_list result;
     result.reserve(_fields.size());
 
     for(auto field : _fields)
@@ -89,7 +89,7 @@ document_array index::extract_index_key(const document& doc)
         auto it = as_map.find(field.first);
         if (it == as_map.end())
         {
-            // TODO insert null
+            result.push_back(document::null());
         }
         else
         {
@@ -108,25 +108,25 @@ document index::generate_key()
 
 document index::create_leaf()
 {
-    document_map leaf;
+    document_object leaf;
     leaf.insert(std::make_pair("type", "leaf"));
-    leaf.insert(std::make_pair("data", document_array()));
+    leaf.insert(std::make_pair("data", document_list()));
 
     return document(leaf);
 }
 
-void index::tree_insert(const document& node_key, const document_array& key, const document& value)
+void index::tree_insert(const document& node_key, const document_list& key, const document& value)
 {
-    document node = _storage.read(node_key);
+    document_object node = _storage.read(node_key);
 
     // insert into leaf node
-    if(node.get_field_as<std::string>("type") == "leaf")
+    if(node.get_field("type").as_ == "leaf")
     {
-        document_array data = node.get_field_as_array("data");
+        document_list data = node.get_field_as_array("data");
         // will fit?
         if (data.size() < ITEMS_PER_LEAF)
         {
-            document_map new_element;
+            document_object new_element;
             new_element.insert(std::make_pair("key", key));
             new_element.insert(std::make_pair("value", value.as_any()));
 
@@ -160,16 +160,16 @@ void index::tree_insert(const document& node_key, const document_array& key, con
     }
 }
 
-void index::tree_remove(const document& node_key, const document_array& key)
+void index::tree_remove(const document& node_key, const document_list& key)
 {
     document node = _storage.read(node_key);
 
     // remove from leaf node
     if(node.get_field_as<std::string>("type") == "leaf")
     {
-        document_array data = node.get_field_as_array("data");
+        document_list data = node.get_field_as_array("data");
 
-        document_map search;
+        document_object search;
         search.insert(std::make_pair("key", key));
 
         auto range = std::equal_range(
@@ -201,7 +201,7 @@ void index::tree_remove(const document& node_key, const document_array& key)
     }
 }
 
-bool index::compare_index_keys(const document_array& a, const document_array& b) const
+bool index::compare_index_keys(const document_list& a, const document_list& b) const
 {
     // TODO ignore element sings now
     assert(a.size() == b.size());

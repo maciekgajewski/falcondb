@@ -18,8 +18,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "document/document.hpp"
+#include "document/document_object.hpp"
+#include "document/document_list.hpp"
+
 #include "document/json_writer.hpp"
 #include "document/json_parser.hpp"
+
+#include "utils/exception.hpp"
 
 #include <sstream>
 
@@ -60,24 +65,5 @@ bool document::operator < (const document& other) const
 {
     return false; // TODO
 }
-
-const document& document_object::get_field(const std::string& field_name) const
-{
-    auto it = find(field_name);
-    if (it == end())
-        throw exception("Field ", field_name, " not set");
-    else
-        return it->second;
-}
-
-document& document_object::get_field(const std::string& field_name)
-{
-    auto it = find(field_name);
-    if (it == end())
-        throw exception("Field ", field_name, " not set");
-    else
-        return it->second;
-}
-
 
 } // namespace

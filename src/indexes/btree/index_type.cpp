@@ -36,8 +36,9 @@ std::unique_ptr<interfaces::index> index_type::load_index(
     interfaces::document_storage& index_storage,
     const document& index_description)
 {
-    document index_root = index_description.get_field_as<document>("root");
-    document index_definition = index_description.get_field_as<document>("definition");
+    const document_object& description_as_object = index_description.as_object();
+    document index_root = description_as_object.get_field("root");
+    document index_definition = description_as_object.get_field("definition");
 
     return std::unique_ptr<interfaces::index>(new index(index_storage, index_definition, index_root));
 }
@@ -61,16 +62,16 @@ interfaces::index_type::create_result index_type::create_index(
     }
 
 
-    document_map index_description;
-    index_description.insert(std::make_pair("root", new_index->get_root().as_any()));
-    index_description.insert(std::make_pair("definition", index_definition.as_any()));
+    document_object index_description;
+    index_description.insert(std::make_pair("root", new_index->get_root()));
+    index_description.insert(std::make_pair("definition", index_definition));
 
-    return create_result{ document(document_any(index_description)), std::move(new_index) };
+    return create_result{ document(index_description), std::move(new_index) };
 }
 
 void index_type::verify_definition(const document& definition)
 {
-    const document_map& fields = definition.get_field_as_map("fields");
+    const document_object& fields = definition.as_object().get_field("fields").as_object();
 
     //document options = definiton.get<document>("options");
     // options are optional, no need to check

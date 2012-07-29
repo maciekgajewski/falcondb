@@ -46,10 +46,10 @@ void scalars()
     std::string s("bububaba");
     test_output("string", s);
 
-    falcondb::raw_document_scalar ds(3.1415);
+    falcondb::detail::raw_document_scalar ds(3.1415);
     test_output("scalar with double", ds);
 
-    falcondb::raw_document_scalar dt(boost::posix_time::second_clock::local_time());
+    falcondb::detail::raw_document_scalar dt(boost::posix_time::second_clock::local_time());
     test_output("scalar with ptime", dt);
 
     test_output("string literal", "hello");
@@ -63,7 +63,7 @@ void arrays()
     std::vector<std::string> vs = {"A", "b", "C"};
     test_output("vector<string>", vs);
 
-    std::vector<falcondb::raw_document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
+    std::vector<falcondb::detail::raw_document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
     test_output("vector<document_scalar>", vds);
 
     // tuple
@@ -78,7 +78,7 @@ void maps()
     test_output("uniform map a:1, b:2", um);
 
     // variant scalar map
-    std::map<std::string, falcondb::raw_document_scalar> dsm =
+    std::map<std::string, falcondb::detail::raw_document_scalar> dsm =
         {std::make_pair("string", "hello"), std::make_pair("int", 7)};
     test_output("scalar map string:hello, int:7", dsm);
 }
@@ -103,10 +103,10 @@ void nested()
 
 void document()
 {
-    falcondb::document dsi = falcondb::document::from(3);
+    falcondb::document dsi = falcondb::document_scalar::from(3);
     test_output("document with scalar", dsi);
 
-    std::vector<falcondb::raw_document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
+    std::vector<falcondb::detail::raw_document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
     //falcondb::document dav = falcondb::to_document_list(vds.begin(), vds.end());
     falcondb::document dav = falcondb::document::from(vds);
     test_output("document with variant array", dav);
@@ -125,7 +125,7 @@ void test_parse_scalar(const std::string& input)
 {
     try
     {
-        falcondb::raw_document_scalar res = falcondb::json_parser::parse_doc(input).as_scalar();
+        falcondb::document_scalar res = falcondb::json_parser::parse_doc(input).as_scalar();
         std::cout << input << " => " << res << std::endl;
     }
     catch(const std::exception& e)

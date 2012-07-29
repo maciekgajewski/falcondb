@@ -114,11 +114,11 @@ private:
 
 // conversion from parser documents to falcon documents
 
-raw_document_any convert_from_parser(const parse_document& );
+document convert_from_parser(const parse_document& );
 
-inline raw_document_scalar convert_from_parser(const parse_scalar& s)
+inline document_scalar convert_from_parser(const parse_scalar& s)
 {
-    return s; // variant automagic
+    return detail::raw_document_scalar(s); // variant automagic
 }
 
 inline document_list convert_from_parser(const parse_array& a)
@@ -143,13 +143,13 @@ inline document_object convert_from_parser(const parse_map& m)
     return result;
 }
 
-struct converter_from_parser : boost::static_visitor<raw_document_any>
+struct converter_from_parser : boost::static_visitor<document>
 {
     template<typename T>
-    raw_document_any operator() (const T& t) const { return convert_from_parser(t); }
+    document operator() (const T& t) const { return convert_from_parser(t); }
 };
 
-inline raw_document_any convert_from_parser(const parse_document& d)
+inline document convert_from_parser(const parse_document& d)
 {
     return boost::apply_visitor(converter_from_parser(), d);
 }
