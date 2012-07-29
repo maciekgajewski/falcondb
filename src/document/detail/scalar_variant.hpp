@@ -17,26 +17,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_NULL_TYPE_HPP
-#define FALCONDB_NULL_TYPE_HPP
+#ifndef FALCONDB_DETAIL_DOCUMENT_SCALAR_VARIANT_HPP
+#define FALCONDB_DETAIL_DOCUMENT_SCALAR_VARIANT_HPP
 
-#include <iostream>
 
-namespace falcondb {
+#include "document/null_type.hpp"
 
-struct null_type { };
+#include <boost/variant.hpp>
+#include <boost/date_time.hpp>
+#include <boost/uuid/uuid.hpp>
 
-inline std::ostream& operator<<(std::ostream& o, const null_type&)
-{
-    return o << "null";
-}
+#include <cstdint>
 
-template<typename T>
-bool operator < (const null_type&, const T&)
-{
-    return true; // null < everything
-}
+namespace falcondb { namespace detail {
 
-}
+// Variant types for storing dynamic documents, created from dynamic data types
+typedef boost::variant<
+    std::string,
+    std::int32_t,
+    std::uint32_t,
+    std::int64_t,
+    std::uint64_t,
+    double,
+    bool,
+    boost::posix_time::ptime,
+    boost::uuids::uuid,
+    null_type
+    > raw_document_scalar;
+
+}}
 
 #endif

@@ -17,26 +17,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_NULL_TYPE_HPP
-#define FALCONDB_NULL_TYPE_HPP
-
-#include <iostream>
+#include "document/document_list.hpp"
+#include "document/document.hpp"
+#include "document/json_writer.hpp"
 
 namespace falcondb {
 
-struct null_type { };
-
-inline std::ostream& operator<<(std::ostream& o, const null_type&)
+std::string document_list::to_json() const
 {
-    return o << "null";
+    std::ostringstream ss;
+    json_writer w(ss);
+    w.write(*this);
+    return ss.str();
 }
 
-template<typename T>
-bool operator < (const null_type&, const T&)
+document_list document_list::from_json(const std::string& s)
 {
-    return true; // null < everything
+    return document::from_json(s).as_list();
 }
 
 }
-
-#endif
