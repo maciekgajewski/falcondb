@@ -25,6 +25,7 @@ endif()
 add_subdirectory(dbengine)
 add_subdirectory(interfaces)
 add_subdirectory(document)
+add_subdirectory(document_test)
 
 # storage backends
 if(COMPILE_NESSDB_BACKEND)
@@ -50,6 +51,3 @@ add_subdirectory(bson)
 add_subdirectory(bson_test)
 add_subdirectory(utils)
 add_subdirectory(threads)
-
-#other
-add_subdirectory(new_doc)

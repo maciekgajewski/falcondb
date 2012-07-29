@@ -1,8 +1,8 @@
 #include "bson/bsonobjbuilder.hpp"
 
-#include "new_doc/dynamic_document.hpp"
-#include "new_doc/json_writer.hpp"
-#include "new_doc/json_parser.hpp"
+#include "document/document.hpp"
+#include "document/json_writer.hpp"
+#include "document/json_parser.hpp"
 
 #include <boost/type_traits.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
@@ -46,10 +46,10 @@ void scalars()
     std::string s("bububaba");
     test_output("string", s);
 
-    falcondb::document_scalar ds(3.1415);
+    falcondb::raw_document_scalar ds(3.1415);
     test_output("scalar with double", ds);
 
-    falcondb::document_scalar dt(boost::posix_time::second_clock::local_time());
+    falcondb::raw_document_scalar dt(boost::posix_time::second_clock::local_time());
     test_output("scalar with ptime", dt);
 
     test_output("string literal", "hello");
@@ -63,7 +63,7 @@ void arrays()
     std::vector<std::string> vs = {"A", "b", "C"};
     test_output("vector<string>", vs);
 
-    std::vector<falcondb::document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
+    std::vector<falcondb::raw_document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
     test_output("vector<document_scalar>", vds);
 
     // tuple
@@ -78,7 +78,7 @@ void maps()
     test_output("uniform map a:1, b:2", um);
 
     // variant scalar map
-    std::map<std::string, falcondb::document_scalar> dsm =
+    std::map<std::string, falcondb::raw_document_scalar> dsm =
         {std::make_pair("string", "hello"), std::make_pair("int", 7)};
     test_output("scalar map string:hello, int:7", dsm);
 }
@@ -103,11 +103,12 @@ void nested()
 
 void document()
 {
-    falcondb::document dsi = falcondb::document_from(3);
+    falcondb::document dsi = falcondb::document::from(3);
     test_output("document with scalar", dsi);
 
-    std::vector<falcondb::document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
-    falcondb::document dav = falcondb::document_from(vds);
+    std::vector<falcondb::raw_document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
+    //falcondb::document dav = falcondb::to_document_list(vds.begin(), vds.end());
+    falcondb::document dav = falcondb::document::from(vds);
     test_output("document with variant array", dav);
 
     // map of arrays
@@ -115,15 +116,16 @@ void document()
     typedef std::map<std::string, vb_t> vbm_t;
 
     vbm_t vbm = { std::make_pair("boolseq1", vb_t{true, false, true, false}), std::make_pair("boolseq2", vb_t{true, true}) };
-    falcondb::document vbmd = falcondb::document_from(vbm);
-    test_output("document with map of vectors of bools", vbm);
+    //falcondb::document vbmd = falcondb::to_document_object(vbm.begin(), vbm.end());
+    falcondb::document vbmd = falcondb::document::from(vbm);
+    test_output("document with map of vectors of bools", vbmd);
 }
 
 void test_parse_scalar(const std::string& input)
 {
     try
     {
-        falcondb::document_scalar res = falcondb::json_parser::parse(input);
+        falcondb::raw_document_scalar res = falcondb::json_parser::parse_doc(input).as_scalar();
         std::cout << input << " => " << res << std::endl;
     }
     catch(const std::exception& e)

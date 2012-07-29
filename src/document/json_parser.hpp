@@ -28,7 +28,7 @@ class json_parser
 {
 public:
 
-    static document_any parse_doc(const std::string& in);
+    static document parse_doc(const std::string& in);
 };
 
 } // namespace

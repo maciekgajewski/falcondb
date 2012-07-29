@@ -25,19 +25,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb {
 
-std::string document_wrapper::to_json() const
+std::string document::to_json() const
 {
     std::ostringstream ss;
     json_writer w(ss);
-    w.write(_any);
+    w.write(*this);
     return ss.str();
-}
-
-std::ostream& operator<<(std::ostream& o, const document_wrapper& d)
-{
-    json_writer w(o);
-    w.write(d.as_any());
-    return o;
 }
 
 document document::from_json(const std::string& s)
@@ -45,9 +38,46 @@ document document::from_json(const std::string& s)
     return json_parser::parse_doc(s);
 }
 
-bool document_wrapper::operator < (const document_wrapper& other) const
+std::string document_object::to_json() const
+{
+    return document::from(*this).to_json();
+}
+
+document_object document_object::from_json(const std::string& s)
+{
+    return document::from_json(s).as_object();
+}
+
+std::ostream& operator<<(std::ostream& o, const document& d)
+{
+    json_writer w(o);
+    w.write(d);
+    return o;
+}
+
+
+bool document::operator < (const document& other) const
 {
     return false; // TODO
 }
+
+const document& document_object::get_field(const std::string& field_name) const
+{
+    auto it = find(field_name);
+    if (it == end())
+        throw exception("Field ", field_name, " not set");
+    else
+        return it->second;
+}
+
+document& document_object::get_field(const std::string& field_name)
+{
+    auto it = find(field_name);
+    if (it == end())
+        throw exception("Field ", field_name, " not set");
+    else
+        return it->second;
+}
+
 
 } // namespace

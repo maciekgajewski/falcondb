@@ -43,7 +43,7 @@ json_writer::json_writer(std::ostream& out)
 {
 }
 
-void json_writer::write(const document_scalar& scalar)
+void json_writer::write(const raw_document_scalar& scalar)
 {
     detail::visitor v(*this);
     boost::apply_visitor(v, scalar);
@@ -55,7 +55,7 @@ std::string json_writer::encode_to_json(const std::string& s)
     return std::string("\"") + s + std::string("\"");
 }
 
-void json_writer::write(const document_any& doc)
+void json_writer::write(const raw_document_any& doc)
 {
     detail::visitor v(*this);
     boost::apply_visitor(v, doc);

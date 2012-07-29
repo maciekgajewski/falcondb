@@ -114,16 +114,16 @@ private:
 
 // conversion from parser documents to falcon documents
 
-document_any convert_from_parser(const parse_document& );
+raw_document_any convert_from_parser(const parse_document& );
 
-inline document_scalar convert_from_parser(const parse_scalar& s)
+inline raw_document_scalar convert_from_parser(const parse_scalar& s)
 {
     return s; // variant automagic
 }
 
-inline document_array convert_from_parser(const parse_array& a)
+inline document_list convert_from_parser(const parse_array& a)
 {
-    document_array result;
+    document_list result;
     result.reserve(a.size());
     std::transform(
         a.begin(), a.end(),
@@ -133,9 +133,9 @@ inline document_array convert_from_parser(const parse_array& a)
     return result;
 }
 
-inline document_map convert_from_parser(const parse_map& m)
+inline document_object convert_from_parser(const parse_map& m)
 {
-    document_map result;
+    document_object result;
     for( auto p : m )
     {
         result.insert(std::make_pair(p.name, convert_from_parser(p.value)));
@@ -143,13 +143,13 @@ inline document_map convert_from_parser(const parse_map& m)
     return result;
 }
 
-struct converter_from_parser : boost::static_visitor<document_any>
+struct converter_from_parser : boost::static_visitor<raw_document_any>
 {
     template<typename T>
-    document_any operator() (const T& t) const { return convert_from_parser(t); }
+    raw_document_any operator() (const T& t) const { return convert_from_parser(t); }
 };
 
-inline document_any convert_from_parser(const parse_document& d)
+inline raw_document_any convert_from_parser(const parse_document& d)
 {
     return boost::apply_visitor(converter_from_parser(), d);
 }
@@ -166,7 +166,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace falcondb {
 
-document_any json_parser::parse_doc(const std::string& in)
+document json_parser::parse_doc(const std::string& in)
 {
     std::string::const_iterator first = in.begin();
     std::string::const_iterator last = in.end();

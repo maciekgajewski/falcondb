@@ -46,68 +46,80 @@ typedef boost::variant<
     boost::posix_time::ptime,
     boost::uuids::uuid,
     null_type
-    > document_scalar;
+    > raw_document_scalar;
 
-typedef boost::make_recursive_variant< // will your eyes explode?
-    document_scalar,
-    std::vector<boost::recursive_variant_>,
-    std::map<std::string, boost::recursive_variant_>
-    >::type document_any;
+class document;
+class document_object;
 
-typedef std::vector<document_any> document_array;
-typedef std::map<std::string, document_any> document_map;
+typedef boost::variant<
+    raw_document_scalar,
+    boost::recursive_wrapper< std::vector<document> >,
+    boost::recursive_wrapper< document_object >
+    > raw_document_any;
 
 
-/// Wrapper clas providing some extra functionality. Does not own the wrapped object!
-class document_wrapper
+typedef std::vector<document> document_list;
+typedef std::map<std::string, document> raw_document_map;
+
+/// Provides some extra functinality on top of document_any
+class document : public raw_document_any
 {
 public:
 
-    document_wrapper(const document_any& any) : _any(any) { }
+    document(const raw_document_any& p) : raw_document_any(p) {}
+    document(raw_document_any&& p) : raw_document_any(p) {}
+    document(const document_list& p) : raw_document_any(p) {}
+    document(document_list&& p) : raw_document_any(p) {}
+    document(const document_object& p) : raw_document_any(p) {}
+    document(document_object&& p) : raw_document_any(p) {}
 
     // converters to variants (non-copying)
 
-    const document_array& as_array() const { return boost::get<document_array>(_any); }
-    const document_map& as_map() const { return boost::get<document_map>(_any); }
-    const document_scalar& as_scalar() const { return boost::get<document_scalar>(_any); }
-    const document_any& as_any() const { return _any; }
+    const document_list& as_list() const { return boost::get<document_list>(*this); }
+    const document_object& as_object() const { return boost::get<document_object>(*this); }
+    const raw_document_scalar& as_scalar() const { return boost::get<raw_document_scalar>(*this); }
+    document_list& as_array() { return boost::get<document_list>(*this); }
+    document_object& as_object() { return boost::get<document_object>(*this); }
+    raw_document_scalar& as_scalar() { return boost::get<raw_document_scalar>(*this); }
 
+    static document from(const raw_document_scalar& scalar) { return raw_document_any(scalar); }
+    static document from(raw_document_scalar&& scalar) { return raw_document_any(scalar); }
+    static document from(const document_object& obj) { return raw_document_any(obj); }
+    static document from(document_object&& obj) { return raw_document_any(obj); }
 
+    // from any std::vector
     template<typename T>
-    std::vector<T> as_array_of() const
+    static document from(const std::vector<T>& input)
     {
-        const document_array& input = boost::get<document_array>(this->_any); // may throw
-        std::vector<T> result;
+        document_list result;
         result.reserve(input.size());
-        std::copy(input.begin(), input.end(), std::back_inserter(result));
-        return result;
-    }
-
-    template<typename T>
-    std::map<std::string, T> as_map_of() const
-    {
-        const document_map& input = as_map(); // may throw
-        std::map<std::string, T> result;
-        std::transform(
-            input.begin(),
-            input.end(),
-            std::inserter(result, result.end()),
-            [] (const document_map::value_type& pair)
+        std::transform(input.begin(), input.end(), std::back_inserter(result),
+            [](const T& i)
             {
-                return std::make_pair(pair.first, boost::get<T>(boost::get<document_scalar>(pair.second)));
-            }
-        );
+                return document::from(i);
+            });
         return result;
     }
-
+    // from any std::map
     template<typename T>
-    T as() const
+    static document from(const std::map<std::string, T>& input);
+
+    /* remove if not needed
+    template<typename T>
+    const T& as() const
     {
         return boost::get<T>(this->_any);
     }
 
-    // field access
+    template<typename T>
+    T& as() const
+    {
+        return boost::get<T>(this->_any);
+    }
+    */
 
+    // field access
+    /*
     template<typename T>
     T get_field_as(const std::string& field_name) const
     {
@@ -150,45 +162,21 @@ public:
             throw exception("No such field '", field_name, "'");
         }
     }
+    */
 
     // i/o
 
     std::string to_json() const;
+    static document from_json(const std::string& s);
 
     // other
 
-    bool operator < (const document_wrapper& other) const;
+    bool operator < (const document& other) const;
 
-
-protected:
-
-    const document_any& _any; // wrapped object
-};
-
-/// Document that actually owns the variant
-class document : public document_wrapper
-{
-public:
-
-    document(const document_any& any) : document_wrapper(_owned), _owned(any) { }
-    document(document_any&& any) : document_wrapper(_owned), _owned(any) { }
-    document(const document& another) : document_wrapper(_owned), _owned(another._owned) {}
-    document(document&& another) : document_wrapper(_owned), _owned(another._owned) { }
-
-    document& operator=(const document& another)
-    {
-        _owned = another._owned;
-        return *this;
-    }
-
-    document& operator=(document&& another)
-    {
-        _owned.swap(another._owned);
-        return *this;
-    }
 
     // convenience converters
 
+    /*
     template<typename T>
     static
     document from_vector(const std::vector<T>& v)
@@ -228,30 +216,78 @@ public:
             throw exception("No such field '", field_name, "'");
         }
     }
-
-    static document from_json(const std::string& s);
-
-    document_array& as_array() { return boost::get<document_array>(_owned); }
-    document_map& as_map() { return boost::get<document_map>(_owned); }
-    document_scalar& as_scalar() { return boost::get<document_scalar>(_owned); }
-    document_any& as_any() { return _owned; }
-
-    // ??
-    const document_array& as_array() const { return boost::get<document_array>(_any); }
-    const document_map& as_map() const { return boost::get<document_map>(_any); }
-    const document_scalar& as_scalar() const { return boost::get<document_scalar>(_any); }
-    const document_any& as_any() const { return _any; }
+    */
 
 
-private:
 
-    document_any _owned;
 };
 
-typedef std::vector<document> document_list;
 
-std::ostream& operator<<(std::ostream& o, const document_wrapper& d);
+std::ostream& operator<<(std::ostream& o, const document& d);
 
+/// Provides some extra functionality on top of document_map
+class document_object : public raw_document_map
+{
+public:
+
+    document_object() = default; // wooohoo!
+    document_object(const raw_document_map& map) : raw_document_map(map) {}
+    document_object(raw_document_map&& map) : raw_document_map(map) {}
+
+    // check for field's existence
+    bool has_field(const std::string& field_name) const { return find(field_name) != end(); }
+
+    // return or throw
+    const document& get_field(const std::string& field_name) const;
+    document& get_field(const std::string& field_name);
+
+    // io
+    std::string to_json() const;
+    static document_object from_json(const std::string& s);
+
+};
+
+// converts any container to document list
+// requirements: exists document::from() for the item held by the container
+template<typename iterator_type>
+document_list to_document_list(iterator_type begin, iterator_type end)
+{
+    document_list result;
+    result.reserve(std::distance(begin, end));
+    std::transform(begin, end, std::back_inserter(result),
+        [](const typename iterator_type::reference i)
+        {
+            return document::from(i);
+        });
+    return result;
+}
+
+// converts any map to document map
+template<typename iterator_type>
+document_object to_document_object(iterator_type begin, iterator_type end)
+{
+    document_object result;
+    std::transform(begin, end, std::inserter(result, result.end()),
+        [](const typename iterator_type::reference i)
+        {
+            return std::make_pair(i.first, document::from(i.second));
+        });
+    return result;
+}
+template<typename T>
+document document::from(const std::map<std::string, T>& input)
+{
+    document_object result;
+    std::transform(input.begin(), input.end(), std::inserter(result, result.end()),
+        [](const std::pair<std::string, T>& i)
+        {
+            return std::make_pair(i.first, document::from(i.second));
+        });
+    return result;
+}
+
+
+/*
 template<>
 inline
 document document::from_vector<document_any>(const document_array& v)
@@ -288,7 +324,7 @@ document document_wrapper::get_field_as<document>(const std::string& field_name)
         throw exception("No such field '", field_name, "'");
     }
 }
-
+*/
 }
 
 #endif // FALCONDB_DOCUMENT_HPP

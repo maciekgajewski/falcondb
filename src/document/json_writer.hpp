@@ -99,7 +99,7 @@ public:
         _out << "]";
     }
 
-    // map
+    // map (including raw_document_map)
     template<typename T>
     void write(const std::map<std::string, T>& m)
     {
@@ -116,10 +116,10 @@ public:
     }
 
     /// variant scalar
-    void write(const document_scalar& scalar);
+    void write(const raw_document_scalar& scalar);
 
     // variant everything
-    void write(const document_any& doc);
+    void write(const raw_document_any& doc);
 
 private:
 
