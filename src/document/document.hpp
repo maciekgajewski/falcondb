@@ -60,6 +60,8 @@ public:
     // from any std::map
     template<typename T>
     static document from(const std::map<std::string, T>& input);
+    template<typename T>
+    static document from(const T& t);
 
     // smart - to-anything converter
     template<typename T>

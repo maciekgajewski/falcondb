@@ -32,9 +32,7 @@ class document_list;
 namespace detail {
 
 typedef boost::variant<
-    //boost::recursive_wrapper< raw_document_scalar >,
     document_scalar,
-    //raw_document_scalar,
     boost::recursive_wrapper< document_list >,
     boost::recursive_wrapper< document_object >
     > raw_document_any;

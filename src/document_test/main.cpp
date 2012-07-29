@@ -46,10 +46,10 @@ void scalars()
     std::string s("bububaba");
     test_output("string", s);
 
-    falcondb::detail::raw_document_scalar ds(3.1415);
+    falcondb::document_scalar ds(3.1415);
     test_output("scalar with double", ds);
 
-    falcondb::detail::raw_document_scalar dt(boost::posix_time::second_clock::local_time());
+    falcondb::document_scalar dt(boost::posix_time::second_clock::local_time());
     test_output("scalar with ptime", dt);
 
     test_output("string literal", "hello");
@@ -63,7 +63,10 @@ void arrays()
     std::vector<std::string> vs = {"A", "b", "C"};
     test_output("vector<string>", vs);
 
-    std::vector<falcondb::detail::raw_document_scalar> vds = {1, "b", boost::posix_time::second_clock::local_time()};
+    std::vector<falcondb::document_scalar> vds = {
+        falcondb::document_scalar(1),
+        falcondb::document_scalar("b"),
+        falcondb::document_scalar(boost::posix_time::second_clock::local_time())};
     test_output("vector<document_scalar>", vds);
 
     // tuple
@@ -78,8 +81,8 @@ void maps()
     test_output("uniform map a:1, b:2", um);
 
     // variant scalar map
-    std::map<std::string, falcondb::detail::raw_document_scalar> dsm =
-        {std::make_pair("string", "hello"), std::make_pair("int", 7)};
+    std::map<std::string, falcondb::document_scalar> dsm =
+        {std::make_pair("string", falcondb::document_scalar("hello")), std::make_pair("int", falcondb::document_scalar(7))};
     test_output("scalar map string:hello, int:7", dsm);
 }
 
