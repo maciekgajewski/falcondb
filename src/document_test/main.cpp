@@ -209,6 +209,8 @@ int main(int argc, char** argv)
     hobbit("[\"moo\", 23.45, true, [1, 2, \"no!\"]]");
     hobbit(" { \"ala\" : \"ma kota\", \"heniek\" : \"ma kaca\" } ");
     hobbit(" { \"constants\" : { \"pi\":3.14,\"e\":2.7 } , \"natual\":[1,2,3,4,5,6,7,8,9] } ");
+    hobbit("[]");
+    hobbit("{}");
 
     //type traits
 

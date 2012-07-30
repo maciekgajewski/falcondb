@@ -70,6 +70,7 @@ private:
     void handle_list(const arg_list& al);
     void handle_remove(const arg_list& al);
     void handle_showdbs();
+    void handle_dump(const arg_list& al);
 };
 
 }}

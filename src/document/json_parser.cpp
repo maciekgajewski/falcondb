@@ -89,12 +89,12 @@ public:
             | qi::bool_
             );
 
-        _array = '[' >> _document[push_back(_val, _1)] % ',' >> ']';
+        _array = '[' >> -(_document/*[push_back(_val, _1)]*/ % ',') >> ']';
         _pair =
             _double_quoted_string
             >> ':'
             >> _document;
-        _map = '{' >> _pair % ',' >> '}';
+        _map = '{' >> -(_pair % ',') >> '}';
 
         _document = _scalar | _array | _map;
     }
@@ -184,7 +184,7 @@ document json_parser::parse_doc(const std::string& in)
 
     if (first != last)
     {
-        throw exception("error at: ",  std::string(first, last));
+        throw exception("error parsig json at: ",  std::string(first, last));
     }
 
     return detail::convert_from_parser(*result);

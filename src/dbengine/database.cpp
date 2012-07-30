@@ -30,14 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace dbengine {
 
-class null_index_iterator : public interfaces::index_iterator
-{
-public:
-    virtual bool has_next() { return false; }
-
-    virtual document next() { assert(false); return document_scalar(null_type()); }
-};
-
 database::database(const interfaces::database_backend_ptr& storage, command_processor& processor)
     : _storage(storage), _processor(processor), _index_storage(_storage, "index")
 {
@@ -68,15 +60,12 @@ database::database(const interfaces::database_backend_ptr& storage, command_proc
         definition.set_field("fields", fields);
         definition.set_field("options", options);
 
-        null_index_iterator it;
-
         document_storage data_storage(_storage, "data");
 
         std::cout << "creating main index: " << definition.to_json() << std::endl;
 
         interfaces::index_type::create_result result = _default_index_type->create_index(
             definition,
-            it,
             _index_storage,
             data_storage);
 
@@ -101,6 +90,16 @@ bool database::post(const std::string& command,
 
     _processor.post(command, params, result, context);
     return true;
+}
+
+void database::dump()
+{
+    _storage->for_each(
+        [&](const range& key)
+        {
+            std::string data = _storage->get(key);
+            std::cout << key.to_string() << " => " << data << std::endl;
+        });
 }
 
 } }

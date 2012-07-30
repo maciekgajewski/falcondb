@@ -40,6 +40,8 @@ public:
         const document& params,
         const interfaces::result_handler& result);
 
+    virtual void dump();
+
 private:
 
     interfaces::database_backend_ptr _storage;

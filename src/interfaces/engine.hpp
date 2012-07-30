@@ -65,6 +65,9 @@ public:
         const std::string& command,
         const document& params,
         const result_handler& result) = 0;
+
+    // DEBUG: dumps content to stdout
+    virtual void dump() = 0;
 };
 
 typedef std::shared_ptr<database> database_ptr;

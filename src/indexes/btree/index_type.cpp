@@ -45,22 +45,12 @@ std::unique_ptr<interfaces::index> index_type::load_index(
 
 interfaces::index_type::create_result index_type::create_index(
     const document& index_definition,
-    interfaces::index_iterator& documents,
     interfaces::document_storage& index_storage,
     interfaces::document_storage& data_storage)
 {
     verify_definition(index_definition);
 
     std::unique_ptr<index> new_index(new index(index_storage, index_definition));
-    // copy data
-    while(documents.has_next())
-    {
-        document storage_key = documents.next();
-        document doc = data_storage.read(storage_key);
-
-        new_index->insert(storage_key, doc);
-    }
-
 
     document_object index_description;
     index_description.insert(std::make_pair("root", new_index->get_root()));

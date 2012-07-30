@@ -51,7 +51,7 @@ public:
 
     virtual void del(const document& doc);
 
-    virtual std::unique_ptr<interfaces::index_iterator> find(const document& range);
+    virtual document_list find(const document& range);
 
 private:
 

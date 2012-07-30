@@ -39,8 +39,6 @@ public:
     : _what(build_string(v...)), _backtrace(get_backtrace())
     { }
 
-
-
     virtual ~exception() throw();
 
     virtual const char* what() const throw() { return _what.c_str(); }

@@ -79,18 +79,17 @@ void list(const document& param,
 {
     // use main index interator to list the dataset
     interfaces::index::unique_ptr& main_index = context.get_indexes()[0];
-    document_list result;
-    /*
-    const interfaces::index_iterator::unique_ptr& it = main_index->find(document());
 
-    while(it->has_next())
+    document_list index_result = main_index->find(document_scalar::null());
+    document_list result;
+    result.reserve(index_result.size());
+
+    for(auto storage_key : index_result)
     {
-        document storage_key = it->next();
         std::cout << "list, storage key: " << storage_key << std::endl;
         document doc = context.get_data_storage().read(storage_key);
         result.push_back(doc);
     }
-    */
     handler(boost::none, result);
 }
 
@@ -109,6 +108,5 @@ void remove(const document& param,
     handler(boost::none, document_list());
 }
 
-
-}
+} // namespace commands
 } }

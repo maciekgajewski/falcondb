@@ -18,7 +18,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "indexes/btree/index.hpp"
-#include "indexes/btree/index_iterator.hpp"
 
 #include "interfaces/document_storage.hpp"
 
@@ -72,10 +71,25 @@ void index::del(const document& doc)
     tree_remove(_root, index_key);
 }
 
-std::unique_ptr<interfaces::index_iterator> index::find(const document& range)
+document_list index::find(const document& range)
 {
-    document root_doc = _storage.read(_root);
-    return std::unique_ptr<interfaces::index_iterator>(new index_iterator(root_doc, 0, _storage));
+    // just return everything for now
+
+    document_object root_doc = _storage.read(_root);
+    const document_list& data = root_doc.get_field("data").as_list();
+
+    document_list result;
+    result.reserve(data.size());
+
+    std::transform(
+        data.begin(), data.end(),
+        std::back_inserter(result),
+        [](const document& in)
+        {
+            return in.as_object().get_field("value");
+        });
+
+    return result;
 }
 
 document_list index::extract_index_key(const document& doc)

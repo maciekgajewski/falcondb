@@ -28,20 +28,6 @@ namespace falcondb { namespace interfaces {
 
 class document_storage;
 
-/// Iterator returned by index
-class index_iterator
-{
-public:
-
-    typedef std::unique_ptr<index_iterator> unique_ptr;
-
-    /// Checks if subsequent call to 'next' will succeed
-    virtual bool has_next() = 0;
-
-    /// Returns document storage key for the next document, moves the iterator
-    virtual document next() = 0;
-};
-
 /// Index abstraction
 class index
 {
@@ -50,7 +36,7 @@ public:
     typedef std::shared_ptr<index> shared_ptr;
     typedef std::unique_ptr<index> unique_ptr;
 
-    virtual ~index() {};
+    virtual ~index() {}
 
     /// Inserts document into index
     virtual void insert(const document& storage_key, const document& doc) = 0;
@@ -61,8 +47,8 @@ public:
     /// Removes document from index
     virtual void del(const document& doc) = 0;
 
-    /// Creates iterator on certain range.
-    virtual index_iterator::unique_ptr find(const document& range) = 0;
+    /// Returns data - list of storage keys
+    virtual document_list find(const document& range) = 0;
 };
 
 /// Index type
@@ -74,12 +60,6 @@ public:
 
     struct create_result
     {
-        /*
-        create_result(create_result&& o)
-        :
-            index_description(std::move(o.index_description)),
-            new_index(std::move(o.new_index))
-            {}*/
         document index_description;
         std::unique_ptr<index> new_index;
     };
@@ -94,7 +74,6 @@ public:
     // and is required to load the index
     virtual create_result create_index(
         const document& index_definition,
-        index_iterator& documents,
         document_storage& index_storage,
         document_storage& data_storage) = 0;
 };
