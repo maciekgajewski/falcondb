@@ -37,10 +37,12 @@ document_object::document_object(detail::raw_document_map&& map)
 : detail::raw_document_map(map)
 { }
 
+inline
 document_object::document_object(const document& d)
 : detail::raw_document_map(d.as_object())
 { }
 
+inline
 document_object::document_object(document&& d)
 : detail::raw_document_map(std::move(d.as_object()))
 { }

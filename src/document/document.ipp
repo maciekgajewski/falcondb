@@ -22,8 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "document/document.hpp"
 
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <type_traits>
 
 namespace falcondb {
 
@@ -160,38 +159,64 @@ namespace detail
 {
     // type traits
     template<typename T>
-    class is_vector : public boost::false_type {};
+    class is_vector : public std::false_type {};
 
     template<typename T>
-    class is_map : public boost::false_type {};
+    class is_map : public std::false_type {};
 
     template<typename T>
-    class is_vector<std::vector<T> > : public boost::true_type {};
+    class is_vector<std::vector<T> > : public std::true_type {};
 
     template<typename T>
-    class is_map<std::map<std::string, T> > : public boost::true_type {};
+    class is_map<std::map<std::string, T> > : public std::true_type {};
 
     /*
     template<typename T>
-    const T& document_as(document& d, boost::enable_if<is_vector<T> >::type* e = nullptr)
+    const T& document_as(const document& d, typename std::enable_if<is_map<T>::value>::type* = nullptr)
+    {
+        return d.as_object().to_map_of<T>();
+    }
+
+    template<typename T>
+    const T& document_as(const document& d, typename std::enable_if<is_vector<T>::value>::type* = nullptr)
     {
         return d.as_list().to_list_of<T>();
     }
 
     template<typename T>
-    const T& document_as(document& d, boost::enable_if<is_mapr<T> >::type* e = nullptr)
+    const T& document_as(const document& d,
+        typename std::enable_if<!(is_vector<T>::value) && !(is_map<T>::value)>::type* = nullptr)
     {
-        return d.as_object().to_map_of<T>();
+        return d.as_scalar().as<T>();
     }
     */
+
 }
 
-/*
 template<typename T>
 const T& document::as() const
 {
+    return as_scalar().as<T>();
 }
-*/
+
+template<>
+inline const document_object& document::as<document_object>() const
+{
+    return as_object();
+}
+
+template<>
+inline const document_list& document::as<document_list>() const
+{
+    return as_list();
+}
+
+template<>
+inline const document_scalar& document::as<document_scalar>() const
+{
+    return as_scalar();
+}
+
 
 }
 

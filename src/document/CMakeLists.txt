@@ -10,4 +10,6 @@ add_library(document
 
 target_link_libraries(document
     utils
+
+    boost_date_time
 )

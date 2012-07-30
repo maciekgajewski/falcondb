@@ -210,5 +210,14 @@ int main(int argc, char** argv)
     hobbit(" { \"ala\" : \"ma kota\", \"heniek\" : \"ma kaca\" } ");
     hobbit(" { \"constants\" : { \"pi\":3.14,\"e\":2.7 } , \"natual\":[1,2,3,4,5,6,7,8,9] } ");
 
+    //type traits
 
+    std::cout << "type traits" << std::endl;
+    std::cout << "int is vector: " << falcondb::detail::is_vector<int>::value << std::endl;
+    std::cout << "int is map: " << falcondb::detail::is_map<int>::value << std::endl;
+    std::cout << "vector<int> is vector: " << falcondb::detail::is_vector< std::vector<int> >::value << std::endl;
+    std::cout << "map<string, int> is map: " << falcondb::detail::is_map< std::map<std::string, int> >::value << std::endl;
+
+    falcondb::document d = falcondb::document::from(3);
+    std::cout << d.as<int>() << std::endl;
 }
