@@ -37,6 +37,15 @@ document_object::document_object(detail::raw_document_map&& map)
 : detail::raw_document_map(map)
 { }
 
+document_object::document_object(const document& d)
+: detail::raw_document_map(d.as_object())
+{ }
+
+document_object::document_object(document&& d)
+: detail::raw_document_map(std::move(d.as_object()))
+{ }
+
+
 // check for field's existence
 inline bool document_object::has_field(const std::string& field_name) const
 {
