@@ -17,22 +17,26 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_INTERFACES_COMMAND_CONTEXT_HPP
+#define FALCONDB_INTERFACES_COMMAND_CONTEXT_HPP
 
-#include <sstream>
+#include "interfaces/index.hpp"
 
+namespace falcondb { namespace interfaces {
 
-namespace falcondb {
+class document_storage;
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+/// Database tools provided to each executed database command
+class command_context
 {
-}
+public:
 
-exception::~exception() throw()
-{
-}
+    /// Main data storage. Can be used to access document data
+    virtual document_storage& get_data_storage() = 0;
+    virtual std::vector<index::unique_ptr>& get_indexes() = 0;
+};
 
-}
+
+}} // namespaces
+
+#endif

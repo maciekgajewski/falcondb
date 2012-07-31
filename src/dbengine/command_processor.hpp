@@ -20,7 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDDB_ENGINE_COMMAND_PROCESSOR_HPP
 #define FALCONDDB_ENGINE_COMMAND_PROCESSOR_HPP
 
-#include "interfaces/storage_backend.hpp"
+#include "dbengine/command_context.hpp"
+
+#include "interfaces/command_context.hpp"
 #include "interfaces/engine.hpp"
 
 #include "utils/rwmutex.hpp"
@@ -50,7 +52,7 @@ public:
     void post(const std::string& command,
         const document_list& params,
         const interfaces::result_handler& result,
-        const interfaces::database_backend_ptr& storage);
+        const dbengine::command_context& context);
 
 private:
 
@@ -67,7 +69,7 @@ private:
     static void handler_wrapper(const std::string& command,
         const document_list& params,
         const interfaces::result_handler& result,
-        const interfaces::database_backend_ptr& storage,
+        dbengine::command_context context,
         const interfaces::command_handler& handler);
 
 };

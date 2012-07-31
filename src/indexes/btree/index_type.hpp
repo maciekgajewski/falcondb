@@ -17,41 +17,35 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_EXCEPTION_HPP
-#define FALCONDB_EXCEPTION_HPP
+#ifndef FALCONDB_INDEXES_BTREE_INDEX_TYPE_HPP
+#define FALCONDB_INDEXES_BTREE_INDEX_TYPE_HPP
 
-#include "utils/string.hpp"
-#include "utils/backtrace_data.hpp"
+#include "interfaces/index.hpp"
 
-#include <stdexcept>
+namespace falcondb { namespace indexes { namespace btree {
 
-namespace falcondb {
-
-class exception : public std::exception
+/// Implments 'index type' for btree indexes
+class index_type : public interfaces::index_type
 {
 public:
+    index_type();
 
-    // simple constructor with pre-formatted message
-    exception(const char* what);
+    // interface
 
-    // formatting constructor
-    template<typename ...T>
-    exception(T ...v)
-    : _what(build_string(v...)), _backtrace()
-    { }
+    virtual std::unique_ptr<interfaces::index> load_index(
+        interfaces::document_storage& index_storage,
+        const document& index_description);
 
-    virtual ~exception() throw();
+    virtual create_result create_index(const document& index_definition,
+        interfaces::document_storage& index_storage,
+        interfaces::document_storage& data_storage);
 
-    virtual const char* what() const throw() { return _what.c_str(); }
-    const backtrace_data& get_backtrace() const { return _backtrace; }
-    std::string get_message() const { return _what; }
+    // other
 
-private:
-
-    const std::string _what;
-    const backtrace_data _backtrace;
+    /// Throws if defintio is invalid
+    static void verify_definition(const document& definition);
 };
 
-} // namespace falcondb
+} } }
 
-#endif // FALCONDB_EXCEPTION_HPP
+#endif

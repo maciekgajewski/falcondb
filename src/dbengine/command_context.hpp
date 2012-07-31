@@ -17,22 +17,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_DBENGINE_COMMAND_CONTEXT_HPP
+#define FALCONDB_DBENGINE_COMMAND_CONTEXT_HPP
 
-#include <sstream>
+#include "dbengine/document_storage.hpp"
 
+#include "interfaces/command_context.hpp"
 
-namespace falcondb {
+namespace falcondb { namespace dbengine {
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+class command_context : public interfaces::command_context
 {
-}
+public:
+    command_context(
+        const document_storage& data_storage,
+        std::vector<interfaces::index::unique_ptr>& indexes
+        );
 
-exception::~exception() throw()
-{
-}
+    // interface
 
-}
+    virtual interfaces::document_storage& get_data_storage();
+    virtual std::vector<interfaces::index::unique_ptr>& get_indexes();
+
+private:
+
+    document_storage _data_storage;
+    std::vector<interfaces::index::unique_ptr>& _indexes;
+};
+
+} }
+
+#endif // FALCONDB_DBENGINE_COMMAND_CONTEXT_HPP

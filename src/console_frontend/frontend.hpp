@@ -57,10 +57,10 @@ private:
     /// returns arg at position idx, throws exception if no such argument
     static const std::string& require_arg(const command_dispatcher::arg_list& al, std::size_t idx);
 
-    void post_command(const std::string& db_name, const std::string& command, const document_list& param = document_list());
+    void post_command(const std::string& db_name, const std::string& command, const document& param = document_scalar::null());
 
     void result_handler(const std::string& operation,
-        const interfaces::error_message& err,
+        const error_message& err,
         const document_list& data);
 
     void handle_quit(const arg_list& al);
@@ -70,6 +70,7 @@ private:
     void handle_list(const arg_list& al);
     void handle_remove(const arg_list& al);
     void handle_showdbs();
+    void handle_dump(const arg_list& al);
 };
 
 }}

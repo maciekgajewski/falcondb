@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "document/document.hpp"
 
-#include <boost/optional.hpp>
+#include <utils/error_message.hpp>
 
 #include <vector>
 #include <string>
@@ -34,16 +34,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 namespace falcondb { namespace interfaces {
 
 class database;
-class collection;
-class database_backend;
+class command_context;
 
-typedef std::shared_ptr<database_backend> database_backend_ptr;
 typedef std::shared_ptr<database> database_ptr;
 
-typedef boost::optional<std::string> error_message;
 typedef std::function<void (const error_message& error, const document_list& result)> result_handler;
-typedef std::function<void (const document_list&, const result_handler&, const database_backend_ptr&)> command_handler;
+typedef std::function<void (const document&, const result_handler&, command_context&)> command_handler;
 
+/// API exposed toward frontends.
 class engine
 {
 public:
@@ -66,6 +64,9 @@ public:
         const std::string& command,
         const document_list& params,
         const result_handler& result) = 0;
+
+    // DEBUG: dumps content to stdout
+    virtual void dump() = 0;
 };
 
 typedef std::shared_ptr<database> database_ptr;

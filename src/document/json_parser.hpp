@@ -17,23 +17,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "dbengine/database_impl.hpp"
+#ifndef FALCONDB_JSON_PARSER_HPP
+#define FALCONDB_JSON_PARSER_HPP
 
-#include "dbengine/command_processor.hpp"
+#include "document/document.hpp"
 
-namespace falcondb { namespace dbengine {
+namespace falcondb {
 
-database_impl::database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor)
-    : _storage(storage), _processor(processor)
+class json_parser
 {
-}
+public:
 
-bool database_impl::post(const std::string& command,
-    const document_list& params,
-    const interfaces::result_handler& result)
-{
-    _processor.post(command, params, result, _storage);
-    return true;
-}
+    static document parse_doc(const std::string& in);
+};
 
-} }
+} // namespace
+
+#endif

@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "dbengine/engine.hpp"
-#include "dbengine/database_impl.hpp"
+#include "dbengine/database.hpp"
 #include "dbengine/commands.hpp"
 
 #include "utils/exception.hpp"
@@ -60,9 +60,12 @@ void engine::run()
                 try
                 {
                     rwmutex::scoped_write_lock lock(_databases_mutex);
-                    interfaces::database_backend_ptr db = _storage_backend.open_database(it->path().string());
+                    interfaces::database_backend_ptr storage = _storage_backend.open_database(it->path().string());
+                    interfaces::database_ptr db = std::make_shared<database>(storage, std::ref(_processor));
+
                     std::string name = it->path().filename().generic_string();
                     _databases.insert(std::make_pair(name, db));
+
                     std::cout << "OK";
 
                 }
@@ -106,11 +109,11 @@ interfaces::database_ptr engine::get_database(const std::string& db_name)
     }
     else
     {
-        return std::make_shared<database_impl>(it->second, std::ref(_processor));
+        return it->second;
     }
 }
 
-interfaces::database_ptr engine::create_database(const std::string& db_name)
+void engine::create_database(const std::string& db_name)
 {
     // does the db already exists?
     {
@@ -132,13 +135,8 @@ interfaces::database_ptr engine::create_database(const std::string& db_name)
 
     bfs::create_directory(new_db_path);
     interfaces::database_backend_ptr backend = _storage_backend.create_database(new_db_path.generic_string());
-
-    {
-        rwmutex::scoped_write_lock lock(_databases_mutex);
-        _databases.insert(std::make_pair(db_name, backend));
-    }
-
-    return std::make_shared<database_impl>(backend, std::ref(_processor));
+    interfaces::database_ptr db = std::make_shared<database>(backend, std::ref(_processor));
+    _databases.insert(std::make_pair(db_name, db));
 }
 
 void engine::drop_database(const std::string& db_name)

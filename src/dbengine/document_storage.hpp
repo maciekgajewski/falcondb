@@ -17,22 +17,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_DBENGINE_DOCUMENT_STORAGE_HPP
+#define FALCONDB_DBENGINE_DOCUMENT_STORAGE_HPP
 
-#include <sstream>
+#include "interfaces/document_storage.hpp"
+#include "interfaces/storage_backend.hpp"
 
+namespace falcondb { namespace dbengine {
 
-namespace falcondb {
-
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+/// Simple implementation of serializing storage.
+/// Adds namespace prefix to each key after serialization
+class document_storage : public interfaces::document_storage
 {
-}
+public:
+    document_storage(const interfaces::database_backend_ptr& raw_storage, const std::string& ns);
 
-exception::~exception() throw()
-{
-}
+    // document_storage
 
-}
+    virtual void write(const document& key, const document& doc);
+    virtual document read(const document& key);
+    virtual void del(const document& key);
+
+private:
+
+    interfaces::database_backend_ptr _raw_storage;
+    const std::string _ns;
+};
+
+
+} } // ns
+
+#endif

@@ -17,22 +17,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_INTERFACES_DOCUMENT_STORAGE_HPP
+#define FALCONDB_INTERFACES_DOCUMENT_STORAGE_HPP
 
-#include <sstream>
+#include "document/document.hpp"
+
+namespace falcondb { namespace interfaces {
 
 
-namespace falcondb {
-
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+/// Serialized storage. Allows for storing and retrieving documents.
+/// Keys used by a store must be uniqe per storage instance; they don't have to be globally unique
+class document_storage
 {
-}
+public:
 
-exception::~exception() throw()
-{
-}
+    /// Stores document
+    virtual void write(const document& key, const document& doc) = 0;
 
-}
+    /// Retrieves document
+    virtual document read(const document& key) = 0;
+
+    /// Deletes document
+    virtual void del(const document& key) = 0;
+};
+
+}} // namespaces
+
+#endif

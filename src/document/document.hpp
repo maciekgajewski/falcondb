@@ -20,130 +20,97 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_DOCUMENT_HPP
 #define FALCONDB_DOCUMENT_HPP
 
-#include "utils/exception.hpp"
-
-#include <jsoncpp/json/json.h>
-
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
-#include <vector>
-#include <iostream>
-#include <memory>
+#include "document/detail/variants.hpp"
+#include "document/document_list.hpp"
+#include "document/document_object.hpp"
 
 namespace falcondb {
 
-/// Wrapper around document library
-/// We need only very minimalistic set of operation to perform on a document,
-/// this makes easy to create an abstraction to hide the actual implementation behind.
+/// Provides some extra functinality on top of document_any
+
+// TODO fix it to work!
+// looks like this: https://svn.boost.org/trac/boost/ticket/7120
+//class document : public detail::raw_document_any
 class document
 {
 public:
 
-    /// creates null document
-    document() : _internal() {}
-    ~document() { }
+    /**/
+    document(const document_list& p);
+    document(document_list&& p);
+    document(const document_object& p);
+    document(document_object&& p);
+    document(const document_scalar& p);
+    document(document_scalar&& p);
+    /**/
 
-    document(const document& other)
-    : _internal(other._internal)
-    { }
+    document(const detail::raw_document_any& v);
+    document(detail::raw_document_any&& v);
+    document(document&& d);
+    document(const document& d);
 
-    document(document&& rvalue)
-    {
-        _internal.swap(rvalue._internal);
-    }
+    // converters to variants (non-copying)
 
-    // field access
+    const document_list& as_list() const;
+    const document_object& as_object() const;
+    const document_scalar& as_scalar() const;
+    document_list& as_list();
+    document_object& as_object() ;
+    document_scalar& as_scalar();
 
-    bool has_field(const std::string& name) const
-    {
-        return _internal.isMember(name);
-    }
+    static document from(const document_scalar& scalar);
+    static document from(document_scalar&& scalar);
+    static document from(const document_object& obj);
+    static document from(document_object&& obj);
+    static document from(const document_list& obj);
+    static document from(document_list&& obj);
+
+    // from any std::vector
+    template<typename T>
+    static document from(const std::vector<T>& input);
+    // from any std::map
+    template<typename T>
+    static document from(const std::map<std::string, T>& input);
+
+    // from anything
+    static document from(const char* t) { return from(std::string(t)); }
+
+    template<std::size_t S>
+    static document from(const char t[S]) { return from(std::string(t)); }
 
     template<typename T>
-    T get(const std::string& field_name) const;
+    static document from(const T& t);
 
-    // field manipulation
+    // TODO add && versions of from(...)
+
+    // smart - to-anything converter
     template<typename T>
-    void append(const std::string& field_name, const T& value)
-    {
-        _internal[field_name] = value; // rely on the existence of compatible constructor
-    }
+    const T& as() const;
 
-    // json i/o
+    // i/o
 
-    std::string to_json() const
-    {
-        Json::FastWriter writer;
-        return writer.write(_internal);
-    }
+    std::string to_json() const;
+    static document from_json(const std::string& s);
 
-    static document from_json(const std::string& json_data)
-    {
-        Json::Reader reader;
-        Json::Value val;
-        if (!reader.parse(json_data, val, false))
-        {
-            throw exception("Error parsing json: ", reader.getFormatedErrorMessages());
-        }
+    // other
 
-        return document(std::move(val));
-    }
+    bool operator < (const document& other) const;
 
-    // storage i/o
-
-    std::string to_storage() const
-    {
-        return to_json();
-    }
-
-    static document from_storage(const std::string& storage_data)
-    {
-        return from_json(storage_data);
-    }
+    const detail::raw_document_any& _v() const { return _variant; }
 
 private:
 
-    document(const Json::Value& internal) : _internal(internal) { }
-    document(Json::Value&& internal)
-    {
-        _internal.swap(internal);
-    }
+    detail::raw_document_any _variant;
 
-    friend std::ostream& operator << (std::ostream& s, const document& d);
-
-    void boo();
-
-    Json::Value _internal;
 };
 
-typedef std::vector<document> document_list;
+std::ostream& operator<<(std::ostream& o, const document& d);
 
-inline std::ostream& operator << (std::ostream& s, const document& d)
-{
-    Json::FastWriter writer;
-    return s << writer.write(d._internal);
 }
 
-template<>
-inline document document::get<document>(const std::string& field_name) const
-{
-    if(has_field(field_name))
-    {
-        return document(_internal.get(field_name, Json::Value()));
-    }
-    else
-    {
-        throw exception("no filed named ", field_name);
-    }
-}
-
-template<>
-inline void document::append<boost::uuids::uuid>(const std::string& field_name, const boost::uuids::uuid& value)
-{
-    _internal[field_name] = to_string(value);
-}
-
-} // namespace falcondb
+#include "document/document.ipp"
+#include "document/document_scalar.ipp"
+#include "document/document_list.ipp"
+#include "document/document_object.ipp"
 
 #endif // FALCONDB_DOCUMENT_HPP

@@ -17,22 +17,29 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_DETAIL_DOCUMENT_VARIANTS_HPP
+#define FALCONDB_DETAIL_DOCUMENT_VARIANTS_HPP
 
-#include <sstream>
+#include "document/document_scalar.hpp"
 
 
 namespace falcondb {
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
-{
-}
+class document;
+class document_object;
+class document_list;
 
-exception::~exception() throw()
-{
-}
+namespace detail {
 
-}
+typedef boost::variant<
+    document_scalar,
+    boost::recursive_wrapper< document_list >,
+    boost::recursive_wrapper< document_object >
+    > raw_document_any;
+
+typedef std::map<std::string, document> raw_document_map;
+typedef std::vector<document> raw_document_list;
+
+}}
+
+#endif

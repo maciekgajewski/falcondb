@@ -57,7 +57,7 @@ private:
     interfaces::storage_backend& _storage_backend;
 
     // databases
-    typedef std::map<std::string, interfaces::database_backend_ptr> database_map;
+    typedef std::map<std::string, interfaces::database_ptr> database_map;
     database_map _databases;
     rwmutex _databases_mutex;
 

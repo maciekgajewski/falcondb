@@ -17,22 +17,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
-
-#include <sstream>
-
+#include "document/document_list.hpp"
+#include "document/document.hpp"
+#include "document/json_writer.hpp"
 
 namespace falcondb {
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+std::string document_list::to_json() const
 {
+    std::ostringstream ss;
+    json_writer w(ss);
+    w.write(*this);
+    return ss.str();
 }
 
-exception::~exception() throw()
+document_list document_list::from_json(const std::string& s)
 {
+    return document::from_json(s).as_list();
 }
 
 }

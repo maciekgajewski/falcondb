@@ -17,22 +17,41 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#include "utils/backtrace_data.hpp"
 
+#include <iostream>
 #include <sstream>
+#include <iterator>
 
+#include <execinfo.h> // glibc-specific backtrace facilities
 
 namespace falcondb {
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+backtrace_data backtrace_data::create()
 {
+    void* buf[1024];
+    int size = ::backtrace(buf, 1024);
+
+    char** symbols = ::backtrace_symbols(buf, size);
+
+    std::stringstream ss;
+    std::vector<std::string> bt;
+    for(int i = 0; i < size; ++i)
+    {
+        bt.push_back(symbols[i]);
+    }
+    ::free(symbols);
+
+    return std::move(bt);
 }
 
-exception::~exception() throw()
+std::ostream& operator<<(std::ostream& o, const backtrace_data& bt)
 {
+    std::copy(
+        bt._bakctrace.begin(), bt._bakctrace.end(),
+        std::ostream_iterator<std::string>(std::cout, "\n"));
+    return o;
 }
 
-}
+
+} // namespace falcondb

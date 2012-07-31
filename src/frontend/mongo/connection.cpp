@@ -160,9 +160,8 @@ void connection::send_reply(const message::pointer& msg, const bson_object_list 
     boost::asio::async_write(
         _socket,
         boost::asio::buffer(stream.str()),
-        boost::bind(&connection::handle_write_msg, shared_from_this(), boost::asio::placeholders::error()));
+        boost::bind(&connection::handle_write_msg, shared_from_this(), boost::asio::placeholders::error));
 }
-
 
 void connection::handle_write_msg(const boost::system::error_code& e)
 {

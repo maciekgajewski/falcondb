@@ -17,32 +17,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FLACONDB_ENGINE_DATABASE_IMPL_HPP
-#define FLACONDB_ENGINE_DATABASE_IMPL_HPP
+#ifndef FALCONDB_DETAIL_DOCUMENT_SCALAR_VARIANT_HPP
+#define FALCONDB_DETAIL_DOCUMENT_SCALAR_VARIANT_HPP
 
-#include "interfaces/engine.hpp"
-#include "interfaces/storage_backend.hpp"
 
-namespace falcondb { namespace dbengine {
+#include "document/null_type.hpp"
 
-class command_processor;
+#include <boost/variant.hpp>
+#include <boost/date_time.hpp>
+#include <boost/uuid/uuid.hpp>
 
-class database_impl : public interfaces::database
-{
-public:
-    database_impl(const interfaces::database_backend_ptr& storage, command_processor& processor);
+#include <cstdint>
 
-    virtual bool post(const std::string& command,
-        const document_list& params,
-        const interfaces::result_handler& result);
+namespace falcondb { namespace detail {
 
-private:
+// Variant types for storing dynamic documents, created from dynamic data types
+typedef boost::variant<
+    std::string,
+    std::int32_t,
+    std::uint32_t,
+    std::int64_t,
+    std::uint64_t,
+    double,
+    bool,
+    boost::posix_time::ptime,
+    boost::uuids::uuid,
+    null_type
+    > raw_document_scalar;
 
-    interfaces::database_backend_ptr _storage;
-    command_processor& _processor;
-
-};
-
-} }
+}}
 
 #endif

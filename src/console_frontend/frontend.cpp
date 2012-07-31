@@ -55,6 +55,8 @@ frontend::frontend(interfaces::engine& engine)
         [this](const arg_list& al) { handle_remove(al); });
     _dispatcher.add_command("showdbs", "showdbs", "List databases",
         [this](const arg_list&) { handle_showdbs(); });
+    _dispatcher.add_command("dump", "dump DATABASE", "DEBUG: dumps db content to STDOUT",
+        [this](const arg_list& al) { handle_dump(al); });
 }
 
 void frontend::execute()
@@ -67,7 +69,8 @@ void frontend::execute()
     boost::asio::posix::stream_descriptor stdin_stream(io_service, stdin_fd);
 
     // setup readline
-    rl_callback_handler_install("ifalcon> ", static_on_text);
+    ::rl_callback_handler_install("ifalcon> ", static_on_text);
+    ::using_history();
 
     char* home = ::getenv("HOME");
     boost::optional<std::string> history_file;
@@ -75,6 +78,7 @@ void frontend::execute()
     {
         history_file = std::string(home) + "/.falcondb_history";
         read_history(history_file->c_str());
+        ::history_set_pos(::history_length-1);
     }
 
 
@@ -135,7 +139,7 @@ void frontend::post_command(
     interfaces::database_ptr db = _engine.get_database(db_name);
 
     db->post(command, param,
-             [this, command](const interfaces::error_message& error, const document_list& data)
+             [this, command](const error_message& error, const document_list& data)
              {
                 result_handler(command, error, data);
             });
@@ -163,11 +167,12 @@ void frontend::handle_drop_db(const frontend::arg_list& al)
     std::cout << "ok" << std::endl;
 }
 
-void frontend::result_handler(const std::string& operation, const interfaces::error_message& err, const document_list& data)
+void frontend::result_handler(const std::string& operation, const error_message& err, const document_list& data)
 {
     if (err)
     {
         std::cout << operation << " error: " << err << std::endl;
+        std::cout << err.get_backtrace() << std::endl;
     }
     else
     {
@@ -197,7 +202,7 @@ void frontend::handle_list(const frontend::arg_list& al)
     post_command(db_name, "list");
 }
 
-void frontend::handle_remove(const frontend::arg_list& al)
+void frontend::handle_remove(const arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
     document_list doc_list;
@@ -212,6 +217,13 @@ void frontend::handle_showdbs()
     {
         std::cout << " * " << db_name << std::endl;
     }
+}
+
+void frontend::handle_dump(const arg_list& al)
+{
+    std::string db_name = require_arg(al, 0);
+    interfaces::database_ptr db = _engine.get_database(db_name);
+    db->dump();
 }
 
 }}
