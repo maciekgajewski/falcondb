@@ -134,7 +134,7 @@ const std::string& frontend::require_arg(const command_dispatcher::arg_list& al,
 void frontend::post_command(
     const std::string& db_name,
     const std::string& command,
-    const document_list& param)
+    const document& param)
 {
     interfaces::database_ptr db = _engine.get_database(db_name);
 

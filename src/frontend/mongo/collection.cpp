@@ -127,8 +127,8 @@ void collection::handle_insert(
 
     _databse->post(
         "insert",
-        doc_list,
-        [handler](const interfaces::error_message& e, const document_list& result)
+        doc_list[0],
+        [handler](const interfaces::error_message& e, const document& result)
         {
             if (e) {
                 std::cerr << *e << std::endl;
