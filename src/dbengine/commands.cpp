@@ -67,7 +67,7 @@ void insert(const document& param,
         insert_with_id(context, copy);
     }
 
-    handler(boost::none, document_list());
+    handler(error_message(), document_list());
 }
 
 ////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ void list(const document& param,
         document doc = context.get_data_storage().read(storage_key);
         result.push_back(doc);
     }
-    handler(boost::none, result);
+    handler(error_message(), result);
 }
 
 void remove(const document& param,
@@ -105,7 +105,7 @@ void remove(const document& param,
     }
 
     context.get_data_storage().del(param); // the param is the key
-    handler(boost::none, document_list());
+    handler(error_message(), document_list());
 }
 
 } // namespace commands

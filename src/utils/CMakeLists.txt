@@ -5,4 +5,6 @@ add_library(utils
     tscclock.hpp
     rwmutex.cpp rwmutex.hpp
     filesystem.hpp
+    backtrace_data.cpp backtrace_data.hpp
+    error_message.hpp
 )

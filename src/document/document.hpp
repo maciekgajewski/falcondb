@@ -71,6 +71,13 @@ public:
     // from any std::map
     template<typename T>
     static document from(const std::map<std::string, T>& input);
+
+    // from anything
+    static document from(const char* t) { return from(std::string(t)); }
+
+    template<std::size_t S>
+    static document from(const char t[S]) { return from(std::string(t)); }
+
     template<typename T>
     static document from(const T& t);
 

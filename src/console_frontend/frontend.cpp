@@ -136,7 +136,7 @@ void frontend::post_command(const std::string& db_name, const std::string& comma
     interfaces::database_ptr db = _engine.get_database(db_name);
 
     db->post(command, param,
-             [this, command](const interfaces::error_message& error, const document_list& data)
+             [this, command](const error_message& error, const document_list& data)
              {
                 result_handler(command, error, data);
             });
@@ -164,11 +164,12 @@ void frontend::handle_drop_db(const frontend::arg_list& al)
     std::cout << "ok" << std::endl;
 }
 
-void frontend::result_handler(const std::string& operation, const interfaces::error_message& err, const document_list& data)
+void frontend::result_handler(const std::string& operation, const error_message& err, const document_list& data)
 {
     if (err)
     {
-        std::cout << operation << " error: " << *err << std::endl;
+        std::cout << operation << " error: " << err << std::endl;
+        std::cout << err.get_backtrace() << std::endl;
     }
     else
     {

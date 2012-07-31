@@ -17,22 +17,37 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_BACKTRACE_DATA_HPP
+#define FALCONDB_BACKTRACE_DATA_HPP
 
-#include <sstream>
-
+#include <string>
+#include <vector>
+#include <iosfwd>
 
 namespace falcondb {
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+class backtrace_data
 {
+public:
+
+    // creates empty backtrace
+    backtrace_data() = default;
+
+    // creates backtrace from the point of call
+    static backtrace_data create();
+
+private:
+
+    backtrace_data(std::vector<std::string>&& bt) : _bakctrace(bt) { }
+
+    std::vector<std::string> _bakctrace;
+
+    friend std::ostream& operator<<(std::ostream& o, const backtrace_data& bt);
+};
+
+std::ostream& operator<<(std::ostream& o, const backtrace_data& bt);
+
+
 }
 
-exception::~exception() throw()
-{
-}
-
-}
+#endif

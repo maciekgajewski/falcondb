@@ -60,7 +60,7 @@ private:
     void post_command(const std::string& db_name, const std::string& command, const document& param = document_scalar::null());
 
     void result_handler(const std::string& operation,
-        const interfaces::error_message& err,
+        const error_message& err,
         const document_list& data);
 
     void handle_quit(const arg_list& al);
