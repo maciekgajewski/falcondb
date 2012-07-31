@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define FALCONDB_EXCEPTION_HPP
 
 #include "utils/string.hpp"
+#include "utils/backtrace_data.hpp"
 
 #include <stdexcept>
 
@@ -36,21 +37,19 @@ public:
     // formatting constructor
     template<typename ...T>
     exception(T ...v)
-    : _what(build_string(v...)), _backtrace(get_backtrace())
+    : _what(build_string(v...)), _backtrace()
     { }
-
-
 
     virtual ~exception() throw();
 
     virtual const char* what() const throw() { return _what.c_str(); }
+    const backtrace_data& get_backtrace() const { return _backtrace; }
+    std::string get_message() const { return _what; }
 
 private:
 
-    static std::string get_backtrace();
-
     const std::string _what;
-    const std::string _backtrace;
+    const backtrace_data _backtrace;
 };
 
 } // namespace falcondb

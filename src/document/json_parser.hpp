@@ -17,22 +17,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_JSON_PARSER_HPP
+#define FALCONDB_JSON_PARSER_HPP
 
-#include <sstream>
-
+#include "document/document.hpp"
 
 namespace falcondb {
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+class json_parser
 {
-}
+public:
 
-exception::~exception() throw()
-{
-}
+    static document parse_doc(const std::string& in);
+};
 
-}
+} // namespace
+
+#endif

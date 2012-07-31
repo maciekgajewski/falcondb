@@ -20,317 +20,97 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_DOCUMENT_HPP
 #define FALCONDB_DOCUMENT_HPP
 
-#include "utils/exception.hpp"
-
-#include <jsoncpp/json/json.h>
-
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
-#include <vector>
-#include <iostream>
+#include "document/detail/variants.hpp"
+#include "document/document_list.hpp"
+#include "document/document_object.hpp"
 
 namespace falcondb {
 
-class document;
+/// Provides some extra functinality on top of document_any
 
-/// Document iterator, used to iterate array document
-class document_const_iterator
-{
-public:
-    document_const_iterator(const document* parent, std::size_t index)
-    : _parent(parent), _index(index)
-    { }
-
-    typedef document value_type;
-    typedef std::size_t difference_type;
-    typedef document* pointer;
-    typedef document& reference;
-    typedef std::random_access_iterator_tag iterator_category;
-
-    document operator*();
-
-    //void operator=(const document_const_iterator& other);
-
-    document_const_iterator& operator ++ () { _index++; return *this; }
-    void operator += (difference_type d) { _index += d; }
-    difference_type operator-(const document_const_iterator& other) { return _index - other._index; }
-
-    bool operator != (document_const_iterator& other) const { return _index != other._index; }
-    bool operator == (document_const_iterator& other) const { return _index == other._index; }
-private:
-
-    const document* _parent;
-    std::size_t _index;
-
-    friend class document;
-};
-
-/// Wrapper around document library
-/// We need only very minimalistic set of operation to perform on a document,
-/// this makes easy to create an abstraction to hide the actual implementation behind.
+// TODO fix it to work!
+// looks like this: https://svn.boost.org/trac/boost/ticket/7120
+//class document : public detail::raw_document_any
 class document
 {
 public:
 
-    //typedef document_iterator iterator;
-    typedef document_const_iterator const_iterator;
+    /**/
+    document(const document_list& p);
+    document(document_list&& p);
+    document(const document_object& p);
+    document(document_object&& p);
+    document(const document_scalar& p);
+    document(document_scalar&& p);
+    /**/
 
-    /// creates null document
-    document() : _internal() {}
-    ~document() { }
+    document(const detail::raw_document_any& v);
+    document(detail::raw_document_any&& v);
+    document(document&& d);
+    document(const document& d);
 
-    document(const document& other)
-    : _internal(other._internal)
-    { }
+    // converters to variants (non-copying)
 
-    document(document&& rvalue)
-    {
-        _internal.swap(rvalue._internal);
-    }
+    const document_list& as_list() const;
+    const document_object& as_object() const;
+    const document_scalar& as_scalar() const;
+    document_list& as_list();
+    document_object& as_object() ;
+    document_scalar& as_scalar();
 
-    void swap(document& another)
-    {
-        _internal.swap(another._internal);
-    }
+    static document from(const document_scalar& scalar);
+    static document from(document_scalar&& scalar);
+    static document from(const document_object& obj);
+    static document from(document_object&& obj);
+    static document from(const document_list& obj);
+    static document from(document_list&& obj);
 
-    void swap(document&& another)
-    {
-        _internal.swap(another._internal);
-    }
+    // from any std::vector
+    template<typename T>
+    static document from(const std::vector<T>& input);
+    // from any std::map
+    template<typename T>
+    static document from(const std::map<std::string, T>& input);
 
-    // this one should be private, but its used by range-based for
-    document(const Json::Value& internal) : _internal(internal) { }
+    // from anything
+    static document from(const char* t) { return from(std::string(t)); }
 
-    // field access
-
-    bool has_field(const std::string& name) const
-    {
-        return _internal.isMember(name);
-    }
+    template<std::size_t S>
+    static document from(const char t[S]) { return from(std::string(t)); }
 
     template<typename T>
-    T get(const std::string& field_name) const
-    {
-        return document(_internal[field_name]).as<T>();
-    }
+    static document from(const T& t);
 
+    // TODO add && versions of from(...)
+
+    // smart - to-anything converter
     template<typename T>
-    T get_dotted(const std::string& dotted_name) const
-    {
-        std::size_t dot_pos = dotted_name.find_first_of('.');
-        if (dot_pos == std::string::npos)
-        {
-            return this->get<T>(dotted_name); // not so dotted after all
-        }
-        else
-        {
-            std::string before_dot = dotted_name.substr(0, dot_pos);
-            std::string after_dot = dotted_name.substr(dot_pos+1);
-            return get<document>(before_dot).get_dotted<T>(after_dot);
-        }
-    }
+    const T& as() const;
 
-    // field manipulation
-    template<typename T>
-    void append(const std::string& field_name, const T& value)
-    {
-        _internal[field_name] = Json::Value(value); // rely on the existence of compatible constructor
-    }
+    // i/o
 
-    // conversion to/from sinple values
-
-    template<typename T>
-    T as() const;
-
-    template<typename T>
-    static
-    document from(const T& value)
-    {
-        return document(Json::Value(value)); // rely on the existence of compatible constructor
-    }
-
-    // array
-
-    static
-    inline
-    document empty_array()
-    {
-        return Json::Value(Json::arrayValue);
-    }
-
-    /// Append to array
-    template<typename T>
-    void append(const T& v)
-    {
-        _internal.append(v);
-    }
-
-    template<typename T>
-    static
-    document from_array(const std::vector<T>& array)
-    {
-        document d = empty_array();
-        for( const T& item: array)
-        {
-            d.append(item); // rely on the existence of compatible constructor
-        }
-        return d;
-    }
-
-    std::size_t size() const
-    {
-        return _internal.size();
-    }
-
-    document operator[](std::size_t idx) const
-    {
-        return _internal[static_cast<Json::Value::ArrayIndex>(idx)];
-    }
-
-    const_iterator insert(const const_iterator& pos, document& element);
-    const_iterator erase(const const_iterator& first, const const_iterator& last);
-    std::vector<document> to_vector() const;
+    std::string to_json() const;
+    static document from_json(const std::string& s);
 
     // other
 
-    bool is_null() const
-    {
-        return _internal.isNull();
-    }
+    bool operator < (const document& other) const;
 
-    std::vector<std::string> field_names() const
-    {
-        return _internal.getMemberNames();
-    }
-
-    bool operator<(const document& other) const;
-
-    // json i/o
-
-    std::string to_json() const
-    {
-        Json::FastWriter writer;
-        return writer.write(_internal);
-    }
-
-    static document from_json(const std::string& json_data)
-    {
-        Json::Reader reader;
-        Json::Value val;
-        if (!reader.parse(json_data, val, false))
-        {
-            throw exception("Error parsing json: ", reader.getFormattedErrorMessages());
-        }
-
-        return document(std::move(val));
-    }
-
-    // storage i/o
-
-    std::string to_storage() const
-    {
-        return to_json();
-    }
-
-    static document from_storage(const std::string& storage_data)
-    {
-        return from_json(storage_data);
-    }
-
-    // iteration
-
-    //iterator begin() { return document_iterator(*this, 0); }
-    //iterator end() { return document_iterator(*this, size()); }
-    const_iterator begin() const { return document_const_iterator(this, 0); }
-    const_iterator end() const { return document_const_iterator(this, size()); }
+    const detail::raw_document_any& _v() const { return _variant; }
 
 private:
 
-    document(Json::Value&& internal)
-    {
-        _internal.swap(internal);
-    }
+    detail::raw_document_any _variant;
 
-    friend std::ostream& operator << (std::ostream& s, const document& d);
-
-    Json::Value _internal;
 };
 
-typedef std::vector<document> document_list;
+std::ostream& operator<<(std::ostream& o, const document& d);
 
-inline std::ostream& operator << (std::ostream& s, const document& d)
-{
-    Json::FastWriter writer;
-    return s << writer.write(d._internal);
 }
 
-template<>
-inline document document::get<document>(const std::string& field_name) const
-{
-    if(has_field(field_name))
-    {
-        return document(_internal.get(field_name, Json::Value()));
-    }
-    else
-    {
-        throw exception("no filed named ", field_name);
-    }
-}
-
-template<>
-inline
-void document::append<boost::uuids::uuid>(const std::string& field_name, const boost::uuids::uuid& value)
-{
-    _internal[field_name] = to_string(value);
-}
-
-template<>
-inline
-void document::append<document>(const std::string& field_name, const document& value)
-{
-    _internal[field_name] = value._internal;
-}
-
-template<>
-inline
-int document::as() const
-{
-    return _internal.asInt();
-}
-
-template<>
-inline
-std::string document::as() const
-{
-    return _internal.asString();
-}
-
-template<>
-inline
-document document::from(const boost::uuids::uuid& uuid)
-{
-    return document(Json::Value(to_string(uuid)));
-}
-
-template<>
-inline
-void document::append<document>(const document& v)
-{
-    _internal.append(v._internal);
-}
-
-inline document document_const_iterator::operator*()
-{
-    return (*_parent)[_index];
-}
-
-//inline void document_const_iterator::operator=(const document_const_iterator& other)
-//{
-//    _parent = other._parent;
-//    _index = other._index;
-//}
-
-} // namespace falcondb
+#include "document/document.ipp"
+#include "document/document_scalar.ipp"
+#include "document/document_list.ipp"
+#include "document/document_object.ipp"
 
 #endif // FALCONDB_DOCUMENT_HPP

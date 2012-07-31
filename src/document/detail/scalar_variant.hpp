@@ -17,30 +17,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_INDEXES_BTREE_INDEX_ITERATOR_HPP
-#define FALCONDB_INDEXES_BTREE_INDEX_ITERATOR_HPP
+#ifndef FALCONDB_DETAIL_DOCUMENT_SCALAR_VARIANT_HPP
+#define FALCONDB_DETAIL_DOCUMENT_SCALAR_VARIANT_HPP
 
-#include "interfaces/index.hpp"
 
-namespace falcondb { namespace indexes { namespace btree {
+#include "document/null_type.hpp"
 
-class index_iterator : public interfaces::index_iterator
-{
-public:
-    index_iterator(const document& leaf_node, std::size_t index, interfaces::document_storage& storage);
+#include <boost/variant.hpp>
+#include <boost/date_time.hpp>
+#include <boost/uuid/uuid.hpp>
 
-    virtual bool has_next();
+#include <cstdint>
 
-    virtual document next();
+namespace falcondb { namespace detail {
 
-private:
+// Variant types for storing dynamic documents, created from dynamic data types
+typedef boost::variant<
+    std::string,
+    std::int32_t,
+    std::uint32_t,
+    std::int64_t,
+    std::uint64_t,
+    double,
+    bool,
+    boost::posix_time::ptime,
+    boost::uuids::uuid,
+    null_type
+    > raw_document_scalar;
 
-    document _leaf_node;
-    std::size_t _index;
-    interfaces::document_storage& _storage;
-
-};
-
-} } }
+}}
 
 #endif

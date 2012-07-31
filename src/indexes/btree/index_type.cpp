@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "interfaces/document_storage.hpp"
 
+#include "utils/exception.hpp"
+
 #include <cassert>
 
 namespace falcondb { namespace indexes { namespace btree {
@@ -34,55 +36,40 @@ std::unique_ptr<interfaces::index> index_type::load_index(
     interfaces::document_storage& index_storage,
     const document& index_description)
 {
-    document index_root = index_description.get<document>("root");
-    document index_definition = index_description.get<document>("definition");
-
-    assert(!index_root.is_null());
-    assert(!index_definition.is_null());
+    const document_object& description_as_object = index_description.as_object();
+    document index_root = description_as_object.get_field("root");
+    document index_definition = description_as_object.get_field("definition");
 
     return std::unique_ptr<interfaces::index>(new index(index_storage, index_definition, index_root));
 }
 
 interfaces::index_type::create_result index_type::create_index(
     const document& index_definition,
-    interfaces::index_iterator& documents,
     interfaces::document_storage& index_storage,
     interfaces::document_storage& data_storage)
 {
     verify_definition(index_definition);
 
     std::unique_ptr<index> new_index(new index(index_storage, index_definition));
-    // copy data
-    while(documents.has_next())
-    {
-        document storage_key = documents.next();
-        document doc = data_storage.read(storage_key);
 
-        new_index->insert(storage_key, doc);
-    }
+    document_object index_description;
+    index_description.insert(std::make_pair("root", new_index->get_root()));
+    index_description.insert(std::make_pair("definition", index_definition));
 
-
-    document index_description;
-    index_description.append("root", new_index->get_root());
-    index_description.append("definition", index_definition);
-
-    return create_result{ index_description, std::move(new_index) };
+    return create_result{ document(index_description), std::move(new_index) };
 }
 
 void index_type::verify_definition(const document& definition)
 {
-    document fields = definition.get<document>("fields");
-    if (fields.is_null())
-        throw exception("fields not defined");
+    std::map<std::string, int> fields = definition.as_object().get_field("fields").as_object().to_map_of<int>();
 
     //document options = definiton.get<document>("options");
     // options are optional, no need to check
 
-    // feilds has top be a flat doc with non-zero integers
-    std::vector<std::string> field_names = fields.field_names();
-    for(const std::string& field : field_names)
+    // feilds has to be a flat object with non-zero integers
+    for(auto field : fields)
     {
-        if (fields.get<int>(field) == 0)
+        if (field.second == 0)
             throw exception("field can not be 0");
     }
 }

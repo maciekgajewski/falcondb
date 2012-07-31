@@ -42,6 +42,10 @@ void remove(const document& param,
     const interfaces::result_handler& handler,
     interfaces::command_context& context);
 
+// dumps the entire db content ot stdout
+void dump(const document& param,
+    const interfaces::result_handler& handler,
+    interfaces::command_context& context);
 
 
 }

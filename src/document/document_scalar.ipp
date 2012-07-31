@@ -17,22 +17,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "utils/exception.hpp"
+#ifndef FALCONDB_DOCUMENT_SCALAR_IPP
+#define FALCONDB_DOCUMENT_SCALAR_IPP
 
-#include <sstream>
-
+#include "document/document.hpp"
 
 namespace falcondb {
 
-exception::exception(const char* what)
-:
-    _what(what),
-    _backtrace(backtrace_data::create())
+inline document_scalar::document_scalar(const document& d)
+: _variant(d.as_scalar()._v())
 {
 }
 
-exception::~exception() throw()
+inline document_scalar::document_scalar(document&& d)
+: _variant(d.as_scalar()._v())
 {
 }
 
+template<typename T>
+T& document_scalar::as()
+{
+    return boost::get<T>(_variant);
 }
+
+template<typename T>
+const T& document_scalar::as() const
+{
+    return boost::get<T>(_variant);
+}
+
+inline document_scalar document_scalar::null()
+{
+    return  detail::raw_document_scalar(null_type());
+    //return null_type();
+}
+
+inline bool document_scalar::is_null() const
+{
+    return _variant.type() == typeid(null_type);
+}
+
+}
+
+#endif

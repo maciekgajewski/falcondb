@@ -37,7 +37,6 @@ public:
         const document& index_description);
 
     virtual create_result create_index(const document& index_definition,
-        interfaces::index_iterator& documents,
         interfaces::document_storage& index_storage,
         interfaces::document_storage& data_storage);
 

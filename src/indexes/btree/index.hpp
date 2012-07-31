@@ -51,24 +51,24 @@ public:
 
     virtual void del(const document& doc);
 
-    virtual std::unique_ptr<interfaces::index_iterator> find(const document& range);
+    virtual document_list find(const document& range);
 
 private:
 
-    /// Reducec document to an array containing values related to fields specified in index definition
-    document extract_index_key(const document& doc);
-    bool compare_index_keys(const document& a, const document& b) const;
+    /// Reduce document to an array containing values related to fields specified in index definition
+    document_list extract_index_key(const document& doc);
+    bool compare_index_keys(const document_list& a, const document_list& b) const;
 
     static document generate_key();
     static document create_leaf();
 
     // tree ops
 
-    void tree_insert(const document& node_key, const document& key, const document& value);
-    void tree_remove(const document& node_key, const document& key);
+    void tree_insert(const document& node_key, const document_list& key, const document& value);
+    void tree_remove(const document& node_key, const document_list& key);
 
     interfaces::document_storage& _storage;
-    const document _definition;
+    const std::map<std::string, int> _fields;
     const document _root;
 
 };

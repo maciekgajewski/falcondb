@@ -79,6 +79,10 @@ void command_processor::handler_wrapper(const std::string& command,
     {
         handler(params, result, context);
     }
+    catch(const falcondb::exception& e)
+    {
+        result(e, document_list());
+    }
     catch(const std::exception& e)
     {
         result(std::string(e.what()), document_list());
