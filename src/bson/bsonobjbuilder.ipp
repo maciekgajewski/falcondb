@@ -23,6 +23,8 @@
 #define BSON_OBJBUILDER_IPP
 
 #include "bson/bsonobjbuilder.hpp"
+#include "bson/bsonobjiterator.hpp"
+#include "bson/bsonobj.ipp"
 #include "bson/optime.hpp"
 
 #include <map>
