@@ -1,4 +1,6 @@
 add_library(frontend_mongo
+    collection.cpp collection.hpp
+    engine.cpp engine.hpp
     frontend.cpp frontend.hpp
     connection.cpp connection.hpp
     message.hpp

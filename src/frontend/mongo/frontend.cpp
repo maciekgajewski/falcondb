@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "frontend/mongo/frontend.hpp"
+#include "frontend/mongo/engine.hpp"
 
 #include "utils/exception.hpp"
 
@@ -31,13 +32,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <iostream>
 #include <algorithm>
-#include <thread>
 
 namespace falcondb { namespace frontend { namespace mongo {
 
-server::server(interfaces::engine& engine)
+server::server(falcondb::interfaces::engine& engine)
 :
-    _engine(engine),
+    _collection_engine(engine),
     _io_service(nullptr),
     _acceptor(nullptr)
 {
@@ -45,7 +45,7 @@ server::server(interfaces::engine& engine)
 
 void server::start_accept()
 {
-    connection::pointer conn = boost::make_shared<connection>(*_io_service, _engine);
+    connection::pointer conn = boost::make_shared<connection>(*_io_service, _collection_engine);
     _acceptor->async_accept(
         conn->socket(),
         [this, conn](const boost::system::error_code &e)
@@ -75,18 +75,15 @@ void server::execute()
 
     using namespace boost::asio::ip;
 
-    tcp::acceptor acceptor(io, tcp::endpoint(tcp::v4(), 27017));
+    tcp::acceptor acceptor(io, tcp::endpoint(tcp::v4(), 37017));
 
     _acceptor = &acceptor;
 
+
     try
     {
-        std::thread worker(
-            [this]() {
-                start_accept();
-                _io_service->run();
-            });
-        boost::asio::io_service::work w(io);
+        start_accept();
+        _io_service->run();
         io.run();
     }
     catch(const std::exception& e)

@@ -32,7 +32,7 @@ namespace falcondb { namespace frontend { namespace mongo {
 class server
 {
 public:
-    server(interfaces::engine& engine);
+    server(falcondb::interfaces::engine& engine);
 
     /// Starts interactive loop. Returns when user quits
     void execute();
@@ -43,7 +43,7 @@ private:
     void handle_accept(const boost::system::error_code& error, const connection::pointer& conn);
 
     // data
-    interfaces::engine& _engine;
+    collection_engine _collection_engine;
 
     boost::asio::io_service* _io_service;
     boost::asio::ip::tcp::acceptor* _acceptor;
