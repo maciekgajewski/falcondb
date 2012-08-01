@@ -214,12 +214,12 @@ void connection::handle_db_query(const message::pointer& msg)
         try {
             interfaces::database_ptr db = _engine.get_database(query_msg.get_ns());
 
-            db->post("list", documents::from_json(query.jsonString()),
-                     [this, msg](const interfaces::error_message& error, const document_list& data)
+            db->post("list", document::from_json(query.jsonString()),
+                     [this, msg](const error_message& error, const document_list& data)
                      {
                         bson_object_list object_list;
                         for(const document& doc : data) {
-                            std::string jsonString = documents::to_json(doc);
+                            std::string jsonString = doc.to_json();
                             boost::algorithm::trim(jsonString);
                             ::mongo::BSONObj obj = ::mongo::fromjson(jsonString);
                             object_list.push_back(obj);
@@ -264,7 +264,7 @@ void connection::post_command(const std::string& db_name, const std::string& com
     interfaces::database_ptr db = _engine.get_database(db_name);
 
     db->post(command, param,
-             [this, command](const interfaces::error_message& error, const document_list& data)
+             [this, command](const error_message& error, const document_list& data)
              {
                 result_handler(command, error, data);
             });
@@ -272,7 +272,7 @@ void connection::post_command(const std::string& db_name, const std::string& com
 
 void connection::result_handler(
     const std::string& operation,
-    const interfaces::error_message& err,
+    const error_message& err,
     const document_list& data)
 {
     if (err)
@@ -309,7 +309,7 @@ void connection::handle_insert_msg(const message::pointer& msg)
         post_command(
             ns,
             "insert",
-            documents::from_json(jsonString));
+            document::from_json(jsonString));
     }
 }
 

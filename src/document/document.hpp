@@ -49,6 +49,8 @@ public:
     document(document&& d);
     document(const document& d);
 
+    document& operator =(const document& d) = default;
+
     // converters to variants (non-copying)
 
     const document_list& as_list() const;
