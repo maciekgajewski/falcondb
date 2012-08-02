@@ -66,6 +66,10 @@ public:
     std::string to_json() const;
     static document_object from_json(const std::string& s);
 
+    // other
+
+    bool operator < (const document_object& ) const { return false; }
+
 };
 
 }

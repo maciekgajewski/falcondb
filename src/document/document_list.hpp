@@ -44,10 +44,13 @@ public:
     static
     document_list from(const std::vector<T>& input);
 
-
     // io
     std::string to_json() const;
     static document_list from_json(const std::string& s);
+
+    // other
+
+    bool operator < (const document_list& other) const;
 };
 
 }

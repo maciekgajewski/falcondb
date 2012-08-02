@@ -36,4 +36,18 @@ document_list document_list::from_json(const std::string& s)
     return document::from_json(s).as_list();
 }
 
+bool document_list::operator < (const document_list& other) const
+{
+    auto me = begin();
+    auto him = other.begin();
+
+    for(;me != end() && him != other.end(); ++me, ++him)
+    {
+        if (*me < *him) return true;
+    }
+
+    // [a,b,c] <  [a,b,c,d]
+    return him != other.end();
+}
+
 }

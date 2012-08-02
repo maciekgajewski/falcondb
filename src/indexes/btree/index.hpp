@@ -22,22 +22,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "interfaces/index.hpp"
 
+#include "indexes/btree/btree.hpp"
+
 namespace falcondb { namespace indexes { namespace btree {
 
 class index : public interfaces::index
 {
 public:
 
-    // creates index, loads content
-    index(
+    // loads existing content
+    static index load(
         interfaces::document_storage& storage,
         const document& definition,
-        const document& root);
+        const document& root_storage_key);
 
-    // creates empty index
-    index(
+    // create new index
+    static index create(
         interfaces::document_storage& storage,
-        const document& definition);
+        const document& definition,
+        const document& root_storage_key);
+
 
     virtual ~index();
 
@@ -55,21 +59,14 @@ public:
 
 private:
 
+    index(btree&& tree, const document& definition);
+
     /// Reduce document to an array containing values related to fields specified in index definition
     document_list extract_index_key(const document& doc);
-    bool compare_index_keys(const document_list& a, const document_list& b) const;
 
-    static document generate_key();
-    static document create_leaf();
-
-    // tree ops
-
-    void tree_insert(const document& node_key, const document_list& key, const document& value);
-    void tree_remove(const document& node_key, const document_list& key);
-
-    interfaces::document_storage& _storage;
+    // tree
+    btree _tree;
     const std::map<std::string, int> _fields;
-    const document _root;
 
 };
 
