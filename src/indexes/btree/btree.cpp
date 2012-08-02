@@ -23,12 +23,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace indexes { namespace btree {
 
-btree load(interfaces::document_storage& storage,  const document& root_storage_key)
+static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
+
+btree btree::load(interfaces::document_storage& storage,  const document& root_storage_key)
 {
     return btree(storage, root_storage_key);
 }
 
-btree create(interfaces::document_storage& storage,  const document& root_storage_key)
+btree btree::create(interfaces::document_storage& storage,  const document& root_storage_key)
 {
     document root_doc = create_leaf();
     storage.write(root_storage_key, root_doc);
@@ -36,17 +38,22 @@ btree create(interfaces::document_storage& storage,  const document& root_storag
     return btree(storage, root_storage_key);
 }
 
+btree::btree(btree&& other)
+:
+    _storage(other._storage),
+    _root_storage_key(std::move(other._root_storage_key))
+{
+}
 
 btree::btree(interfaces::document_storage& storage, const document& root_storage_key)
 : _storage(storage), _root_storage_key(root_storage_key)
 {
 }
 
-document_list btree::scan(
-    const boost::optional<document_list>& low,
+document_list btree::scan(const boost::optional<document_list>& low,
     const boost::optional<document_list>& hi,
-    std::size_t limit,
-    std::size_t skip)
+    const boost::optional<std::size_t> limit,
+    const boost::optional<std::size_t> skip)
 {
     // TODO implement
     assert(false);

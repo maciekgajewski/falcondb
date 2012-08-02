@@ -36,12 +36,14 @@ public:
     static btree load(interfaces::document_storage& storage,  const document& root_storage_key);
     static btree create(interfaces::document_storage& storage,  const document& root_storage_key);
 
+    btree(btree&& other);
+
     // read data from tree
     document_list scan(
         const boost::optional<document_list>& low,
         const boost::optional<document_list>& hi,
-        std::size_t limit,
-        std::size_t skip);
+        const boost::optional<std::size_t> limit,
+        const boost::optional<std::size_t> skip);
 
     void insert(const document_list key, const document& value);
     void remove(const document_list& key);

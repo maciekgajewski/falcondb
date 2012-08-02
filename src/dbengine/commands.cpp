@@ -80,7 +80,7 @@ void list(const document& param,
     // use main index interator to list the dataset
     interfaces::index::unique_ptr& main_index = context.get_indexes()[0];
 
-    document_list index_result = main_index->find(document_scalar::null());
+    document_list index_result = main_index->scan(boost::none, boost::none, boost::none, boost::none);
     document_list result;
     result.reserve(index_result.size());
 

@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "document/document.hpp"
 
+#include <boost/optional.hpp>
+
 #include <memory>
 
 namespace falcondb { namespace interfaces {
@@ -47,8 +49,12 @@ public:
     /// Removes document from index
     virtual void del(const document& doc) = 0;
 
-    /// Returns data - list of storage keys
-    virtual document_list find(const document& range) = 0;
+    /// ORdered scan. Returns data - list of storage keys
+    virtual document_list scan(
+        const boost::optional<document>& min,
+        const boost::optional<document>& max,
+        const boost::optional<std::size_t> limit,
+        const boost::optional<std::size_t> skip) = 0;
 };
 
 /// Index type

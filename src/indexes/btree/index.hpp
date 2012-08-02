@@ -42,10 +42,8 @@ public:
         const document& definition,
         const document& root_storage_key);
 
-
+    index(index&& other);
     virtual ~index();
-
-    document get_root() const { return _root; }
 
     // interface
 
@@ -55,7 +53,11 @@ public:
 
     virtual void del(const document& doc);
 
-    virtual document_list find(const document& range);
+    virtual document_list scan(
+        const boost::optional<document>& min,
+        const boost::optional<document>& max,
+        const boost::optional<std::size_t> limit,
+        const boost::optional<std::size_t> skip);
 
 private:
 

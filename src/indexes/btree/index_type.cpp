@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "utils/exception.hpp"
 
+#include <boost/uuid/random_generator.hpp>
+
 #include <cassert>
 
 namespace falcondb { namespace indexes { namespace btree {
@@ -40,7 +42,7 @@ std::unique_ptr<interfaces::index> index_type::load_index(
     document index_root = description_as_object.get_field("root");
     document index_definition = description_as_object.get_field("definition");
 
-    return std::unique_ptr<interfaces::index>(new index(index_storage, index_definition, index_root));
+    return std::unique_ptr<interfaces::index>(new index(index::load(index_storage, index_definition, index_root)));
 }
 
 interfaces::index_type::create_result index_type::create_index(
@@ -50,10 +52,12 @@ interfaces::index_type::create_result index_type::create_index(
 {
     verify_definition(index_definition);
 
-    std::unique_ptr<index> new_index(new index(index_storage, index_definition));
+    boost::uuids::random_generator gen;
+    document new_storage_root = document::from(gen());
+    std::unique_ptr<index> new_index(new index(index::create(index_storage, index_definition, new_storage_root)));
 
     document_object index_description;
-    index_description.insert(std::make_pair("root", new_index->get_root()));
+    index_description.insert(std::make_pair("root", new_storage_root));
     index_description.insert(std::make_pair("definition", index_definition));
 
     return create_result{ document(index_description), std::move(new_index) };
