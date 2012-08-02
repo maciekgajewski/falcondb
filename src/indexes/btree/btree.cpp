@@ -25,28 +25,29 @@ namespace falcondb { namespace indexes { namespace btree {
 
 static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
 
-btree btree::load(interfaces::document_storage& storage,  const document& root_storage_key)
+btree btree::load(interfaces::document_storage& storage,  const document& root_storage_key, bool unique)
 {
-    return btree(storage, root_storage_key);
+    return btree(storage, root_storage_key, unique);
 }
 
-btree btree::create(interfaces::document_storage& storage,  const document& root_storage_key)
+btree btree::create(interfaces::document_storage& storage,  const document& root_storage_key, bool unique)
 {
     document root_doc = create_leaf();
     storage.write(root_storage_key, root_doc);
 
-    return btree(storage, root_storage_key);
+    return btree(storage, root_storage_key, unique);
 }
 
 btree::btree(btree&& other)
 :
     _storage(other._storage),
-    _root_storage_key(std::move(other._root_storage_key))
+    _root_storage_key(std::move(other._root_storage_key)),
+    _unique(other._unique)
 {
 }
 
-btree::btree(interfaces::document_storage& storage, const document& root_storage_key)
-: _storage(storage), _root_storage_key(root_storage_key)
+btree::btree(interfaces::document_storage& storage, const document& root_storage_key, bool unique)
+: _storage(storage), _root_storage_key(root_storage_key), _unique(unique)
 {
 }
 

@@ -104,7 +104,7 @@ void remove(const document& param,
         index->del(doc);
     }
 
-    context.get_data_storage().del(param); // the param is the key
+    context.get_data_storage().remove(param); // the param is the key
     handler(error_message(), document_list());
 }
 

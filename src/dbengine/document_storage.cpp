@@ -49,7 +49,7 @@ document document_storage::read(const document& key)
     }
 }
 
-void document_storage::del(const document& key)
+void document_storage::remove(const document& key)
 {
     std::string key_data = _ns + key.to_json();
     _raw_storage->del(key_data);

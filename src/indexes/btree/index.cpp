@@ -27,21 +27,31 @@ namespace falcondb { namespace indexes { namespace btree {
 
 index index::create(interfaces::document_storage& storage, const document& definition, const document& root_storage_key)
 {
-    btree tree = btree::create(storage, root_storage_key);
-    return index(std::move(tree), definition);
+    const document_object def_obj = definition.as_object();
+    bool unique = false;
+    if (def_obj.has_field("unique"))
+        unique = def_obj.get_field("unique").as<bool>();
+
+    btree tree = btree::create(storage, root_storage_key, unique);
+    return index(std::move(tree), def_obj);
 }
 
 index index::load(interfaces::document_storage& storage, const document& definition, const document& root_storage_key)
 {
-    btree tree = btree::load(storage, root_storage_key);
-    return index(std::move(tree), definition);
+    const document_object def_obj = definition.as_object();
+    bool unique = false;
+    if (def_obj.has_field("unique"))
+        unique = def_obj.get_field("unique").as<bool>();
+
+    btree tree = btree::load(storage, root_storage_key, unique);
+    return index(std::move(tree), def_obj);
 }
 
 
-index::index(btree&& tree, const document& definition)
+index::index(btree&& tree, const document_object& definition)
 :
     _tree(std::move(tree)),
-    _fields(definition.as_object().get_field("fields").as_object().to_map_of<int>())
+    _fields(definition.get_field("fields").as_object().to_map_of<int>())
 {
 }
 

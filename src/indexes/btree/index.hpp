@@ -61,7 +61,7 @@ public:
 
 private:
 
-    index(btree&& tree, const document& definition);
+    index(btree&& tree, const document_object& definition);
 
     /// Reduce document to an array containing values related to fields specified in index definition
     document_list extract_index_key(const document& doc);

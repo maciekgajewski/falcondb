@@ -33,8 +33,8 @@ class btree
 public:
 
     // constructors
-    static btree load(interfaces::document_storage& storage,  const document& root_storage_key);
-    static btree create(interfaces::document_storage& storage,  const document& root_storage_key);
+    static btree load(interfaces::document_storage& storage,  const document& root_storage_key, bool unique);
+    static btree create(interfaces::document_storage& storage,  const document& root_storage_key, bool unique);
 
     btree(btree&& other);
 
@@ -50,7 +50,7 @@ public:
 
 private:
 
-    btree(interfaces::document_storage& storage,  const document& root_storage_key);
+    btree(interfaces::document_storage& storage,  const document& root_storage_key, bool unique);
 
 
     void tree_insert(const document& node_key, const document_list& key, const document& value);
@@ -84,6 +84,7 @@ private:
 
     interfaces::document_storage& _storage;
     const document _root_storage_key;
+    bool _unique;
 
 };
 

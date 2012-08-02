@@ -97,6 +97,7 @@ public:
     // other
 
     bool operator < (const document& other) const;
+    void swap(document& other) { _variant.swap(other._variant); }
 
     const detail::raw_document_any& _v() const { return _variant; }
 

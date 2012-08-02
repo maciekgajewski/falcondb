@@ -17,30 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_INTERFACES_DOCUMENT_STORAGE_HPP
-#define FALCONDB_INTERFACES_DOCUMENT_STORAGE_HPP
+#define BOOST_TEST_MODULE btree_test
+#include <boost/test/included/unit_test.hpp>
 
-#include "document/document.hpp"
-
-namespace falcondb { namespace interfaces {
-
-
-/// Serialized storage. Allows for storing and retrieving documents.
-/// Keys used by a store must be uniqe per storage instance; they don't have to be globally unique
-class document_storage
-{
-public:
-
-    /// Stores document
-    virtual void write(const document& key, const document& doc) = 0;
-
-    /// Retrieves document
-    virtual document read(const document& key) = 0;
-
-    /// Deletes document
-    virtual void remove(const document& key) = 0;
-};
-
-}} // namespaces
-
-#endif
