@@ -26,6 +26,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace indexes { namespace btree {
 
+namespace detail
+{
+    class insert_result;
+}
+
 /// B-tree stores key - value pairs in a storage-backend tree
 /// Key has to be a document_list, value can be anything
 class btree
@@ -35,13 +40,13 @@ public:
     // constructors
     static btree load(
         interfaces::document_storage& storage,
-        const document& root_storage_key,
+        const document& storage_key,
         bool unique,
         std::size_t items_per_leaf);
 
     static btree create(
         interfaces::document_storage& storage,
-        const document& root_storage_key,
+        const document& storage_key,
         bool unique,
         std::size_t items_per_leaf);
 
@@ -67,15 +72,15 @@ private:
         bool unique,
         std::size_t items_per_leaf);
 
-    void tree_insert(const document& node_key, const document_list& key, const document& value);
+    detail::insert_result tree_insert(const document& node_key, const document_list& key, const document& value);
 
-    void tree_insert_leaf(
+    detail::insert_result tree_insert_leaf(
         const document& node_key,
         document_object& node,
         const document_list& key,
         const document& value);
 
-    void tree_insert_interior(
+    detail::insert_result tree_insert_interior(
         const document& node_key,
         document_object& node,
         const document_list& key,
@@ -94,13 +99,19 @@ private:
         const document_list& key);
 
     static document generate_key();
-    static document create_leaf();
+    static document_object create_leaf();
+    static document_object create_interior(const detail::insert_result& insert_result);
+    static document_object create_interior();
+
+    void load_meta_data();
+    void store_meta_data();
 
     interfaces::document_storage& _storage;
-    const document _root_storage_key;
+    const document _storage_key;
     const bool _unique;
     const std::size_t _items_per_leaf;
 
+    document _root_storage_key;
 };
 
 }}} // ns

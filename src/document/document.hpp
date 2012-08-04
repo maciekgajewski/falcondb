@@ -60,6 +60,8 @@ public:
     document_object& as_object() ;
     document_scalar& as_scalar();
 
+    static document from(const document& doc);
+    static document from(document&& doc);
     static document from(const document_scalar& scalar);
     static document from(document_scalar&& scalar);
     static document from(const document_object& obj);

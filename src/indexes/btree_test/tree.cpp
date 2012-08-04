@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "interfaces/document_storage.hpp"
 
+#include "document/json_writer.hpp"
+
 #include <boost/test/unit_test.hpp>
 
 #include <memory>
@@ -59,6 +61,14 @@ public:
         _storage.erase(key);
     }
 
+    void dump()
+    {
+        for(auto p : _storage)
+        {
+            std::cout << p.first << "  =>  " << p.second << std::endl;
+        }
+    }
+
 private:
     std::map<document, document> _storage;
 };
@@ -80,7 +90,7 @@ public:
     {
         _btree.reset(
             new btree(
-                btree::create(_storage, document_scalar::from("root"), unique, 10)));
+                btree::create(_storage, document_scalar::from(std::string("main")), unique, 10)));
     }
 
     template<typename T>
@@ -90,6 +100,12 @@ public:
     static document_list make_key(const T& a, const T& b) { return document_list({document::from(a), document::from(b)}); }
 
     btree& get_tree() { return *_btree; }
+
+    void dump_storage()
+    {
+        _storage.dump();
+        std::cout << std::endl << std::endl;
+    }
 
 private:
 
@@ -111,6 +127,11 @@ BOOST_FIXTURE_TEST_CASE(string_key_scan_non_unique, fixture)
         document_list key = make_key(ss.str());
 
         document_scalar value = document_scalar::from(i+base);
+
+        //BEGIN debug
+        //dump_storage(); // to debug some nasty issues
+        //std::cout << "inserting " << key << " -> " << value << std::endl;
+        //END debug
 
         get_tree().insert(key, value);
     }
