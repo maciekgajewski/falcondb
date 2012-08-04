@@ -33,15 +33,26 @@ class btree
 public:
 
     // constructors
-    static btree load(interfaces::document_storage& storage,  const document& root_storage_key, bool unique);
-    static btree create(interfaces::document_storage& storage,  const document& root_storage_key, bool unique);
+    static btree load(
+        interfaces::document_storage& storage,
+        const document& root_storage_key,
+        bool unique,
+        std::size_t items_per_leaf);
+
+    static btree create(
+        interfaces::document_storage& storage,
+        const document& root_storage_key,
+        bool unique,
+        std::size_t items_per_leaf);
 
     btree(btree&& other);
 
     // read data from tree
     document_list scan(
-        const boost::optional<document_list>& low,
-        const boost::optional<document_list>& hi,
+        const boost::optional<document_list>& min,
+        bool min_inclusive,
+        const boost::optional<document_list>& max,
+        bool max_inclusive,
         const boost::optional<std::size_t> limit,
         const boost::optional<std::size_t> skip);
 
@@ -50,8 +61,11 @@ public:
 
 private:
 
-    btree(interfaces::document_storage& storage,  const document& root_storage_key, bool unique);
-
+    btree(
+        interfaces::document_storage& storage,
+        const document& root_storage_key,
+        bool unique,
+        std::size_t items_per_leaf);
 
     void tree_insert(const document& node_key, const document_list& key, const document& value);
 
@@ -84,7 +98,8 @@ private:
 
     interfaces::document_storage& _storage;
     const document _root_storage_key;
-    bool _unique;
+    const bool _unique;
+    const std::size_t _items_per_leaf;
 
 };
 

@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <boost/test/unit_test.hpp>
 
 #include <memory>
+#include <sstream>
+#include <iomanip>
 
 namespace falcondb {
 
@@ -78,14 +80,14 @@ public:
     {
         _btree.reset(
             new btree(
-                btree::create(_storage, document_scalar::from("root"), unique)));
+                btree::create(_storage, document_scalar::from("root"), unique, 10)));
     }
 
     template<typename T>
-    static document_list key(const T& a) { return document_list({a}); }
+    static document_list make_key(const T& a) { return document_list({document::from(a)}); }
 
     template<typename T, typename U>
-    static document_list key(const T& a, const T& b) { return document_list({a, b}); }
+    static document_list make_key(const T& a, const T& b) { return document_list({document::from(a), document::from(b)}); }
 
     btree& get_tree() { return *_btree; }
 
@@ -99,7 +101,61 @@ BOOST_FIXTURE_TEST_CASE(string_key_scan_non_unique, fixture)
 {
     init(false);
 
-    // TODO
+    // populate with keys in range 1000-2999
+    unsigned to_insert = 2000;
+    unsigned base = 1000;
+    for(unsigned i = 0; i < to_insert; ++i)
+    {
+        std::ostringstream ss;
+        ss << std::setw(4) << (i+base);
+        document_list key = make_key(ss.str());
+
+        document_scalar value = document_scalar::from(i+base);
+
+        get_tree().insert(key, value);
+    }
+
+    // search below
+    {
+        document_list result = get_tree().scan(
+            make_key("0000"), true,
+            make_key("1000"), false,
+            boost::none, boost::none);
+        BOOST_CHECK_EQUAL(result.size(), 0);
+    }
+
+    // search above
+    {
+        document_list result = get_tree().scan(
+            make_key("2999"), false,
+            make_key("5678"), true,
+            boost::none, boost::none);
+        BOOST_CHECK_EQUAL(result.size(), 0);
+    }
+
+    // search below including the first one
+    {
+        document_list result = get_tree().scan(
+            make_key("0000"), false,
+            make_key("1000"), true,
+            boost::none, boost::none);
+        BOOST_REQUIRE_EQUAL(result.size(), 1);
+        BOOST_CHECK_EQUAL(result[0].as_scalar().as<int>(), 1);
+    }
+
+    // serch inside the range
+    {
+        document_list result = get_tree().scan(
+            make_key("1500"), false,
+            make_key("1600"), true,
+            boost::none, boost::none);
+        BOOST_REQUIRE_EQUAL(result.size(), 100);
+        for(int i = 0; i < 100; ++i)
+        {
+            BOOST_CHECK_EQUAL(result[i].as_scalar().as<int>(), 1501+i);
+        }
+    }
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -23,36 +23,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace indexes { namespace btree {
 
-static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
-
-btree btree::load(interfaces::document_storage& storage,  const document& root_storage_key, bool unique)
+btree btree::load(interfaces::document_storage& storage,  const document& root_storage_key, bool unique, std::size_t items_per_leaf)
 {
-    return btree(storage, root_storage_key, unique);
+    return btree(storage, root_storage_key, unique, items_per_leaf);
 }
 
-btree btree::create(interfaces::document_storage& storage,  const document& root_storage_key, bool unique)
+btree btree::create(interfaces::document_storage& storage,  const document& root_storage_key, bool unique, std::size_t items_per_leaf)
 {
     document root_doc = create_leaf();
     storage.write(root_storage_key, root_doc);
 
-    return btree(storage, root_storage_key, unique);
+    return btree(storage, root_storage_key, unique, items_per_leaf);
 }
 
 btree::btree(btree&& other)
 :
     _storage(other._storage),
     _root_storage_key(std::move(other._root_storage_key)),
-    _unique(other._unique)
+    _unique(other._unique),
+    _items_per_leaf(other._items_per_leaf)
 {
 }
 
-btree::btree(interfaces::document_storage& storage, const document& root_storage_key, bool unique)
-: _storage(storage), _root_storage_key(root_storage_key), _unique(unique)
+btree::btree(interfaces::document_storage& storage, const document& root_storage_key, bool unique, std::size_t items_per_leaf)
+:
+    _storage(storage),
+    _root_storage_key(root_storage_key),
+    _unique(unique),
+    _items_per_leaf(items_per_leaf)
 {
 }
 
-document_list btree::scan(const boost::optional<document_list>& low,
-    const boost::optional<document_list>& hi,
+document_list btree::scan(
+    const boost::optional<document_list>& min,
+    bool min_inclusive,
+    const boost::optional<document_list>& max,
+    bool max_inclusive,
     const boost::optional<std::size_t> limit,
     const boost::optional<std::size_t> skip)
 {
@@ -108,7 +114,7 @@ void btree::tree_insert_leaf(
 {
     document_list& data = node.get_field("data").as_list();
     // will fit?
-    if (data.size() < ITEMS_PER_LEAF)
+    if (data.size() < _items_per_leaf)
     {
         document_object new_element;
         new_element.insert(std::make_pair("key", key));
@@ -184,7 +190,7 @@ void btree::tree_remove_leaf(
 
     _storage.write(node_storage_key, node);
 
-    if (data.size() < ITEMS_PER_LEAF/2 )
+    if (data.size() < _items_per_leaf/2 )
     {
         // consolidate nodes or what?
         assert(false); // TODO implement

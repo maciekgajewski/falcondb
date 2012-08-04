@@ -55,7 +55,9 @@ public:
 
     virtual document_list scan(
         const boost::optional<document>& min,
+        bool min_inclusive,
         const boost::optional<document>& max,
+        bool max_inlcusive,
         const boost::optional<std::size_t> limit,
         const boost::optional<std::size_t> skip);
 

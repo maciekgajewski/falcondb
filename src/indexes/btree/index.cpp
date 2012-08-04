@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <algorithm>
 
+static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
+
 namespace falcondb { namespace indexes { namespace btree {
 
 index index::create(interfaces::document_storage& storage, const document& definition, const document& root_storage_key)
@@ -32,7 +34,7 @@ index index::create(interfaces::document_storage& storage, const document& defin
     if (def_obj.has_field("unique"))
         unique = def_obj.get_field("unique").as<bool>();
 
-    btree tree = btree::create(storage, root_storage_key, unique);
+    btree tree = btree::create(storage, root_storage_key, unique, ITEMS_PER_LEAF);
     return index(std::move(tree), def_obj);
 }
 
@@ -43,7 +45,7 @@ index index::load(interfaces::document_storage& storage, const document& definit
     if (def_obj.has_field("unique"))
         unique = def_obj.get_field("unique").as<bool>();
 
-    btree tree = btree::load(storage, root_storage_key, unique);
+    btree tree = btree::load(storage, root_storage_key, unique, ITEMS_PER_LEAF);
     return index(std::move(tree), def_obj);
 }
 
@@ -89,7 +91,9 @@ void index::del(const document& doc)
 
 document_list index::scan(
     const boost::optional<document>& min,
+    bool min_inclusive,
     const boost::optional<document>& max,
+    bool max_inlcusive,
     const boost::optional<std::size_t> limit,
     const boost::optional<std::size_t> skip)
 {
@@ -98,7 +102,7 @@ document_list index::scan(
     if (min) min_index_key = extract_index_key(*min);
     if (max) max_index_key = extract_index_key(*max);
 
-    return _tree.scan(min_index_key, max_index_key, limit, skip);
+    return _tree.scan(min_index_key, min_inclusive, max_index_key, max_inlcusive, limit, skip);
 }
 
 document_list index::extract_index_key(const document& doc)

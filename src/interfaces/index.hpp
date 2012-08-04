@@ -52,7 +52,9 @@ public:
     /// ORdered scan. Returns data - list of storage keys
     virtual document_list scan(
         const boost::optional<document>& min,
+        bool min_inclusive, // > or >=
         const boost::optional<document>& max,
+        bool max_inclusive, // < or <=
         const boost::optional<std::size_t> limit,
         const boost::optional<std::size_t> skip) = 0;
 };
