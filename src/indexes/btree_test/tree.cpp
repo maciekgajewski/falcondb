@@ -135,13 +135,11 @@ BOOST_FIXTURE_TEST_CASE(string_key_scan_non_unique, fixture)
 
         get_tree().insert(key, value);
     }
-
     // search below
     {
         document_list result = get_tree().scan(
             make_key("0000"), true,
-            make_key("1000"), false,
-            boost::none, boost::none);
+            make_key("1000"), false);
         BOOST_CHECK_EQUAL(result.size(), 0);
     }
 
@@ -149,8 +147,7 @@ BOOST_FIXTURE_TEST_CASE(string_key_scan_non_unique, fixture)
     {
         document_list result = get_tree().scan(
             make_key("2999"), false,
-            make_key("5678"), true,
-            boost::none, boost::none);
+            make_key("5678"), true);
         BOOST_CHECK_EQUAL(result.size(), 0);
     }
 
@@ -158,22 +155,20 @@ BOOST_FIXTURE_TEST_CASE(string_key_scan_non_unique, fixture)
     {
         document_list result = get_tree().scan(
             make_key("0000"), false,
-            make_key("1000"), true,
-            boost::none, boost::none);
+            make_key("1000"), true);
         BOOST_REQUIRE_EQUAL(result.size(), 1);
-        BOOST_CHECK_EQUAL(result[0].as_scalar().as<int>(), 1);
+        BOOST_CHECK_EQUAL(result[0].as_scalar(), document_scalar::from(1000));
     }
 
     // serch inside the range
     {
         document_list result = get_tree().scan(
             make_key("1500"), false,
-            make_key("1600"), true,
-            boost::none, boost::none);
+            make_key("1600"), true);
         BOOST_REQUIRE_EQUAL(result.size(), 100);
         for(int i = 0; i < 100; ++i)
         {
-            BOOST_CHECK_EQUAL(result[i].as_scalar().as<int>(), 1501+i);
+            BOOST_CHECK_EQUAL(result[i].as_scalar(), document_scalar::from(1501+i));
         }
     }
 

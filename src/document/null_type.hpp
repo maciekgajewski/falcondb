@@ -37,6 +37,12 @@ bool operator < (const null_type&, const T&)
     return true; // null < everything
 }
 
+inline
+bool operator == (const null_type&, const null_type&)
+{
+    return true; // all nulls are equal
+}
+
 }
 
 #endif

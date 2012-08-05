@@ -21,7 +21,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <boost/uuid/random_generator.hpp>
 
+
+
 namespace falcondb { namespace indexes { namespace btree {
+
+template<typename T>
+std::string optional_to_string(const boost::optional<T>& opt)
+{
+    std::ostringstream ss;
+    if (opt) ss << *opt;
+    else ss << "none";
+    return ss.str();
+}
 
 namespace detail
 {
@@ -102,12 +113,190 @@ document_list btree::scan(
     bool min_inclusive,
     const boost::optional<document_list>& max,
     bool max_inclusive,
-    const boost::optional<std::size_t> limit,
-    const boost::optional<std::size_t> skip)
+    std::size_t limit,
+    std::size_t skip)
 {
-    // TODO implement
-    assert(false);
-    return document_list();
+//    std::cout << "===== tree node scan =======" << std::endl;
+//    std::cout << "min: " << optional_to_string(min) << ", max: " << optional_to_string(max) << std::endl;
+//    std::cout << "skip: " << skip << ", limit: " << limit << std::endl;
+//    std::cout << std::endl;
+
+    document_object node = _storage.read(_root_storage_key);
+    return tree_scan(node, min, min_inclusive, max, max_inclusive, limit, skip);
+}
+
+document_list btree::tree_scan(
+    const document_object& node,
+    const boost::optional<document_list>& min,
+    bool min_inclusive,
+    const boost::optional<document_list>& max,
+    bool max_inclusive,
+    std::size_t limit,
+    std::size_t skip)
+{
+    if (node.get_field("type").as_scalar().as<std::string>() == "leaf")
+    {
+        return tree_scan_leaf(node, min, min_inclusive, max, max_inclusive, limit, skip);
+    }
+    else
+    {
+        return tree_scan_interior(node, min, min_inclusive, max, max_inclusive, limit, skip);
+    }
+}
+
+document_list btree::tree_scan_interior(
+    const document_object& node,
+    const boost::optional<document_list>& min,
+    bool min_inclusive,
+    const boost::optional<document_list>& max,
+    bool max_inclusive,
+    std::size_t limit,
+    std::size_t skip)
+{
+    /*
+    std::cout << "interior node scan:" << std::endl;
+    std::cout << "min: " << optional_to_string(min) << ", max: " << optional_to_string(max) << std::endl;
+    std::cout << "skip: " << skip << ", limit: " << limit << std::endl;
+    std::cout << "node: " << node << std::endl;
+    std::cout << std::endl;
+    */
+
+    const document_list& data = node.get_field("data");
+    document_list::const_iterator it = data.begin();
+
+    // boundary check - if max below colelction's min or min above max - return immediately
+    if ( (min && *min > data.back().as_object().get_field("max").as_list())
+        ||
+        (max && *max < data.front().as_object().get_field("min").as_list()))
+    {
+        return document_list();
+    }
+
+    // if min is defined, look for node with min <= thatn the one
+    if (min)
+    {
+        document_object search;
+        search.set_field("min", *min);
+        if (min_inclusive)
+        {
+            // needed: last element with min <= search.min
+            // this is an equivalent of looking from the back for first with search.min > min
+            auto rit = std::upper_bound(
+                data.rbegin(), data.rend(),
+                search,
+                [] (const document& a, const document& b)
+                {
+                    return b.as_object().get_field("min") < a.as_object().get_field("min");
+                });
+            if (rit != data.rend())
+                std::advance(it, std::distance(rit, data.rend()) - 1);
+        }
+        else
+        {
+            auto rit = std::lower_bound(
+                data.rbegin(), data.rend(),
+                search,
+                [] (const document& a, const document& b)
+                {
+                    return b.as_object().get_field("min") < a.as_object().get_field("min");
+                });
+            if (rit != data.rend())
+                std::advance(it, std::distance(rit, data.rend()) - 1);
+        }
+    }
+
+    // skip entire tree branches
+    if (skip > 0)
+    {
+        while(true)
+        {
+            std::size_t count = it->as_object().get_field("count").as_scalar().as<std::size_t>();
+            if(skip >= count && it != data.end())
+            {
+                skip -= count;
+                ++it;
+            }
+            else
+                break;
+        }
+        if (it == data.end())
+        {
+            return document_list();
+        }
+    }
+
+    document inferior_node_storage_key = it->as_object().get_field("storage");
+    document inferior_node = _storage.read(inferior_node_storage_key);
+
+    return tree_scan(inferior_node, min, min_inclusive, max, max_inclusive, limit, skip);
+}
+
+document_list btree::tree_scan_leaf(
+    const document_object& nodep,
+    const boost::optional<document_list>& min,
+    bool min_inclusive,
+    const boost::optional<document_list>& max,
+    bool max_inclusive,
+    std::size_t limit,
+    std::size_t skip)
+{
+    document_list result;
+    document_object node = nodep; // local copy for iteration
+    while(true)
+    {
+        /*
+        std::cout << "leaf node scan:" << std::endl;
+        std::cout << "min: " << optional_to_string(min) << " inclusive: " << std::boolalpha << min_inclusive << std::endl;
+        std::cout << "max: " << optional_to_string(max) << " inlcusive: " << std::boolalpha << max_inclusive << std::endl;
+        std::cout << "skip: " << skip << ", limit: " << limit << std::endl;
+        std::cout << "node: " << node << std::endl;
+        std::cout << std::endl;
+        */
+
+        const document_list& data = node.get_field("data");
+
+        // full scan of the array. this could be asyli optimized
+        for(auto kv : data)
+        {
+            document_list key = kv.as_object().get_field("key");
+            document val = kv.as_object().get_field("value");
+
+            // skip below min
+            if (min && (key < *min || (!min_inclusive && key == *min)))
+            {
+                continue;
+            }
+
+            // skip & limit
+            if (skip > 0)
+            {
+                skip--;
+                continue;
+            }
+            if(limit-- == 0)
+            {
+                return result;
+            }
+
+            // return if max reached
+            if (max && ((*max < key) || (!max_inclusive && key == *max)))
+            {
+                return result;
+            }
+
+            result.push_back(val);
+        }
+
+        document next_node_storage_key = node.get_field("next");
+        if (!next_node_storage_key.is_null())
+        {
+            node = _storage.read(next_node_storage_key);
+        }
+        else
+        {
+            return result;
+        }
+    }
 }
 
 void btree::insert(const document_list key, const document& value)

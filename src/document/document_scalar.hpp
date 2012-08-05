@@ -54,6 +54,7 @@ public:
     bool is_null() const;
 
     bool operator<(const document_scalar& other) const;
+    bool operator==(const document_scalar& other) const;
 
     // i hate it
     const detail::raw_document_scalar& _v() const { return _variant; }

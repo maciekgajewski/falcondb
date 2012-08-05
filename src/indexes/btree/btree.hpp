@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <boost/optional.hpp>
 
+#include <limits>
+
 namespace falcondb { namespace indexes { namespace btree {
 
 namespace detail
@@ -58,8 +60,8 @@ public:
         bool min_inclusive,
         const boost::optional<document_list>& max,
         bool max_inclusive,
-        const boost::optional<std::size_t> limit,
-        const boost::optional<std::size_t> skip);
+        std::size_t limit = std::numeric_limits<std::size_t>::max(),
+        std::size_t skip = 0);
 
     void insert(const document_list key, const document& value);
     void remove(const document_list& key);
@@ -71,6 +73,9 @@ private:
         const document& root_storage_key,
         bool unique,
         std::size_t items_per_leaf);
+
+
+    // insert
 
     detail::insert_result tree_insert(const document& node_key, const document_list& key, const document& value);
 
@@ -86,6 +91,8 @@ private:
         const document_list& key,
         const document& value);
 
+    // remove
+
     void tree_remove(const document& node_key, const document_list& key);
 
     void tree_remove_leaf(
@@ -97,6 +104,44 @@ private:
         const document& node_key,
         document_object& node,
         const document_list& key);
+
+
+    // scan
+
+    document_list tree_scan(
+        const document_object& node,
+        const boost::optional<document_list>& min,
+        bool min_inclusive,
+        const boost::optional<document_list>& max,
+        bool max_inclusive,
+        std::size_t limit,
+        std::size_t skip);
+
+    document_list tree_scan_leaf(
+        const document_object& node,
+        const boost::optional<document_list>& min,
+        bool min_inclusive,
+        const boost::optional<document_list>& max,
+        bool max_inclusive,
+        std::size_t limit,
+        std::size_t skip);
+
+    document_list tree_scan_interior(
+        const document_object& node,
+        const boost::optional<document_list>& min,
+        bool min_inclusive,
+        const boost::optional<document_list>& max,
+        bool max_inclusive,
+        std::size_t limit,
+        std::size_t skip);
+
+
+
+
+
+
+
+
 
     static document generate_key();
     static document_object create_leaf();

@@ -28,7 +28,7 @@ namespace falcondb {
 
 struct scalar_less_visitor : boost::static_visitor<bool>
 {
-    // the same types - use native conparison
+    // the same types - use native comparison
     template<typename T>
     bool operator()(const T& a, const T& b) const
     {
@@ -75,6 +75,39 @@ bool document_scalar::operator<(const document_scalar& other) const
     return boost::apply_visitor(scalar_less_visitor(), _variant, other._variant);
 }
 
+struct scalar_equals_visitor : boost::static_visitor<bool>
+{
+    // the same types - use native comparison
+    template<typename T>
+    bool operator()(const T& a, const T& b) const
+    {
+        return a == b;
+    }
+
+    // different types, both arithmetic
+    template<typename T, typename U>
+    typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<U>::value, bool>::type
+    operator()(const T& a, const U& b) const
+    {
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wsign-compare"
+        return a == b;
+        #pragma GCC diagnostic pop
+    }
+
+    // different types - not equal
+    template<typename T, typename U>
+    typename std::enable_if<!std::is_arithmetic<T>::value || !std::is_arithmetic<U>::value, bool>::type
+    operator()(const T& a, const U& b) const
+    {
+        return false;
+    }
+};
+
+bool document_scalar::operator==(const document_scalar& other) const
+{
+    return boost::apply_visitor(scalar_equals_visitor(), _variant, other._variant);
+}
 
 }
 

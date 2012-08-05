@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "interfaces/document_storage.hpp"
 
 #include <algorithm>
+#include <limits>
 
 static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
 
@@ -102,7 +103,12 @@ document_list index::scan(
     if (min) min_index_key = extract_index_key(*min);
     if (max) max_index_key = extract_index_key(*max);
 
-    return _tree.scan(min_index_key, min_inclusive, max_index_key, max_inlcusive, limit, skip);
+    std::size_t s = 0;
+    if (skip) s = *skip;
+    std::size_t l = std::numeric_limits<std::size_t>::max();
+    if (limit) l = *limit;
+
+    return _tree.scan(min_index_key, min_inclusive, max_index_key, max_inlcusive, l, s);
 }
 
 document_list index::extract_index_key(const document& doc)
