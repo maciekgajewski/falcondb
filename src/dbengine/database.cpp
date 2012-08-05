@@ -42,20 +42,29 @@ database::database(const interfaces::database_backend_ptr& storage, command_proc
         std::string doc_data = _storage->get(key);
         _meta_data = document::from_json(doc_data);
 
-        document_list index_descriptions = _meta_data.get_field("indexes").as_list();
-        for(const document& description : index_descriptions)
+        document_object index_descriptions = _meta_data.get_field("indexes").as_object();
+        for(auto description : index_descriptions)
         {
-            _indexes.push_back(_default_index_type->load_index(_index_storage, description));
+            _indexes.insert(
+                std::make_pair(
+                    description.first,
+                    _default_index_type->load_index(_index_storage, description.second)
+                )
+            );
         }
     }
     catch(...)
     {
         // so this is a new database
         // create main index
-        document_object fields;
-        fields.set_field("_id", 1);
+        document_list fields;
+        document_object field1;
+        field1.set_field("name", document_scalar::from(std::string("_id")));
+        field1.set_field("direction", document_scalar::from(std::int32_t(1)));
+        fields.push_back(field1);
+
         document_object options;
-        options.set_field("unique", true);
+        options.set_field("unique", document_scalar::from(true));
         document_object definition;
         definition.set_field("fields", fields);
         definition.set_field("options", options);
@@ -69,11 +78,11 @@ database::database(const interfaces::database_backend_ptr& storage, command_proc
             _index_storage,
             data_storage);
 
-        _indexes.push_back(std::move(result.new_index));
+        _indexes.insert(std::make_pair("main", std::move(result.new_index)));
 
         // create and store meta data
-        document_list index_descriptions;
-        index_descriptions.push_back(result.index_description);
+        document_object index_descriptions;
+        index_descriptions.insert(std::make_pair("main", result.index_description));
         _meta_data.set_field("indexes", index_descriptions);
         _storage->add(key, _meta_data.to_json());
 

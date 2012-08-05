@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <algorithm>
 #include <limits>
+#include <cstdint>
 
 static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
 
@@ -54,8 +55,17 @@ index index::load(interfaces::document_storage& storage, const document& definit
 index::index(btree&& tree, const document_object& definition)
 :
     _tree(std::move(tree)),
-    _fields(definition.get_field("fields").as_object().to_map_of<int>())
+    _fields()
 {
+    // read the fields definition
+    const document_list& fields = definition.get_field("fields").as_list();
+    for(const document& field : fields)
+    {
+        const document_object& field_obj = field.as_object();
+        std::string field_name = field_obj.get_field("name").as_scalar().as<std::string>();
+        std::int32_t direction = field_obj.get_field("direction").as_scalar().as<std::int32_t>();
+        _fields.insert(std::make_pair(field_name, direction));
+    }
 }
 
 index::index(index&& other)

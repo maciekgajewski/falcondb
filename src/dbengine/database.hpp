@@ -48,7 +48,7 @@ private:
     command_processor& _processor;
     document_object _meta_data;
 
-    std::vector<interfaces::index::unique_ptr> _indexes;
+    std::map<std::string, interfaces::index::unique_ptr> _indexes;
     document_storage _index_storage;
 
     interfaces::index_type::pointer _default_index_type;

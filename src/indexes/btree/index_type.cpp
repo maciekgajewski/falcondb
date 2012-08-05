@@ -65,16 +65,20 @@ interfaces::index_type::create_result index_type::create_index(
 
 void index_type::verify_definition(const document& definition)
 {
-    std::map<std::string, int> fields = definition.as_object().get_field("fields").as_object().to_map_of<int>();
-
-    //document options = definiton.get<document>("options");
-    // options are optional, no need to check
-
-    // feilds has to be a flat object with non-zero integers
-    for(auto field : fields)
+    try
     {
-        if (field.second == 0)
-            throw exception("field can not be 0");
+        const document_list& fields = definition.as_object().get_field("fields").as_list();
+        for( const document field : fields)
+        {
+            const document_object& field_obj = field.as_object();
+            field_obj.get_field("name").as_scalar();
+            field_obj.get_field("direction").as_scalar();
+        }
+
+    }
+    catch(...)
+    {
+        throw exception("Index definition invalid");
     }
 }
 

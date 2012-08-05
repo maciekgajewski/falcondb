@@ -70,7 +70,7 @@ private:
 
     // tree
     btree _tree;
-    const std::map<std::string, int> _fields;
+    std::map<std::string, int> _fields;
 
 };
 

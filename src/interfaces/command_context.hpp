@@ -26,6 +26,8 @@ namespace falcondb { namespace interfaces {
 
 class document_storage;
 
+typedef std::map<std::string, index::unique_ptr> index_map;
+
 /// Database tools provided to each executed database command
 class command_context
 {
@@ -33,7 +35,7 @@ public:
 
     /// Main data storage. Can be used to access document data
     virtual document_storage& get_data_storage() = 0;
-    virtual std::vector<index::unique_ptr>& get_indexes() = 0;
+    virtual index_map& get_indexes() = 0;
 };
 
 

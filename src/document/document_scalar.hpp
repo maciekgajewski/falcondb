@@ -40,10 +40,14 @@ public:
     document_scalar(const document& d);
     document_scalar(document&& d);
 
+    /*
+    static
+    document_scalar from(const char* c) { return from(std::string(c)); }
+    */
+
     template<typename T>
     static
     document_scalar from(const T& v) { return detail::raw_document_scalar(v); }
-
     template<typename T>
     T& as();
     template<typename T>

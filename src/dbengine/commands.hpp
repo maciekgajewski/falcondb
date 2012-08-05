@@ -47,6 +47,9 @@ void dump(const document& param,
     const interfaces::result_handler& handler,
     interfaces::command_context& context);
 
+void listindexes(const document& param,
+    const interfaces::result_handler& handler,
+    interfaces::command_context& context);
 
 }
 } }

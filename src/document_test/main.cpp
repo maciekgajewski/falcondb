@@ -197,6 +197,7 @@ int main(int argc, char** argv)
     test_parse_scalar("\"valid string with\\\"quote\"");
     test_parse_scalar("true");
     test_parse_scalar("false");
+    test_parse_scalar("null");
     test_parse_scalar("100000000000");
 
     hobbit("[1,2,3]");
@@ -211,6 +212,7 @@ int main(int argc, char** argv)
     hobbit(" { \"constants\" : { \"pi\":3.14,\"e\":2.7 } , \"natual\":[1,2,3,4,5,6,7,8,9] } ");
     hobbit("[]");
     hobbit("{}");
+    hobbit("{\"data\":[],\"next\":null,\"prev\":null,\"type\":\"leaf\"}");
 
     //type traits
 

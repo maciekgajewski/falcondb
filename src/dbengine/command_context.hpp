@@ -31,18 +31,18 @@ class command_context : public interfaces::command_context
 public:
     command_context(
         const document_storage& data_storage,
-        std::vector<interfaces::index::unique_ptr>& indexes
+        interfaces::index_map& indexes
         );
 
     // interface
 
     virtual interfaces::document_storage& get_data_storage();
-    virtual std::vector<interfaces::index::unique_ptr>& get_indexes();
+    virtual interfaces::index_map& get_indexes();
 
 private:
 
     document_storage _data_storage;
-    std::vector<interfaces::index::unique_ptr>& _indexes;
+    interfaces::index_map& _indexes;
 };
 
 } }

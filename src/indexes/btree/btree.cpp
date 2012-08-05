@@ -81,7 +81,7 @@ btree btree::create(interfaces::document_storage& storage,  const document& stor
 btree::btree(btree&& other)
 :
     _storage(other._storage),
-    _storage_key(std::move(other._root_storage_key)),
+    _storage_key(std::move(other._storage_key)),
     _unique(other._unique),
     _items_per_leaf(other._items_per_leaf),
 
