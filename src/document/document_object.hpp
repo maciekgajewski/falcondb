@@ -37,6 +37,8 @@ public:
     document_object(const document& d);
     document_object(document&& d);
 
+    document_object& operator = (const document_object& d) = default;
+
     // check for field's existence
     bool has_field(const std::string& field_name) const;
 

@@ -1,6 +1,3 @@
-#ifndef FALCONDB_FRONTEND_MONGO_ENGINE_HPP
-#define FALCONDB_FRONTEND_MONGO_ENGINE_HPP
-
 /*
 FalconDB, a database
 Copyright (C) 2012 Kamil Zbrog <kamil.zbrog at gmail dot com>
@@ -20,31 +17,35 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "interfaces/engine.hpp"
-
-#include "frontend/mongo/message.hpp"
+#ifndef FALCONDB_FRONTEND_MONGO_COLLECTION_GROUP_HPP
+#define FALCONDB_FRONTEND_MONGO_COLLECTION_GROUP_HPP
 
 #include "frontend/mongo/base_collection.hpp"
 
-#include <boost/optional.hpp>
-
-#include <string>
-#include <functional>
-#include <vector>
+#include "frontend/mongo/engine.hpp"
 
 namespace falcondb { namespace frontend { namespace mongo {
 
-class collection_engine
+class collection_group : public base_collection
 {
 
 public:
 
-    collection_engine(falcondb::interfaces::engine& engine);
-
-    virtual base_collection::pointer get_collection(const std::string& collection_name);
+    collection_group(const std::vector<std::string>& ns, falcondb::interfaces::engine& engine);
 
 private:
 
+    virtual void handle_query(
+        const bson_object_list& params,
+        const result_handler& handler);
+
+    virtual void handle_insert(
+        const bson_object_list& params,
+        const result_handler& handler);
+
+    std::vector<std::string> get_collection_names();
+
+    const std::vector<std::string> _ns;
     falcondb::interfaces::engine& _engine;
 };
 

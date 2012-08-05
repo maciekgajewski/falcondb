@@ -37,13 +37,15 @@ class connection : public boost::enable_shared_from_this<connection>
 public:
     typedef boost::shared_ptr<connection> pointer;
 
-    connection(boost::asio::io_service& io_service, interfaces::collection_engine& engine);
+    connection(boost::asio::io_service& io_service, collection_engine& engine);
 
     boost::asio::ip::tcp::socket& socket() { return _socket; }
 
     void start();
 
 private:
+
+    std::uint32_t reqId();
 
     void handle_read_header(const boost::system::error_code& e, const message::pointer& msg);
     void handle_read_body(const boost::system::error_code& e, const message::pointer& msg);
@@ -53,10 +55,9 @@ private:
     void handle_insert_msg(const message::pointer& msg);
 
     void send_reply(const message::pointer& msg, const bson_object_list &obj_list);
-
     boost::asio::ip::tcp::socket _socket;
 
-    interfaces::collection_engine& _engine;
+    collection_engine& _engine;
 };
 
 }}}

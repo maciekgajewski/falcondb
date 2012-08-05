@@ -19,6 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "frontend/mongo/collection.hpp"
 #include "frontend/mongo/engine.hpp"
+#include "frontend/mongo/admin_collection.hpp"
+#include "frontend/mongo/collection.hpp"
+#include "frontend/mongo/collection_group.hpp"
+
+#include "utils/log.hpp"
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -36,7 +41,7 @@ collection_engine::collection_engine(falcondb::interfaces::engine& engine)
 {
 }
 
-interfaces::collection::pointer collection_engine::get_collection(const std::string& collection_name)
+base_collection::pointer collection_engine::get_collection(const std::string& collection_name)
 {
     assert(!collection_name.empty());
 
@@ -44,17 +49,28 @@ interfaces::collection::pointer collection_engine::get_collection(const std::str
     std::string ns(collection_name);
     boost::split(ns_splited, ns, boost::is_any_of("."));
 
-    assert(!ns_splited.empty());
-    if (ns_splited.size() > 1) {
-        if (ns_splited[1] == "$cmd") {
-            return std::make_shared<admin_collection>(_engine);
-        }
+    assert(ns_splited.size() > 1);
+
+    const std::string& group_name = ns_splited[0];
+
+    if ( group_name == "admin") {
+        logging::debug("admin collecion access");
+        return std::make_shared<admin_collection>(ns_splited, _engine);
     } else {
-        falcondb::interfaces::database_ptr db = _engine.create_database(collection_name);
-        return std::make_shared<collection>(db);
+        if (ns_splited[1] == "system" || ns_splited[1] == "$cmd"){
+            logging::debug("group collecion ", ns_splited[0], " access");
+            return std::make_shared<collection_group>(ns_splited, _engine);
+        } else {
+            logging::info("Creating new collection ", collection_name);
+            try {
+                _engine.create_database(collection_name);
+            } catch (...) {}
+            falcondb::interfaces::database_ptr db = _engine.get_database(collection_name);
+            return std::make_shared<collection>(collection_name, db);
+        }
     }
 
-    return interfaces::collection::pointer();
+    return base_collection::pointer();
 }
 
 /*

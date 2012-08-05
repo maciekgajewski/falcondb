@@ -1,4 +1,7 @@
 add_library(frontend_mongo
+    base_collection.cpp base_collection.hpp
+    admin_collection.cpp admin_collection.hpp
+    collection_group.cpp collection_group.hpp
     collection.cpp collection.hpp
     engine.cpp engine.hpp
     frontend.cpp frontend.hpp

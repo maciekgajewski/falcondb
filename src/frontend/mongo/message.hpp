@@ -32,6 +32,7 @@ namespace falcondb { namespace frontend { namespace mongo {
 typedef ::mongo::BSONObj bson_object;
 typedef std::vector<bson_object> bson_object_list;
 
+
 struct coder
 {
     coder(std::ostream& out)
@@ -102,7 +103,7 @@ inline std::ostream& operator <<(std::ostream& out, const message::header& heade
     out
         << "msg header"
         << " msgLen: " << header._msglen
-        << " regId:  " << header._reqId
+        << " reqId: " << header._reqId
         << " respId: " << header._resId
         << " opCode: " << static_cast<message::op_code::type>(header._opCode)
         << " reserv: " << header._reserved;
@@ -160,5 +161,9 @@ struct query_message : public db_message
 
 } } }
 
+inline std::ostream& operator<<(std::ostream& out, const falcondb::frontend::mongo::bson_object& obj)
+{
+    return out << obj.toString();
+}
 
 #endif

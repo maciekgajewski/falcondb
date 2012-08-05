@@ -20,54 +20,32 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_FRONTEND_MONGO_COLLECTION_HPP
 #define FALCONDB_FRONTEND_MONGO_COLLECTION_HPP
 
-#include "frontend/mongo/engine.hpp"
+#include "frontend/mongo/base_collection.hpp"
 
-#include "interfaces/engine.hpp"
+#include "frontend/mongo/engine.hpp"
 
 namespace falcondb { namespace frontend { namespace mongo {
 
-class collection : public interfaces::collection
+class collection : public base_collection
 {
 public:
-    collection(falcondb::interfaces::database_ptr& database);
 
-    virtual void post(
-        const std::string& command,
-        const bson_object_list& params,
-        const interfaces::result_handler& handler);
+    collection(const std::string& name, falcondb::interfaces::database_ptr& database);
 
 private:
 
-    void handle_insert(
+    virtual void handle_insert(
         const bson_object_list& params,
-        const interfaces::result_handler& handler);
+        const result_handler& handler);
 
-    void handle_query(
+    virtual void handle_query(
         const bson_object_list& params,
-        const interfaces::result_handler& handler);
+        const result_handler& handler);
 
-    falcondb::interfaces::database_ptr& _databse;
+    const std::string _name;
+    falcondb::interfaces::database_ptr _databse;
 };
 
-class admin_collection : public interfaces::collection
-{
-public:
-    admin_collection(falcondb::interfaces::engine& engine);
-
-    virtual void post(
-        const std::string& command,
-        const bson_object_list& params,
-        const interfaces::result_handler& handler);
-
-private:
-
-
-    void handle_query(
-        const bson_object_list& params,
-        const interfaces::result_handler& handler);
-
-    falcondb::interfaces::engine& _engine;
-};
 
 }}}
 

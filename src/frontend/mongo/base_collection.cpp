@@ -1,6 +1,3 @@
-#ifndef FALCONDB_FRONTEND_MONGO_ENGINE_HPP
-#define FALCONDB_FRONTEND_MONGO_ENGINE_HPP
-
 /*
 FalconDB, a database
 Copyright (C) 2012 Kamil Zbrog <kamil.zbrog at gmail dot com>
@@ -20,34 +17,33 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "interfaces/engine.hpp"
-
-#include "frontend/mongo/message.hpp"
-
 #include "frontend/mongo/base_collection.hpp"
 
-#include <boost/optional.hpp>
+#include "utils/log.hpp"
 
-#include <string>
-#include <functional>
-#include <vector>
+#include "bson/bsonobjbuilder.ipp"
+
+#include <boost/assign/list_of.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
+#include <boost/bind.hpp>
+#include <boost/bind/placeholders.hpp>
 
 namespace falcondb { namespace frontend { namespace mongo {
 
-class collection_engine
+void base_collection::post(
+    const std::string& command,
+    const bson_object_list& params,
+    const result_handler& handler)
 {
-
-public:
-
-    collection_engine(falcondb::interfaces::engine& engine);
-
-    virtual base_collection::pointer get_collection(const std::string& collection_name);
-
-private:
-
-    falcondb::interfaces::engine& _engine;
-};
+    if (command == "query") {
+        handle_query(params, handler);
+    } else if (command == "insert") {
+        handle_insert(params, handler);
+    } else {
+        handler(error_message(), bson_object_list());
+    }
+}
 
 }}}
-
-#endif
