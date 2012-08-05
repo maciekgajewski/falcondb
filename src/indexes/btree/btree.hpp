@@ -31,6 +31,7 @@ namespace falcondb { namespace indexes { namespace btree {
 namespace detail
 {
     class insert_result;
+    class remove_result;
 }
 
 /// B-tree stores key - value pairs in a storage-backend tree
@@ -64,7 +65,7 @@ public:
         std::size_t skip = 0);
 
     void insert(const document_list key, const document& value);
-    void remove(const document_list& key);
+    std::size_t remove(const document_list& key);
 
 private:
 
@@ -93,14 +94,14 @@ private:
 
     // remove
 
-    void tree_remove(const document& node_key, const document_list& key);
+    detail::remove_result tree_remove(const document& node_key, const document_list& key);
 
-    void tree_remove_leaf(
+    detail::remove_result tree_remove_leaf(
         const document& node_key,
         document_object& node,
         const document_list& key);
 
-    void tree_remove_interior(
+    detail::remove_result tree_remove_interior(
         const document& node_key,
         document_object& node,
         const document_list& key);

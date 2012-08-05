@@ -52,6 +52,13 @@ namespace detail
         boost::optional<node_summary> right;
     };
 
+    // remove result
+    struct remove_result
+    {
+        std::size_t removed_records;
+        boost::optional<node_summary> node;
+    };
+
 }
 
 btree btree::load(interfaces::document_storage& storage,  const document& storage_key, bool unique, std::size_t items_per_leaf)
@@ -321,7 +328,6 @@ document_object btree::create_interior()
     node.set_field("data", document_list());
 
     return node;
-
 }
 
 document_object btree::create_interior(const detail::insert_result& insert_result)
@@ -350,9 +356,16 @@ document_object btree::create_interior(const detail::insert_result& insert_resul
 }
 
 
-void btree::remove(const document_list& key)
+std::size_t btree::remove(const document_list& key)
 {
-    tree_remove(_root_storage_key, key);
+    detail::remove_result result = tree_remove(_root_storage_key, key);
+    if (result.removed_records > 0 && !result.node)
+    {
+        // the root has been removed, the index is now empty. reinitialize root
+        document_object new_root = create_leaf();
+        _storage.write(_root_storage_key, new_root);
+    }
+    return result.removed_records;
 }
 
 document btree::generate_key()
@@ -569,21 +582,21 @@ detail::insert_result btree::tree_insert_interior(
     }
 }
 
-void btree::tree_remove(const document& node_storage_key, const document_list& key)
+detail::remove_result btree::tree_remove(const document& node_storage_key, const document_list& key)
 {
     document_object node = _storage.read(node_storage_key);
 
     if(node.get_field("type").as_scalar().as<std::string>() == "leaf")
     {
-        tree_remove_leaf(node_storage_key, node, key);
+        return tree_remove_leaf(node_storage_key, node, key);
     }
     else
     {
-        tree_remove_interior(node_storage_key, node, key);
+        return tree_remove_interior(node_storage_key, node, key);
     }
 }
 
-void btree::tree_remove_leaf(
+detail::remove_result btree::tree_remove_leaf(
     const document& node_storage_key,
     document_object& node,
     const document_list& key)
@@ -603,25 +616,117 @@ void btree::tree_remove_leaf(
                 b.as_object().get_field("key").as_list();
         });
 
-    assert(range.first != range.second);
+    std::size_t removed_items = std::distance(range.first, range.second);
     data.erase(range.first, range.second);
 
-    _storage.write(node_storage_key, node);
-
-    if (data.size() < _items_per_leaf/2 )
+    if (removed_items > 0)
     {
-        // consolidate nodes or what?
-        assert(false); // TODO implement
+        if (data.empty())
+        {
+            _storage.remove(node_storage_key);
+            return detail::remove_result { removed_items, boost::none };
+        }
+        else
+        {
+            _storage.write(node_storage_key, node);
+        }
     }
+
+    return detail::remove_result {
+        removed_items,
+        detail::node_summary {
+            data.size(),
+            data.front().as_object().get_field("key"),
+            data.back().as_object().get_field("key"),
+            node_storage_key }
+        };
 }
 
-void btree::tree_remove_interior(
-    const document& node_key,
+static document_list::iterator find_inferiror_for_key(document_list& data, const document_list& key)
+{
+    for(auto it = data.begin(); it != data.end(); ++it)
+    {
+        const document_list& min = it->as_object().get_field("min").as_list();
+        const document_list& max = it->as_object().get_field("max").as_list();
+        if (min <= key && key <= max)
+            return it;
+    }
+    return data.end();
+}
+
+detail::remove_result btree::tree_remove_interior(
+    const document& node_storage_key,
     document_object& node,
     const document_list& key)
 {
-    // TODO implement
-    assert(false);
+    document_list& data = node.get_field("data").as_list();
+
+    // find the node where min >= key
+    auto it = find_inferiror_for_key(data, key);
+
+    if (it == data.end())
+    {
+        return detail::remove_result { 0, boost::none };
+    }
+
+    document_object& inferior_summary = it->as_object();
+    document inferior_node_key = inferior_summary.get_field("storage");
+    detail::remove_result result = tree_remove(inferior_node_key, key);
+
+    // handle the removal
+    if (result.removed_records == 0)
+    {
+        // nothing removed
+        return result;
+    }
+    else if (result.node)
+    {
+        // something removed, but the node is still exists
+        inferior_summary.set_field("min", result.node->min_key);
+        inferior_summary.set_field("max", result.node->max_key);
+        inferior_summary.set_field("count", document_scalar::from(result.node->count));
+
+        _storage.write(node_storage_key, node);
+
+        return detail::remove_result {
+            result.removed_records,
+            detail::node_summary {
+                sum_count(data),
+                data.front().as_object().get_field("min"),
+                data.back().as_object().get_field("max"),
+                node_storage_key }
+            };
+    }
+    else
+    {
+        // the inferior node has been removed
+        data.erase(it);
+
+        // shall we remove ourselves?
+        if (data.empty())
+        {
+            _storage.remove(node_storage_key);
+            return detail::remove_result { result.removed_records, boost::none };
+        }
+        else
+        {
+            // something removed, but the node is still exists
+            inferior_summary.set_field("min", result.node->min_key);
+            inferior_summary.set_field("max", result.node->max_key);
+            inferior_summary.set_field("count", document_scalar::from(result.node->count));
+
+            _storage.write(node_storage_key, node);
+
+            return detail::remove_result {
+                result.removed_records,
+                detail::node_summary {
+                    sum_count(data),
+                    data.front().as_object().get_field("min"),
+                    data.back().as_object().get_field("max"),
+                    node_storage_key }
+                };
+        }
+    }
 }
 
 }}} // ns

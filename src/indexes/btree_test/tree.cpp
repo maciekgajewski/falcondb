@@ -90,7 +90,7 @@ public:
     {
         _btree.reset(
             new btree(
-                btree::create(_storage, document_scalar::from(std::string("main")), unique, 10)));
+                btree::create(_storage, document_scalar::from(std::string("main")), unique, 4)));
     }
 
     template<typename T>
@@ -105,6 +105,12 @@ public:
     {
         _storage.dump();
         std::cout << std::endl << std::endl;
+    }
+
+    bool exists(const document_list& key)
+    {
+        document_list result = _btree->scan(key, true, key, true);
+        return !result.empty();
     }
 
 private:
@@ -171,7 +177,51 @@ BOOST_FIXTURE_TEST_CASE(string_key_scan_non_unique, fixture)
             BOOST_CHECK_EQUAL(result[i].as_scalar(), document_scalar::from(1501+i));
         }
     }
+}
 
+BOOST_FIXTURE_TEST_CASE(int_key_removal, fixture)
+{
+    init(false);
+
+    for (int i=0; i < 20; i++)
+    {
+        get_tree().insert(make_key(i), document_scalar::from(i));
+    }
+
+    BOOST_CHECK_EQUAL(exists(make_key(0)), true);
+    BOOST_CHECK_EQUAL(exists(make_key(5)), true);
+    BOOST_CHECK_EQUAL(exists(make_key(15)), true);
+    BOOST_CHECK_EQUAL(exists(make_key(19)), true);
+    BOOST_CHECK_EQUAL(exists(make_key(20)), false);
+
+    {
+        std::size_t removed = get_tree().remove(make_key(22));
+        BOOST_CHECK_EQUAL(removed, 0);
+    }
+
+    {
+        std::size_t removed = get_tree().remove(make_key(15));
+        BOOST_CHECK_EQUAL(removed, 1);
+        BOOST_CHECK_EQUAL(exists(make_key(15)), false);
+    }
+
+    {
+        std::size_t removed = get_tree().remove(make_key(5));
+        BOOST_CHECK_EQUAL(removed, 1);
+        BOOST_CHECK_EQUAL(exists(make_key(5)), false);
+    }
+
+    {
+        std::size_t removed = get_tree().remove(make_key(0));
+        BOOST_CHECK_EQUAL(removed, 1);
+        BOOST_CHECK_EQUAL(exists(make_key(0)), false);
+    }
+
+    {
+        std::size_t removed = get_tree().remove(make_key(19));
+        BOOST_CHECK_EQUAL(removed, 1);
+        BOOST_CHECK_EQUAL(exists(make_key(19)), false);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
