@@ -22,13 +22,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "backend_leveldb/backend.hpp"
 
 #include "dbengine/engine.hpp"
-#include "bson/bsonobj.ipp"
 
 using namespace falcondb;
 
 void help()
 {
-    std::cout << "usage: ifalcon DBPATH" << std::endl;
+    std::cout << "usage: mongofalcon DBPATH" << std::endl;
 }
 
 int main(int argc, char** argv)

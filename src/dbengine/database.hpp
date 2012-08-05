@@ -36,7 +36,7 @@ public:
     database(const interfaces::database_backend_ptr& storage, command_processor& processor);
 
     virtual bool post(const std::string& command,
-        const document_list& params,
+        const document& params,
         const interfaces::result_handler& result);
 
     virtual void dump();

@@ -45,7 +45,7 @@ static void insert_with_id(interfaces::command_context& context, const document_
     }
 }
 
-void insert(const document_list& params,
+void insert(const document& param,
     const interfaces::result_handler& handler,
     interfaces::command_context& context)
 {
@@ -73,7 +73,7 @@ void insert(const document_list& params,
 ////////////////////////////////////////////////////
 /// list
 
-void list(const document_list& param,
+void list(const document& param,
     const interfaces::result_handler& handler,
     interfaces::command_context& context)
 {
@@ -93,7 +93,7 @@ void list(const document_list& param,
     handler(error_message(), result);
 }
 
-void remove(const document_list& params,
+void remove(const document& param,
     const interfaces::result_handler& handler,
     interfaces::command_context& context)
 {

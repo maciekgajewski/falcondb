@@ -116,16 +116,6 @@ interfaces::database_ptr engine::get_database(const std::string& db_name)
 void engine::create_database(const std::string& db_name)
 {
     // does the db already exists?
-    {
-        rwmutex::scoped_read_lock lock(_databases_mutex);
-
-        auto it = _databases.find(db_name);
-        if (it != _databases.end())
-        {
-            return std::make_shared<database_impl>(it->second, std::ref(_processor));
-        }
-    }
-
     bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
 
     if (bfs::exists(new_db_path))

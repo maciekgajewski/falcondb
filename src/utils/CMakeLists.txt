@@ -7,4 +7,5 @@ add_library(utils
     filesystem.hpp
     backtrace_data.cpp backtrace_data.hpp
     error_message.hpp
+    log.hpp
 )
