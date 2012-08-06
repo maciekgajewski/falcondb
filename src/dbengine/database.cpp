@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "dbengine/database.hpp"
 
 #include "dbengine/command_processor.hpp"
-#include "dbengine/command_context.hpp"
 #include "dbengine/document_storage.hpp"
 
 #include "indexes/btree/index_type.hpp"
@@ -31,7 +30,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 namespace falcondb { namespace dbengine {
 
 database::database(const interfaces::database_backend_ptr& storage, command_processor& processor)
-    : _storage(storage), _processor(processor), _index_storage(_storage, "index")
+:
+    _storage(storage),
+    _processor(processor),
+    _index_storage(_storage, "index"),
+    _data_storage(_storage, "data")
 {
     _default_index_type = std::make_shared<indexes::btree::index_type>();
 
@@ -93,11 +96,7 @@ bool database::post(const std::string& command,
     const document& params,
     const interfaces::result_handler& result)
 {
-    // build context for the command
-    document_storage data_storage(_storage, "data");
-    command_context context(data_storage, _indexes);
-
-    _processor.post(command, params, result, context);
+    _processor.post(command, params, result, boost::ref(*this));
     return true;
 }
 

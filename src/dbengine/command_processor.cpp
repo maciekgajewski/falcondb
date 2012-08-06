@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "dbengine/command_processor.hpp"
+#include "dbengine/database.hpp"
 
 #include "utils/exception.hpp"
 
@@ -40,7 +41,7 @@ void command_processor::run()
     _thread.reset(new boost::thread([this] { _io_service.run(); }));
 }
 
-void command_processor::register_command(const std::string& command, const interfaces::command_handler& handler)
+void command_processor::register_command(const std::string& command, const command_handler& handler)
 {
     rwmutex::scoped_write_lock lock(_command_handlers_mutex);
 
@@ -55,7 +56,7 @@ void command_processor::post(
     const std::string& command,
     const document& params,
     const interfaces::result_handler& result,
-    const dbengine::command_context& context)
+    dbengine::database& db)
 {
     rwmutex::scoped_read_lock lock(_command_handlers_mutex);
 
@@ -65,19 +66,19 @@ void command_processor::post(
         throw exception("no such command: ", command);
     }
 
-    const interfaces::command_handler& handler = it->second;
-    _io_service.post([=](){ handler_wrapper(command, params, result, context, handler); });
+    const command_handler& handler = it->second;
+    _io_service.post([=,&db](){ handler_wrapper(command, params, result, db, handler); });
 }
 
 void command_processor::handler_wrapper(const std::string& command,
     const document& params,
     const interfaces::result_handler& result,
-    dbengine::command_context context,
-    const interfaces::command_handler& handler)
+    dbengine::database& db,
+    const command_handler& handler)
 {
     try
     {
-        handler(params, result, context);
+        handler(params, result, db);
     }
     catch(const falcondb::exception& e)
     {

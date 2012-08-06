@@ -30,16 +30,16 @@ namespace commands {
 ////////////////////////////////////////////////////
 /// insert
 
-static void insert_with_id(interfaces::command_context& context, const document_object& doc)
+static void insert_with_id(database& db, const document_object& doc)
 {
     assert(doc.has_field("_id"));
 
     document key = doc.get_field("_id");
 
-    context.get_data_storage().write(key, doc);
+    db.get_data_storage().write(key, doc);
 
     // update indexes
-    for( const auto& index : context.get_indexes())
+    for( const auto& index : db.get_indexes())
     {
         index.second->insert(key, doc);
     }
@@ -47,13 +47,13 @@ static void insert_with_id(interfaces::command_context& context, const document_
 
 void insert(const document& param,
     const interfaces::result_handler& handler,
-    interfaces::command_context& context)
+    database& db)
 {
     const document_object& as_obj = param.as_object();
     // does the object has _id field?
     if (as_obj.has_field("_id"))
     {
-        insert_with_id(context, as_obj);
+        insert_with_id(db, as_obj);
     }
     else
     {
@@ -64,7 +64,7 @@ void insert(const document& param,
         document_object copy = as_obj;
         copy.set_field("_id", document_scalar::from(id));
 
-        insert_with_id(context, copy);
+        insert_with_id(db, copy);
     }
 
     handler(error_message(), document_list());
@@ -75,7 +75,7 @@ void insert(const document& param,
 
 void list(const document& param,
     const interfaces::result_handler& handler,
-    interfaces::command_context& context)
+    database& db)
 {
     // TODO
     // list should use low-level scan on document_storage, to be inmplemented
@@ -85,31 +85,31 @@ void list(const document& param,
 
 void remove(const document& param,
     const interfaces::result_handler& handler,
-    interfaces::command_context& context)
+    database& db)
 {
     // remove from indexes
-    document doc = context.get_data_storage().read(param);
-    for(const auto& index : context.get_indexes())
+    document doc = db.get_data_storage().read(param);
+    for(const auto& index : db.get_indexes())
     {
         index.second->del(doc);
     }
 
-    context.get_data_storage().remove(param); // the param is the key
+    db.get_data_storage().remove(param); // the param is the key
     handler(error_message(), document_list());
 }
 
 void listindexes(const document& param,
     const interfaces::result_handler& handler,
-    interfaces::command_context& context)
+    database& db)
 {
     document_list result;
-    const interfaces::index_map& indexes = context.get_indexes();
+    const database::index_map& indexes = db.get_indexes();
 
     result.reserve(indexes.size());
     std::transform(
         indexes.begin(), indexes.end(),
         std::back_inserter(result),
-        [] (const interfaces::index_map::value_type& p) { return document_scalar::from(p.first); });
+        [] (const database::index_map::value_type& p) { return document_scalar::from(p.first); });
 
     handler(error_message(), result);
 }

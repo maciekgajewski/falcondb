@@ -42,14 +42,22 @@ public:
 
     virtual void dump();
 
+    // interface for own commands
+    typedef std::map<std::string, interfaces::index::unique_ptr> index_map;
+    index_map& get_indexes() { return _indexes; }
+    document_storage& get_data_storage() { return _data_storage; }
+
+
 private:
 
     interfaces::database_backend_ptr _storage;
     command_processor& _processor;
     document_object _meta_data;
 
-    std::map<std::string, interfaces::index::unique_ptr> _indexes;
+    index_map _indexes;
     document_storage _index_storage;
+
+    document_storage _data_storage;
 
     interfaces::index_type::pointer _default_index_type;
 
