@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 namespace falcondb { namespace backend_leveldb {
 
 static inline leveldb::Slice to_slice(range& r) { return leveldb::Slice(r.begin(), r.size()); }
+static inline range from_slice(const leveldb::Slice& s) { return range(s.data(), s.size()); }
 
 database::database(leveldb::DB* db)
 : _db(db)
@@ -91,17 +92,30 @@ std::string database::get(range key)
     return out;
 }
 
-void database::for_each(const interfaces::database_backend::key_handler& handler)
+void database::for_each(const interfaces::database_backend::key_value_handler& handler)
 {
-    leveldb::Iterator* it = _db->NewIterator(leveldb::ReadOptions());
+    std::unique_ptr<leveldb::Iterator> it(_db->NewIterator(leveldb::ReadOptions()));
     for (it->SeekToFirst(); it->Valid(); it->Next())
     {
-        leveldb::Slice key = it->key();
-        handler(range(key.data(), key.size()));
+        handler(from_slice(it->key()), from_slice(it->value()));
     }
     throw_if_not_ok(it->status());
-    delete it;
 }
+
+void database::for_each(range begin, range end, const key_value_handler& handler)
+{
+    std::unique_ptr<leveldb::Iterator> it(_db->NewIterator(leveldb::ReadOptions()));
+    std::string end_as_string = end.to_string();
+
+    for (it->Seek(to_slice(begin));
+        it->Valid() && it->key().ToString() < end_as_string;
+        it->Next())
+    {
+        handler(from_slice(it->key()), from_slice(it->value()));
+    }
+    throw_if_not_ok(it->status());
+}
+
 
 void database::throw_if_not_ok(const leveldb::Status& status)
 {

@@ -61,6 +61,15 @@ public:
         _storage.erase(key);
     }
 
+    virtual void for_each(const key_value_handler& fun)
+    {
+        for(const auto& p : _storage)
+        {
+            fun(p.first, p.second);
+        }
+    }
+
+
     void dump()
     {
         for(auto p : _storage)

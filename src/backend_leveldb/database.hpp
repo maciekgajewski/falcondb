@@ -46,7 +46,8 @@ public:
     virtual void add(range key, range data);
     virtual void del(range key);
     virtual std::string get(range key);
-    virtual void for_each(const key_handler& handler);
+    virtual void for_each(const key_value_handler& handler);
+    virtual void for_each(range begin, range end, const key_value_handler& handler);
 private:
 
     database(leveldb::DB* db);

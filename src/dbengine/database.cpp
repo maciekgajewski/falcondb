@@ -103,10 +103,9 @@ bool database::post(const std::string& command,
 void database::dump()
 {
     _storage->for_each(
-        [&](const range& key)
+        [&](const range& key, const range& value)
         {
-            std::string data = _storage->get(key);
-            std::cout << key.to_string() << " => " << data << std::endl;
+            std::cout << key.to_string() << " => " << value.to_string() << std::endl;
         });
 }
 

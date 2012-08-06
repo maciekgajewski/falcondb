@@ -37,6 +37,7 @@ public:
     virtual void write(const document& key, const document& doc);
     virtual document read(const document& key);
     virtual void remove(const document& key);
+    virtual void for_each(const key_value_handler& fun);
 
 private:
 
