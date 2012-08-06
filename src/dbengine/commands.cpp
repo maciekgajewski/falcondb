@@ -77,11 +77,19 @@ void list(const document& param,
     const interfaces::result_handler& handler,
     database& db)
 {
-    // TODO
-    // list should use low-level scan on document_storage, to be inmplemented
-    handler(error_message("'list' not implemented", backtrace_data::create()), document_list());
+    document_list result;
+
+    db.get_data_storage().for_each(
+        [&result](const document& key, const document& value)
+        {
+            result.push_back(value);
+        });
+
+    handler(error_message(), result);
 }
 
+////////////////////////////////////////////////////
+/// remove
 
 void remove(const document& param,
     const interfaces::result_handler& handler,
@@ -97,6 +105,9 @@ void remove(const document& param,
     db.get_data_storage().remove(param); // the param is the key
     handler(error_message(), document_list());
 }
+
+////////////////////////////////////////////////////
+/// listindexes
 
 void listindexes(const document& param,
     const interfaces::result_handler& handler,
