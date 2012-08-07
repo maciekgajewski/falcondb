@@ -38,6 +38,13 @@ document_list::document_list(detail::raw_document_list&& raw)
 }
 
 inline
+document_list::document_list(std::initializer_list<document> initializer)
+: detail::raw_document_list(initializer)
+{
+}
+
+
+inline
 document_list::document_list(const document& d)
 : detail::raw_document_list(d.as_list())
 {

@@ -31,6 +31,9 @@ class document_storage
 {
 public:
 
+    /// iteration callback
+    typedef std::function<void (const document& key, const document& value)> key_value_handler;
+
     /// Stores document
     virtual void write(const document& key, const document& doc) = 0;
 
@@ -38,7 +41,11 @@ public:
     virtual document read(const document& key) = 0;
 
     /// Deletes document
-    virtual void del(const document& key) = 0;
+    virtual void remove(const document& key) = 0;
+
+    /// Iterates over all documents
+    virtual void for_each(const key_value_handler& fun) = 0;
+
 };
 
 }} // namespaces

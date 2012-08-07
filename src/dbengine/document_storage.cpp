@@ -49,10 +49,29 @@ document document_storage::read(const document& key)
     }
 }
 
-void document_storage::del(const document& key)
+void document_storage::remove(const document& key)
 {
     std::string key_data = _ns + key.to_json();
     _raw_storage->del(key_data);
 }
+
+void document_storage::for_each(const key_value_handler& fun)
+{
+    // create the end of the range by incremeting the last byte of namespace
+    assert(!_ns.empty());
+    std::string end = _ns;
+    ++end.back();
+
+    _raw_storage->for_each(
+        _ns, end,
+        [&](const range& key, const range& val)
+        {
+            std::string key_as_string = std::string(key.begin() + _ns.length(), key.size() - _ns.length());
+            std::string value_as_string = val.to_string();
+
+            fun(document::from_json(key_as_string), document::from_json(value_as_string));
+        });
+}
+
 
 } }

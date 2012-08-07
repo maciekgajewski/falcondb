@@ -47,10 +47,8 @@ public:
     document& get_field(const std::string& field_name);
 
     // upsert
-    template<typename T>
-    void set_field(const std::string& field_name, const T& t);
-    template<typename T>
-    void set_field(const std::string& field_name, T&& t);
+    void set_field(const std::string& field_name, const document& doc);
+    void set_field(const std::string& field_name, document&& doc);
 
     // collapse to std::map of specific type
     // requirement: there must be a compatible document::as<T>()
@@ -65,6 +63,10 @@ public:
     // io
     std::string to_json() const;
     static document_object from_json(const std::string& s);
+
+    // other
+
+    bool operator < (const document_object& ) const { return false; }
 
 };
 

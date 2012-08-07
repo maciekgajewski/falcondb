@@ -60,6 +60,8 @@ public:
     document_object& as_object() ;
     document_scalar& as_scalar();
 
+    static document from(const document& doc);
+    static document from(document&& doc);
     static document from(const document_scalar& scalar);
     static document from(document_scalar&& scalar);
     static document from(const document_object& obj);
@@ -97,6 +99,9 @@ public:
     // other
 
     bool operator < (const document& other) const;
+    bool operator == (const document& other) const;
+    void swap(document& other) { _variant.swap(other._variant); }
+    bool is_null() const;
 
     const detail::raw_document_any& _v() const { return _variant; }
 

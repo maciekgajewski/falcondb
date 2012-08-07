@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "utils/exception.hpp"
 
+#include <boost/uuid/random_generator.hpp>
+
 #include <cassert>
 
 namespace falcondb { namespace indexes { namespace btree {
@@ -40,7 +42,7 @@ std::unique_ptr<interfaces::index> index_type::load_index(
     document index_root = description_as_object.get_field("root");
     document index_definition = description_as_object.get_field("definition");
 
-    return std::unique_ptr<interfaces::index>(new index(index_storage, index_definition, index_root));
+    return std::unique_ptr<interfaces::index>(new index(index::load(index_storage, index_definition, index_root)));
 }
 
 interfaces::index_type::create_result index_type::create_index(
@@ -50,10 +52,12 @@ interfaces::index_type::create_result index_type::create_index(
 {
     verify_definition(index_definition);
 
-    std::unique_ptr<index> new_index(new index(index_storage, index_definition));
+    boost::uuids::random_generator gen;
+    document new_storage_root = document::from(gen());
+    std::unique_ptr<index> new_index(new index(index::create(index_storage, index_definition, new_storage_root)));
 
     document_object index_description;
-    index_description.insert(std::make_pair("root", new_index->get_root()));
+    index_description.insert(std::make_pair("root", new_storage_root));
     index_description.insert(std::make_pair("definition", index_definition));
 
     return create_result{ document(index_description), std::move(new_index) };
@@ -61,16 +65,20 @@ interfaces::index_type::create_result index_type::create_index(
 
 void index_type::verify_definition(const document& definition)
 {
-    std::map<std::string, int> fields = definition.as_object().get_field("fields").as_object().to_map_of<int>();
-
-    //document options = definiton.get<document>("options");
-    // options are optional, no need to check
-
-    // feilds has to be a flat object with non-zero integers
-    for(auto field : fields)
+    try
     {
-        if (field.second == 0)
-            throw exception("field can not be 0");
+        const document_list& fields = definition.as_object().get_field("fields").as_list();
+        for( const document field : fields)
+        {
+            const document_object& field_obj = field.as_object();
+            field_obj.get_field("name").as_scalar();
+            field_obj.get_field("direction").as_scalar();
+        }
+
+    }
+    catch(...)
+    {
+        throw exception("Index definition invalid");
     }
 }
 

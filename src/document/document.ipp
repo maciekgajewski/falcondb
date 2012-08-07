@@ -106,6 +106,16 @@ inline document_scalar& document::as_scalar()
     return boost::get<document_scalar>(_variant);
 }
 
+inline document document::from(const document& doc)
+{
+    return doc;
+}
+
+inline document document::from(document&& doc)
+{
+    return doc;
+}
+
 inline document document::from(const document_scalar& scalar)
 {
     return document(scalar);

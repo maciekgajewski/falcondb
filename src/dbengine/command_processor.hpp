@@ -20,9 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDDB_ENGINE_COMMAND_PROCESSOR_HPP
 #define FALCONDDB_ENGINE_COMMAND_PROCESSOR_HPP
 
-#include "dbengine/command_context.hpp"
+#include "dbengine/database.hpp"
 
-#include "interfaces/command_context.hpp"
 #include "interfaces/engine.hpp"
 
 #include "utils/rwmutex.hpp"
@@ -38,6 +37,9 @@ namespace falcondb { namespace dbengine {
 class command_processor
 {
 public:
+    typedef std::function<void (const document&, const interfaces::result_handler&, database&)> command_handler;
+
+
     command_processor();
     //command_
     ~command_processor();
@@ -46,18 +48,18 @@ public:
     void run();
 
     // registers db command
-    void register_command(const std::string& command, const interfaces::command_handler& handler);
+    void register_command(const std::string& command, const command_handler& handler);
 
     // posts command for execution
     void post(const std::string& command,
         const document& params,
         const interfaces::result_handler& result,
-        const dbengine::command_context& context);
+        database& db);
 
 private:
 
     // commands
-    typedef std::unordered_map<std::string, interfaces::command_handler> command_handler_map;
+    typedef std::unordered_map<std::string, command_handler> command_handler_map;
     command_handler_map _command_handlers;
     rwmutex _command_handlers_mutex;
 
@@ -69,8 +71,8 @@ private:
     static void handler_wrapper(const std::string& command,
         const document& params,
         const interfaces::result_handler& result,
-        dbengine::command_context context,
-        const interfaces::command_handler& handler);
+        dbengine::database& db,
+        const command_handler& handler);
 
 };
 

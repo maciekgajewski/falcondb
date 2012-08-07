@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "document/json_parser.hpp"
+#include "document/null_type.hpp"
 
 #include "utils/exception.hpp"
 
@@ -43,6 +44,7 @@ typedef boost::variant<
     std::int64_t,
     std::uint64_t,
     double,
+    null_type,
     bool> parse_scalar;
 
 class parse_pair;
@@ -81,11 +83,14 @@ public:
             *(_escape_chars | (qi::char_ - '\\' - '"')) >>
             '"';
 
+        _null = qi::lit("null")[_1=null_type()];
+
         _scalar =
             ( _double_quoted_string
             | qi::double_
             | qi::uint_parser<std::uint64_t>()
             | qi::int_parser<std::int64_t>()
+            | _null
             | qi::bool_
             );
 
@@ -109,6 +114,7 @@ private:
     qi::rule<iterator_type, parse_pair(), qi::ascii::space_type> _pair;
     qi::rule<iterator_type, parse_map(), qi::ascii::space_type> _map;
     qi::rule<iterator_type, parse_document(), qi::ascii::space_type> _document;
+    qi::rule<iterator_type, null_type()> _null;
 
 };
 

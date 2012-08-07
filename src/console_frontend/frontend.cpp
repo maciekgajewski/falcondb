@@ -51,6 +51,8 @@ frontend::frontend(interfaces::engine& engine)
         [this](const arg_list& al) { handle_insert(al); });
     _dispatcher.add_command("list", "list DATABASE", "Get the entire content of the db",
         [this](const arg_list& al) { handle_list(al); });
+    _dispatcher.add_command("listindexes", "listindexes DATABASE", "Get the entire content of the db",
+        [this](const arg_list& al) { handle_listindexes(al); });
     _dispatcher.add_command("remove", "remove DATABASE KEY", "Remove document with _id=KEY from db",
         [this](const arg_list& al) { handle_remove(al); });
     _dispatcher.add_command("showdbs", "showdbs", "List databases",
@@ -200,6 +202,12 @@ void frontend::handle_list(const frontend::arg_list& al)
 {
     std::string db_name = require_arg(al, 0);
     post_command(db_name, "list");
+}
+
+void frontend::handle_listindexes(const frontend::arg_list& al)
+{
+    std::string db_name = require_arg(al, 0);
+    post_command(db_name, "listindexes");
 }
 
 void frontend::handle_remove(const arg_list& al)

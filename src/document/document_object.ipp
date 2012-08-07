@@ -108,25 +108,23 @@ document_object document_object::from(const std::map<std::string, T>& m)
     return result;
 }
 
-template<typename T>
-void document_object::set_field(const std::string& field_name, const T& t)
+inline
+void document_object::set_field(const std::string& field_name, const document& doc)
 {
-    document d = document::from(t);
-    auto r = insert(std::make_pair(field_name, d));
+    auto r = insert(std::make_pair(field_name, doc));
     if (!r.second)
     {
-        r.first->second = d;
+        r.first->second = doc;
     }
 }
 
-template<typename T>
-void document_object::set_field(const std::string& field_name, T&& t)
+inline
+void document_object::set_field(const std::string& field_name, document&& doc)
 {
-    document d = document::from(t);
-    auto r = insert(std::make_pair(field_name, d));
+    auto r = insert(std::make_pair(field_name, doc));
     if (!r.second)
     {
-        r.first->second = d;
+        r.first->second = doc;
     }
 }
 

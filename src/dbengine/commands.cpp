@@ -30,30 +30,30 @@ namespace commands {
 ////////////////////////////////////////////////////
 /// insert
 
-static void insert_with_id(interfaces::command_context& context, const document_object& doc)
+static void insert_with_id(database& db, const document_object& doc)
 {
     assert(doc.has_field("_id"));
 
     document key = doc.get_field("_id");
 
-    context.get_data_storage().write(key, doc);
+    db.get_data_storage().write(key, doc);
 
     // update indexes
-    for( const interfaces::index::unique_ptr& i : context.get_indexes())
+    for( const auto& index : db.get_indexes())
     {
-        i->insert(key, doc);
+        index.second->insert(key, doc);
     }
 }
 
 void insert(const document& param,
     const interfaces::result_handler& handler,
-    interfaces::command_context& context)
+    database& db)
 {
     const document_object& as_obj = param.as_object();
     // does the object has _id field?
     if (as_obj.has_field("_id"))
     {
-        insert_with_id(context, as_obj);
+        insert_with_id(db, as_obj);
     }
     else
     {
@@ -62,9 +62,9 @@ void insert(const document& param,
         boost::uuids::uuid id = gen();
 
         document_object copy = as_obj;
-        copy.set_field("_id", id);
+        copy.set_field("_id", document_scalar::from(id));
 
-        insert_with_id(context, copy);
+        insert_with_id(db, copy);
     }
 
     handler(error_message(), document_list());
@@ -75,38 +75,56 @@ void insert(const document& param,
 
 void list(const document& param,
     const interfaces::result_handler& handler,
-    interfaces::command_context& context)
+    database& db)
 {
-    // use main index interator to list the dataset
-    interfaces::index::unique_ptr& main_index = context.get_indexes()[0];
-
-    document_list index_result = main_index->find(document_scalar::null());
     document_list result;
-    result.reserve(index_result.size());
 
-    for(auto storage_key : index_result)
-    {
-        std::cout << "list, storage key: " << storage_key << std::endl;
-        document doc = context.get_data_storage().read(storage_key);
-        result.push_back(doc);
-    }
+    db.get_data_storage().for_each(
+        [&result](const document& key, const document& value)
+        {
+            result.push_back(value);
+        });
+
     handler(error_message(), result);
 }
 
+////////////////////////////////////////////////////
+/// remove
+
 void remove(const document& param,
     const interfaces::result_handler& handler,
-    interfaces::command_context& context)
+    database& db)
 {
     // remove from indexes
-    document doc = context.get_data_storage().read(param);
-    for(const interfaces::index::unique_ptr& index : context.get_indexes())
+    document doc = db.get_data_storage().read(param);
+    for(const auto& index : db.get_indexes())
     {
-        index->del(doc);
+        index.second->del(doc);
     }
 
-    context.get_data_storage().del(param); // the param is the key
+    db.get_data_storage().remove(param); // the param is the key
     handler(error_message(), document_list());
 }
+
+////////////////////////////////////////////////////
+/// listindexes
+
+void listindexes(const document& param,
+    const interfaces::result_handler& handler,
+    database& db)
+{
+    document_list result;
+    const database::index_map& indexes = db.get_indexes();
+
+    result.reserve(indexes.size());
+    std::transform(
+        indexes.begin(), indexes.end(),
+        std::back_inserter(result),
+        [] (const database::index_map::value_type& p) { return document_scalar::from(p.first); });
+
+    handler(error_message(), result);
+}
+
 
 } // namespace commands
 } }

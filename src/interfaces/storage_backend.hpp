@@ -48,7 +48,7 @@ public:
 class database_backend
 {
 public:
-    typedef std::function<void (const range&)> key_handler;
+    typedef std::function<void (const range& key, const range& value)> key_value_handler;
 
     virtual ~database_backend() {}
 
@@ -57,7 +57,10 @@ public:
     virtual void add(range key, range data) = 0;
     virtual void del(range key) = 0;
     virtual std::string get(range key) = 0;
-    virtual void for_each(const key_handler& handler) = 0;
+    virtual void for_each(const key_value_handler& handler) = 0;
+
+    // iterates over range [begin, end)
+    virtual void for_each(range begin, range end, const key_value_handler& handler) = 0;
 };
 
 }}

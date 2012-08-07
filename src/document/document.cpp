@@ -75,9 +75,35 @@ struct less_visitor : boost::static_visitor<bool>
     }
 };
 
+struct equals_visitor : boost::static_visitor<bool>
+{
+    template<typename T>
+    bool operator()(const T& a, const T& b) const
+    {
+        return a == b;
+    }
+
+    template<typename T, typename U>
+    bool operator()(const T&, const U&) const
+    {
+        return false;
+    }
+};
+
 bool document::operator < (const document& other) const
 {
     return boost::apply_visitor(less_visitor(), _variant, other._variant);
 }
+
+bool document::operator == (const document& other) const
+{
+    return boost::apply_visitor(equals_visitor(), _variant, other._variant);
+}
+
+bool document::is_null() const
+{
+    return *this == document_scalar::null();
+}
+
 
 } // namespace

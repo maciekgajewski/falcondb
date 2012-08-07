@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "document/detail/variants.hpp"
 
+#include <initializer_list>
+
 namespace falcondb {
 
 class document_list : public detail::raw_document_list
@@ -30,6 +32,7 @@ public:
     document_list() = default; // wooohoo!
     document_list(const detail::raw_document_list& raw);
     document_list(detail::raw_document_list&& raw);
+    document_list(std::initializer_list<document> initializer);
     document_list(const document& d);
     document_list(document&& d);
 
@@ -44,10 +47,13 @@ public:
     static
     document_list from(const std::vector<T>& input);
 
-
     // io
     std::string to_json() const;
     static document_list from_json(const std::string& s);
+
+    // other
+
+    bool operator < (const document_list& other) const;
 };
 
 }

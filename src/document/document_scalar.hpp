@@ -40,10 +40,14 @@ public:
     document_scalar(const document& d);
     document_scalar(document&& d);
 
+    /*
+    static
+    document_scalar from(const char* c) { return from(std::string(c)); }
+    */
+
     template<typename T>
     static
     document_scalar from(const T& v) { return detail::raw_document_scalar(v); }
-
     template<typename T>
     T& as();
     template<typename T>
@@ -54,6 +58,7 @@ public:
     bool is_null() const;
 
     bool operator<(const document_scalar& other) const;
+    bool operator==(const document_scalar& other) const;
 
     // i hate it
     const detail::raw_document_scalar& _v() const { return _variant; }

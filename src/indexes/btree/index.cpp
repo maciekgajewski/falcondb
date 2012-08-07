@@ -21,28 +21,58 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "interfaces/document_storage.hpp"
 
-#include <boost/uuid/random_generator.hpp>
-
 #include <algorithm>
-
-namespace falcondb { namespace indexes { namespace btree {
+#include <limits>
+#include <cstdint>
 
 static std::size_t ITEMS_PER_LEAF = 100; // completely arbitrary
 
-index::index(interfaces::document_storage& storage, const document& definition, const document& root)
-:   _storage(storage),
-    _fields(definition.as_object().get_field("fields").as_object().to_map_of<int>()),
-    _root(root)
+namespace falcondb { namespace indexes { namespace btree {
+
+index index::create(interfaces::document_storage& storage, const document& definition, const document& root_storage_key)
 {
+    const document_object def_obj = definition.as_object();
+    bool unique = false;
+    if (def_obj.has_field("unique"))
+        unique = def_obj.get_field("unique").as<bool>();
+
+    btree tree = btree::create(storage, root_storage_key, unique, ITEMS_PER_LEAF);
+    return index(std::move(tree), def_obj);
 }
 
-index::index(interfaces::document_storage& storage, const document& definition)
-:   _storage(storage),
-    _fields(definition.as_object().get_field("fields").as_object().to_map_of<int>()),
-    _root(generate_key())
+index index::load(interfaces::document_storage& storage, const document& definition, const document& root_storage_key)
 {
-    document root_doc = create_leaf();
-    _storage.write(_root, root_doc);
+    const document_object def_obj = definition.as_object();
+    bool unique = false;
+    if (def_obj.has_field("unique"))
+        unique = def_obj.get_field("unique").as<bool>();
+
+    btree tree = btree::load(storage, root_storage_key, unique, ITEMS_PER_LEAF);
+    return index(std::move(tree), def_obj);
+}
+
+
+index::index(btree&& tree, const document_object& definition)
+:
+    _tree(std::move(tree)),
+    _fields()
+{
+    // read the fields definition
+    const document_list& fields = definition.get_field("fields").as_list();
+    for(const document& field : fields)
+    {
+        const document_object& field_obj = field.as_object();
+        std::string field_name = field_obj.get_field("name").as_scalar().as<std::string>();
+        std::int32_t direction = field_obj.get_field("direction").as_scalar().as<std::int32_t>();
+        _fields.insert(std::make_pair(field_name, direction));
+    }
+}
+
+index::index(index&& other)
+:
+    _tree(std::move(other._tree)),
+    _fields(std::move(other._fields))
+{
 }
 
 index::~index()
@@ -54,7 +84,7 @@ void index::insert(const document& storage_key, const document& doc)
     document_list index_key = extract_index_key(doc);
 
     // enter the actual recursive algo
-    tree_insert(_root, index_key, storage_key);
+    _tree.insert(index_key, storage_key);
 
 }
 
@@ -67,29 +97,28 @@ void index::update(const document& old_doc, const document& new_doc)
 void index::del(const document& doc)
 {
     document_list index_key = extract_index_key(doc);
-
-    tree_remove(_root, index_key);
+    _tree.remove(index_key);
 }
 
-document_list index::find(const document& range)
+document_list index::scan(
+    const boost::optional<document>& min,
+    bool min_inclusive,
+    const boost::optional<document>& max,
+    bool max_inlcusive,
+    const boost::optional<std::size_t> limit,
+    const boost::optional<std::size_t> skip)
 {
-    // just return everything for now
+    boost::optional<document_list> min_index_key;
+    boost::optional<document_list> max_index_key;
+    if (min) min_index_key = extract_index_key(*min);
+    if (max) max_index_key = extract_index_key(*max);
 
-    document_object root_doc = _storage.read(_root);
-    const document_list& data = root_doc.get_field("data").as_list();
+    std::size_t s = 0;
+    if (skip) s = *skip;
+    std::size_t l = std::numeric_limits<std::size_t>::max();
+    if (limit) l = *limit;
 
-    document_list result;
-    result.reserve(data.size());
-
-    std::transform(
-        data.begin(), data.end(),
-        std::back_inserter(result),
-        [](const document& in)
-        {
-            return in.as_object().get_field("value");
-        });
-
-    return result;
+    return _tree.scan(min_index_key, min_inclusive, max_index_key, max_inlcusive, l, s);
 }
 
 document_list index::extract_index_key(const document& doc)
@@ -114,115 +143,5 @@ document_list index::extract_index_key(const document& doc)
     return result;
 }
 
-document index::generate_key()
-{
-    boost::uuids::random_generator gen;
-    return document_scalar::from(gen());
-}
-
-document index::create_leaf()
-{
-    document_object leaf;
-    leaf.insert(std::make_pair("type", document::from("leaf")));
-    leaf.insert(std::make_pair("data", document_list()));
-
-    return document(leaf);
-}
-
-void index::tree_insert(const document& node_key, const document_list& key, const document& value)
-{
-    document_object node = _storage.read(node_key);
-
-    // insert into leaf node
-    if(node.get_field("type").as_scalar().as<std::string>() == "leaf")
-    {
-        document_list& data = node.get_field("data").as_list();
-        // will fit?
-        if (data.size() < ITEMS_PER_LEAF)
-        {
-            document_object new_element;
-            new_element.insert(std::make_pair("key", key));
-            new_element.insert(std::make_pair("value", value));
-
-            auto it = std::lower_bound(
-                data.begin(), data.end(),
-                new_element,
-                [this](const document& a, const document& b)
-                {
-                    return compare_index_keys(
-                        a.as_object().get_field("key").as_list(),
-                        b.as_object().get_field("key").as_list());
-                });
-
-            data.insert(it, new_element);
-
-            _storage.write(node_key, node);
-        }
-        else
-        {
-            // split leaf, returns something to say the parent that it should update
-            assert(false); // TODO implement!
-        }
-
-    }
-    // insert into interior node
-    else
-    {
-        // TODO implement
-        assert(false);
-    }
-}
-
-void index::tree_remove(const document& node_key, const document_list& key)
-{
-    document_object node = _storage.read(node_key);
-
-    // remove from leaf node
-    if(node.get_field("type").as_scalar().as<std::string>() == "leaf")
-    {
-        document_list& data = node.get_field("data").as_list();
-
-        document_object search;
-        search.insert(std::make_pair("key", key));
-
-        auto range = std::equal_range(
-            data.begin(), data.end(),
-            search,
-            [this](const document& a, const document& b)
-            {
-                return compare_index_keys(
-                    a.as_object().get_field("key").as_list(),
-                    b.as_object().get_field("key").as_list());
-            });
-
-        assert(range.first != range.second);
-        data.erase(range.first, range.second);
-
-        _storage.write(node_key, node);
-
-        if (data.size() < ITEMS_PER_LEAF/2 )
-        {
-            // consolidate nodes or what?
-        }
-    }
-    // remove from interior node
-    else
-    {
-        // TODO implement
-        assert(false);
-    }
-}
-
-bool index::compare_index_keys(const document_list& a, const document_list& b) const
-{
-    // TODO ignore element sings now
-    assert(a.size() == b.size());
-
-    for(std::size_t i = 0; i< a.size(); ++i)
-    {
-        if (a[i] < b[i]) return true;
-    }
-    return false;
-}
 
 } } }

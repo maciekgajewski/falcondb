@@ -38,8 +38,7 @@ class command_context;
 
 typedef std::shared_ptr<database> database_ptr;
 
-typedef std::function<void (const error_message& error, const document& result)> result_handler;
-typedef std::function<void (const document&, const result_handler&, command_context&)> command_handler;
+typedef std::function<void (const error_message& error, const document_list& result)> result_handler;
 
 /// API exposed toward frontends.
 class engine
