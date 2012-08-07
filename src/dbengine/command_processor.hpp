@@ -68,7 +68,8 @@ private:
     std::unique_ptr<boost::thread> _thread;
     std::unique_ptr<boost::asio::io_service::work> _work;
 
-    static void handler_wrapper(const std::string& command,
+    static void handler_wrapper(
+        const std::string& command,
         const document& params,
         const interfaces::result_handler& result,
         dbengine::database& db,

@@ -90,9 +90,6 @@ void engine::run()
 std::vector<std::string> engine::get_databases()
 {
     std::vector<std::string> result;
-
-    rwmutex::scoped_read_lock lock(_databases_mutex);
-
     std::transform(_databases.begin(), _databases.end(),
         std::back_inserter(result), [](const database_map::value_type& p) { return p.first; });
 
@@ -117,6 +114,11 @@ interfaces::database_ptr engine::get_database(const std::string& db_name)
 void engine::create_database(const std::string& db_name)
 {
     // does the db already exists?
+    if (_databases.find(db_name) != _databases.end())
+    {
+        throw exception("Dastabase ", db_name, " already exists");
+    }
+
     bfs::path new_db_path = bfs::path(_config.data_dir) / db_name;
 
     if (bfs::exists(new_db_path))

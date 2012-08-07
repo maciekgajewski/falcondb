@@ -35,7 +35,8 @@ class database : public interfaces::database
 public:
     database(const interfaces::database_backend_ptr& storage, command_processor& processor);
 
-    virtual bool post(const std::string& command,
+    virtual bool post(
+        const std::string& command,
         const document& params,
         const interfaces::result_handler& result);
 

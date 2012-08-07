@@ -27,26 +27,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 namespace falcondb { namespace dbengine { namespace commands {
 
 /// upsert object into collection. _id is added to the object if absent
-void insert(const document& param,
+void insert(
+    const document& param,
     const interfaces::result_handler& handler,
     database& db);
 
 // returns the entire content of the collection in no particular order
-void list(const document& param,
+void list(
+    const document& param,
     const interfaces::result_handler& handler,
     database& db);
 
 // removes object which _id is equal to param
-void remove(const document& param,
+void remove(
+    const document& param,
     const interfaces::result_handler& handler,
     database& db);
 
 // dumps the entire db content ot stdout
-void dump(const document& param,
+void dump(
+    const document& param,
     const interfaces::result_handler& handler,
     database& db);
 
-void listindexes(const document& param,
+void listindexes(
+    const document& param,
     const interfaces::result_handler& handler,
     database& db);
 

@@ -75,11 +75,12 @@ void collection_group::handle_query(const bson_object_list& params, const result
         ::mongo::BSONObj query = params[0];
         std::string command(query.firstElement().fieldName());
 
-        if (command == "drop") {
-            std::string coll_name = group_name + '.' +query.firstElement().valuestr();
-            logging::info("dropping", coll_name);
-            _engine.drop_database(coll_name);
-            logging::info(coll_name, " dropped");
+        if (command == "dropDatabase") {
+            for(const auto& coll_name : get_collection_names()) {
+                logging::info("dropping ", coll_name);
+                _engine.drop_database(coll_name);
+                logging::info(coll_name, " dropped");
+            }
         } else if (command == "getlasterror") {
             ::mongo::BSONObjBuilder builder;
             builder.append("n", std::int32_t(0));
