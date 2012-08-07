@@ -22,10 +22,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "utils/log.hpp"
 
 #include "bson/bsonobjbuilder.ipp"
+#include "bson/json.hpp"
 
 #include <boost/assign/list_of.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
@@ -53,19 +55,40 @@ void collection::handle_insert(
             }
         };
 
-    document_list doc_list;
+    std::string insert_string;
+    document_list doc;
     for(const bson_object& object: params) {
-        doc_list.push_back(document::from_json(object.jsonString()));
+        std::string jsonString = object.jsonString();
+        insert_string += jsonString;
+        _databse->post( "insert", document::from_json(jsonString), result_handler);
     }
 
-    _databse->post( "insert", doc_list, result_handler);
+    logging::debug("inserting ", insert_string);
 }
 
 void collection::handle_query(
     const bson_object_list& params,
     const result_handler& handler)
 {
-    return handler(error_message(), bson_object_list());
+    logging::debug("quering ", _name);
+
+    auto result_handler =
+        [handler](const error_message& e, const document_list& result)
+        {
+            bson_object_list result_list;
+            std::string result_string;
+            for(const auto& doc: result) {
+                std::string jsonString = doc.to_json();
+                result_string += jsonString;
+                boost::algorithm::trim(jsonString);
+                ::mongo::BSONObj obj = ::mongo::fromjson(jsonString);
+                result_list.push_back(obj);
+            }
+            logging::debug("query result ", result_string, " ", result.size());
+            handler(e, result_list);
+        };
+
+    _databse->post("list", document_list(), result_handler);
 }
 
 

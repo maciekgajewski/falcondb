@@ -53,7 +53,7 @@ void command_processor::register_command(const std::string& command, const inter
 
 void command_processor::post(
     const std::string& command,
-    const document_list& params,
+    const document& params,
     const interfaces::result_handler& result,
     const dbengine::command_context& context)
 {
@@ -70,7 +70,7 @@ void command_processor::post(
 }
 
 void command_processor::handler_wrapper(const std::string& command,
-    const document_list& params,
+    const document& params,
     const interfaces::result_handler& result,
     dbengine::command_context context,
     const interfaces::command_handler& handler)

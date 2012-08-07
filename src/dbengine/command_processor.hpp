@@ -50,7 +50,7 @@ public:
 
     // posts command for execution
     void post(const std::string& command,
-        const document_list& params,
+        const document& params,
         const interfaces::result_handler& result,
         const dbengine::command_context& context);
 
@@ -67,7 +67,7 @@ private:
     std::unique_ptr<boost::asio::io_service::work> _work;
 
     static void handler_wrapper(const std::string& command,
-        const document_list& params,
+        const document& params,
         const interfaces::result_handler& result,
         dbengine::command_context context,
         const interfaces::command_handler& handler);

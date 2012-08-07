@@ -158,7 +158,7 @@ void connection::handle_insert_msg(const message::pointer& msg)
             if(e) {
                 logging::error("Error querring ",e );
             } else {
-                this->send_reply(msg, result);
+               // this->send_reply(msg, result);
             }
         });
 }
