@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "document/document_list.hpp"
 #include "document/document_object.hpp"
 
+#include <boost/optional.hpp>
+
 namespace falcondb {
 
 /// Provides some extra functinality on top of document_any
@@ -112,6 +114,8 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& o, const document& d);
+
+typedef boost::optional<document> optional_document;
 
 }
 
