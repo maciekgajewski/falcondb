@@ -29,6 +29,81 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace dbengine {
 
+
+class session : public interfaces::session
+{
+public:
+
+    session(engine& e, const std::string name) : _engine(e), _name(name)
+    { }
+
+    virtual void open(
+        const std::string& path,
+        const open_channel_callback& callback)
+    {
+        _engine.open(path, callback);
+    }
+
+    virtual ~session()
+    {
+        _engine.session_closed(_name);
+    }
+
+private:
+
+    engine& _engine;
+    std::string _name;
+};
+
+class channel : public interfaces::channel
+{
+public:
+
+    channel(const interfaces::database_ptr& db)
+        : _db(db)
+    {
+    }
+
+    virtual void post(
+        const std::string command,
+        document& param,
+        command_result_callback& callback)
+    {
+        _db->post(
+            command, param,
+            [=](const error_message& error, const document_list& result)
+            {
+                result_handler(error, result, callback);
+            });
+    }
+
+    virtual ~channel()
+    {
+    }
+
+private:
+
+    static void result_handler(
+        const error_message& error,
+        const document_list& result,
+        const command_result_callback& callback)
+    {
+        if (error)
+        {
+            callback(error, document_list());
+        }
+        else
+        {
+            document_object doc;
+            doc.set_field("data", std::move(result));
+
+            callback(error_message(), doc);
+        }
+    }
+
+    interfaces::database_ptr _db;
+};
+
 engine::engine(const engine_config& config, interfaces::storage_backend& backend)
 :
     _config(config),
@@ -87,13 +162,51 @@ void engine::run()
     _processor.run();
 }
 
-std::vector<std::string> engine::get_databases()
+void engine::create_session(
+    const std::string& session_name,
+    const create_session_callback& callback)
 {
-    std::vector<std::string> result;
-    std::transform(_databases.begin(), _databases.end(),
-        std::back_inserter(result), [](const database_map::value_type& p) { return p.first; });
+    {
+        rwmutex::scoped_write_lock lock(_sessions_mutex);
 
-    return result;
+        auto it = _sessions.find(session_name);
+        if (it == _sessions.end())
+        {
+            std::shared_ptr<session> s = std::make_shared<session>(*this, session_name);
+            _sessions.insert(std::make_pair(session_name, s));
+            callback(error_message(), s);
+        }
+    }
+    callback(error_message("session named ", session_name, " already exists"));
+}
+
+void engine::session_closed(const std::string& session_name)
+{
+    auto it = _sessions.find(session_name);
+    assert (it != _sessions.end());
+
+    _sessions.erase(it);
+}
+
+void engine::open(const std::string& path, const interfaces::session::open_channel_callback& callback)
+{
+    try
+    {
+        if (path.empty() || path[0] != '/')
+        {
+            throw exception("path malformed");
+        }
+
+        // no other object that collections now
+        std::string db_name = path.substr(1);
+        interfaces::database_ptr db = get_database(db_name);
+
+        // TODO create channel
+    }
+    catch(const std::exception& e)
+    {
+        callback(error_message(e.what()), interfaces::channel_ptr());
+    }
 }
 
 interfaces::database_ptr engine::get_database(const std::string& db_name)

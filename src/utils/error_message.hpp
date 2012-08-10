@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "utils/backtrace_data.hpp"
 #include "utils/exception.hpp"
+#include "utils/string.hpp"
 
 #include <boost/optional.hpp>
 
@@ -41,6 +42,11 @@ class error_message
 public:
 
     error_message() = default;
+
+    template<typename ...T>
+    error_message(T ...v)
+    : _content({ build_string(v...), backtrace_data() })
+    { }
 
     error_message(const exception& e)
     : _content({e.get_message(), e.get_backtrace()})

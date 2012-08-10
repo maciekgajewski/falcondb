@@ -50,7 +50,7 @@ public:
     command_result_callback;
 
     /// Send command to associated object.
-    virtual bool post(
+    virtual void post(
         const std::string command,
         document& param,
         command_result_callback& callback) = 0;
@@ -78,7 +78,7 @@ public:
     /// object will result the same handler.
     virtual void open(
         const std::string& path,
-        const open_channel_callback& callback);
+        const open_channel_callback& callback) = 0;
 
     virtual ~session() = 0;
 };
@@ -95,10 +95,36 @@ public:
     create_session_callback;
 
     /// Creates client's database session. The name must be unique in the socpe of the engine.
-    virtual create_session(
+    virtual void create_session(
         const std::string& session_name,
         const create_session_callback& callback) = 0;
 };
+
+// obsolete ////////////////////////////
+
+typedef std::function<void (const error_message& error, const document_list& result)> result_handler;
+
+class database
+{
+public:
+
+    /// Puts command into datyabases' command queue.
+    /// \returns false if the queue is full
+    /// \param command the command
+    /// \param params command params
+    /// \param handler completion handler, called in one of engine threads
+    virtual bool post(
+        const std::string& command,
+        const document& params,
+        const result_handler& result) = 0;
+
+    // DEBUG: dumps content to stdout
+    virtual void dump() = 0;
+};
+
+typedef std::shared_ptr<database> database_ptr;
+
+
 
 }}
 

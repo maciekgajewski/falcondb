@@ -39,19 +39,22 @@ class engine : public interfaces::engine
 {
 public:
     engine(const engine_config& config, interfaces::storage_backend& backend);
+    engine(const engine&) = delete;
     virtual ~engine();
 
     /// Initializes the database, then spawns the engine worker threads and return
     void run();
 
     // API
-
-    virtual std::vector<std::string> get_databases();
-    virtual interfaces::database_ptr get_database(const std::string& db_name);
-    virtual void create_database(const std::string& db_name);
-    virtual void drop_database(const std::string& db_name);
+    virtual void create_session(
+        const std::string& session_name,
+        const create_session_callback& callback);
 
 private:
+
+    void create_database(const std::string& db_name);
+    void drop_database(const std::string& db_name);
+    interfaces::database_ptr get_database(const std::string& db_name);
 
     engine_config _config;
     interfaces::storage_backend& _storage_backend;
@@ -60,6 +63,16 @@ private:
     typedef std::map<std::string, interfaces::database_ptr> database_map;
     database_map _databases;
     rwmutex _databases_mutex;
+
+    // TODO: temporary - internal session mamagement
+    typedef std::map<std::string, interfaces::session_ptr> session_map;
+    session_map _sessions;
+    rwmutex _sessions_mutex;
+
+    friend class session;
+
+    void session_closed(const std::string& session_name);
+    void open(const std::string& path, const interfaces::session::open_channel_callback& callback);
 
     command_processor _processor;
 };
