@@ -120,9 +120,19 @@ const std::string& frontend::require_arg(const command_dispatcher::arg_list& al,
     return al[idx];
 }
 
-void frontend::post_command(const std::string& object_name, const std::string& command, const document& param)
+void frontend::post_command(const std::string& path, const std::string& command, document&& param)
 {
-    // TODO
+    interfaces::channel_ptr channel = _open_channels[path];
+    interfaces::channel::command_result_callback callback =
+        [=](const error_message& err, const optional_document& data)
+        {
+            result_handler(command, err, data);
+        };
+
+    channel->post(
+        command,
+        std::move(param),
+        std::move(callback));
 }
 
 void frontend::static_on_text(char* text)
@@ -135,7 +145,7 @@ void frontend::handle_quit(const frontend::arg_list &al)
     _io_service->stop();
 }
 
-void frontend::result_handler(const std::string& operation, const error_message& err, const document& data)
+void frontend::result_handler(const std::string& operation, const error_message& err, const optional_document& data)
 {
     if (err)
     {
@@ -145,7 +155,7 @@ void frontend::result_handler(const std::string& operation, const error_message&
     else
     {
         std::cout << operation << " successfull" << std::endl;
-        std::cout << data.to_json() << std::endl;
+        std::cout << data->to_json() << std::endl;
     }
     _io_service->post([]{ rl_forced_update_display(); });
 }
@@ -155,14 +165,14 @@ void frontend::handle_command(const arg_list& al)
     // input parsing and validation
     if (al.size() < 1)
     {
-        std::cout << "Command syntax: COMMAND [TARGET [PARAM]]" << std::endl;
+        std::cout << "Command syntax: COMMAND [PATH [PARAM]]" << std::endl;
         return;
     }
 
     std::string command = al[0];
-    std::string target = "/";
+    std::string path = "/";
     document param = document_scalar::null();
-    if (al.size() > 1) target = al[1];
+    if (al.size() > 1) path = al[1];
     if (al.size() > 2)
     {
         try
@@ -182,10 +192,22 @@ void frontend::handle_command(const arg_list& al)
         std::cout << "Error: unable to execute command, session not created yet" << std::endl;
     }
 
-    // do we have the object open
-    // TODO
-
-
+    // do we have open channel to the object?
+    auto it = _open_channels.find(path);
+    if (it == _open_channels.end())
+    {
+        open_channel(
+            path,
+            [=]()
+            {
+                document copy = param; // why??
+                post_command(path, command, std::move(copy));
+            });
+    }
+    else
+    {
+        post_command(path, command, std::move(param));
+    }
 }
 
 void frontend::create_session()
@@ -209,6 +231,39 @@ void frontend::session_callback(const error_message& e, const interfaces::sessio
     {
         std::cout << "Session created, ready to accept commands" << std::endl;
         _io_service->post([=](){ _session = session; });
+    }
+}
+
+void frontend::open_channel(const std::string& path, const std::function<void ()>& continuation)
+{
+    std::cout << "Opening channel to " << path << " ..." << std::endl;
+    _session->open(
+        path,
+        [=](const error_message& e, const interfaces::channel_ptr& channel)
+        {
+            channel_callback(path, e, channel, continuation);
+        });
+}
+
+void frontend::channel_callback(
+    const std::string& path,
+    const error_message& e,
+    const interfaces::channel_ptr& channel,
+    const std::function<void ()>& continuation)
+{
+    if (e)
+    {
+        std::cout << "Error opening channel to " << path << ": " << e << std::endl;
+    }
+    else
+    {
+        std::cout << "Chanel to" << path << "open" << std::endl;
+        _io_service->post(
+            [=]()
+            {
+                _open_channels.insert(std::make_pair(path, channel));
+                continuation();
+            });
     }
 }
 

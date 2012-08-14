@@ -51,9 +51,9 @@ public:
 
     /// Send command to associated object.
     virtual void post(
-        const std::string command,
-        document& param,
-        command_result_callback& callback) = 0;
+        const std::string& command,
+        document&& param,
+        command_result_callback&& callback) = 0;
 
     /// Closes the comm channel
     virtual ~channel() {}

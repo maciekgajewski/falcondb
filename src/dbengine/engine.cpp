@@ -65,12 +65,13 @@ public:
     }
 
     virtual void post(
-        const std::string command,
-        document& param,
-        command_result_callback& callback)
+        const std::string& command,
+        document&& param,
+        command_result_callback&& callback)
     {
         _db->post(
-            command, param,
+            command,
+            std::move(param),
             [=](const error_message& error, const document_list& result)
             {
                 result_handler(error, result, callback);
