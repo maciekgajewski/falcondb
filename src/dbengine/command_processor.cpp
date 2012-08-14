@@ -82,11 +82,11 @@ void command_processor::handler_wrapper(const std::string& command,
     }
     catch(const falcondb::exception& e)
     {
-        result(e, document_list());
+        result(error_message(e), document_list());
     }
     catch(const std::exception& e)
     {
-        result(std::string(e.what()), document_list());
+        result(error_message(e.what()), document_list());
     }
 }
 

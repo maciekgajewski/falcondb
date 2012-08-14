@@ -32,10 +32,11 @@ class exception : public std::exception
 public:
 
     // simple constructor with pre-formatted message
-    exception(const char* what);
+    explicit exception(const char* what);
 
     // formatting constructor
     template<typename ...T>
+    explicit
     exception(T ...v)
     : _what(build_string(v...)), _backtrace()
     { }

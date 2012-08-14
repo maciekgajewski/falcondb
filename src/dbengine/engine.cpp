@@ -90,14 +90,14 @@ private:
     {
         if (error)
         {
-            callback(error, document_list());
+            callback(error, boost::none);
         }
         else
         {
             document_object doc;
             doc.set_field("data", std::move(result));
 
-            callback(error_message(), doc);
+            callback(error_message(), document(std::move(doc)));
         }
     }
 
@@ -177,7 +177,9 @@ void engine::create_session(
             callback(error_message(), s);
         }
     }
-    callback(error_message("session named ", session_name, " already exists"));
+    callback(
+        error_message(build_string("session named ", session_name, " already exists")),
+        interfaces::session_ptr());
 }
 
 void engine::session_closed(const std::string& session_name)

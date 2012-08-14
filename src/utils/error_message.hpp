@@ -43,16 +43,15 @@ public:
 
     error_message() = default;
 
-    template<typename ...T>
-    error_message(T ...v)
-    : _content({ build_string(v...), backtrace_data() })
-    { }
-
-    error_message(const exception& e)
+    explicit error_message(const exception& e)
     : _content({e.get_message(), e.get_backtrace()})
     { }
 
-    error_message(const std::string m, const backtrace_data& b = backtrace_data())
+    explicit error_message(const char* m, const backtrace_data& b = backtrace_data())
+    : _content({m, b})
+    { }
+
+    explicit error_message(const std::string& m, const backtrace_data& b = backtrace_data())
     : _content({m, b})
     { }
 
