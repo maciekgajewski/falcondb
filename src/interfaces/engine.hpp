@@ -56,7 +56,7 @@ public:
         command_result_callback& callback) = 0;
 
     /// Closes the comm channel
-    virtual ~channel() = 0;
+    virtual ~channel() {}
 };
 
 typedef std::shared_ptr<channel> channel_ptr;
@@ -80,7 +80,7 @@ public:
         const std::string& path,
         const open_channel_callback& callback) = 0;
 
-    virtual ~session() = 0;
+    virtual ~session() {}
 };
 
 typedef std::shared_ptr<session> session_ptr;

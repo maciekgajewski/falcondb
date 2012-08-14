@@ -42,6 +42,10 @@ private:
 
     // data
     interfaces::engine& _engine;
+    interfaces::session_ptr _session;
+
+    void create_session();
+    void session_callback(const error_message& e, const interfaces::session_ptr& session);
 
     // reading loop
 
@@ -51,27 +55,20 @@ private:
     boost::asio::io_service* _io_service;
     command_dispatcher _dispatcher;
 
-    // commands
+    // command handling
 
     typedef command_dispatcher::arg_list arg_list;
     /// returns arg at position idx, throws exception if no such argument
     static const std::string& require_arg(const command_dispatcher::arg_list& al, std::size_t idx);
 
-    void post_command(const std::string& db_name, const std::string& command, const document& param = document_scalar::null());
+    void post_command(const std::string& object_name, const std::string& command, const document& param = document_scalar::null());
 
     void result_handler(const std::string& operation,
         const error_message& err,
-        const document_list& data);
+        const document& data);
 
     void handle_quit(const arg_list& al);
-    void handle_create_db(const arg_list& al);
-    void handle_drop_db(const arg_list& al);
-    void handle_insert(const arg_list& al);
-    void handle_list(const arg_list& al);
-    void handle_listindexes(const arg_list& al);
-    void handle_remove(const arg_list& al);
-    void handle_showdbs();
-    void handle_dump(const arg_list& al);
+    void handle_command(const arg_list& al);
 };
 
 }}

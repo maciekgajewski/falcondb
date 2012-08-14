@@ -48,6 +48,9 @@ public:
         const std::string& description,
         const command_handler& handler);
 
+    /// Sets hanler for unrecognized command
+    void set_unrecognized_hanlder(const command_handler& handler);
+
     /// Tokenizes command-line input, executes command
     void tokenize_and_execute(const std::string& commandline);
 
@@ -66,6 +69,8 @@ private:
 
     typedef std::map<std::string, command_description> command_map;
     command_map _commands;
+
+    command_handler _unrecognized_hanlder;
 };
 
 }}
