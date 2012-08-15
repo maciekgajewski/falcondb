@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "backend_nessdb/database.hpp"
+#include "backends/nessdb/database.hpp"
 
 #include <utils/exception.hpp>
 
@@ -89,7 +89,7 @@ std::string database::get(range key)
     return result;
 }
 
-void database::for_each(const interfaces::database_backend::key_handler& handler)
+void database::for_each(const interfaces::database_backend::key_value_handler& handler)
 {
     // undoable with current nessdb
     throw exception("for_each not implemented in nessdb backend");

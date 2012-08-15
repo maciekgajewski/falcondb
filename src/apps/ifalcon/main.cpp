@@ -17,40 +17,41 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef FALCONDB_BACKEND_NESSDB_DATABASE_HPP
-#define FALCONDB_BACKEND_NESSDB_DATABASE_HPP
+#include "frontends/console/frontend.hpp"
 
-#include "interfaces/storage_backend.hpp"
+#include "backends/leveldb/backend.hpp"
 
-extern "C" {
-#include <nessdb/db.h>
+#include "dbengine/engine.hpp"
+
+using namespace falcondb;
+
+void help()
+{
+    std::cout << "usage: ifalcon DBPATH" << std::endl;
 }
 
-namespace falcondb { namespace backend_nessdb {
-
-class database : public interfaces::database_backend
+int main(int argc, char** argv)
 {
-public:
+    if (argc < 2)
+    {
+        help();
+        return 1;
+    }
+    std::string arg = argv[1];
+    if (arg == "--help" || arg == "-help")
+    {
+        help();
+        return 1;
+    }
 
-    virtual ~database();
+    backend_leveldb::backend backend;
 
-    virtual void drop();
+    dbengine::engine_config config = { arg };
+    dbengine::engine engine(config, backend);
 
-    virtual void add(range key, range data);
-    virtual void del(range key);
-    virtual std::string get(range key);
-    virtual void for_each(const key_handler& handler);
+    console_frontend::frontend frontend(engine);
 
+    engine.run();
 
-private:
-
-    database(const std::string& path);
-    friend class backend;
-
-    nessdb* _db;
-
-};
-
-} }
-
-#endif
+    frontend.execute();
+}

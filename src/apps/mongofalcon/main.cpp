@@ -17,29 +17,41 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "backend_leveldb/backend.hpp"
-#include "backend_leveldb/database.hpp"
+#include "frontends/mongo/frontend.hpp"
 
-#include <boost/filesystem.hpp>
+#include "backends/leveldb/backend.hpp"
 
-namespace falcondb { namespace backend_leveldb {
+#include "dbengine/engine.hpp"
 
-backend::backend()
+using namespace falcondb;
+
+void help()
 {
+    std::cout << "usage: mongofalcon DBPATH" << std::endl;
 }
 
-backend::~backend()
+int main(int argc, char** argv)
 {
-}
+    if (argc < 2)
+    {
+        help();
+        return 1;
+    }
+    std::string arg = argv[1];
+    if (arg == "--help" || arg == "-help")
+    {
+        help();
+        return 1;
+    }
 
-std::shared_ptr<interfaces::database_backend> backend::open_database(const std::string& path)
-{
-    return database::open(path);
-}
+    backend_leveldb::backend backend;
 
-std::shared_ptr<interfaces::database_backend> backend::create_database(const std::string& path)
-{
-    return database::create(path);
-}
+    dbengine::engine_config config = { arg };
+    dbengine::engine engine(config, backend);
 
-} }
+    frontend::mongo::server frontend(engine);
+
+    engine.run();
+
+    frontend.execute();
+}

@@ -17,41 +17,40 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "frontend/mongo/frontend.hpp"
+#ifndef FALCONDB_BACKEND_NESSDB_DATABASE_HPP
+#define FALCONDB_BACKEND_NESSDB_DATABASE_HPP
 
-#include "backend_leveldb/backend.hpp"
+#include "interfaces/storage_backend.hpp"
 
-#include "dbengine/engine.hpp"
-
-using namespace falcondb;
-
-void help()
-{
-    std::cout << "usage: mongofalcon DBPATH" << std::endl;
+extern "C" {
+#include <nessdb/db.h>
 }
 
-int main(int argc, char** argv)
+namespace falcondb { namespace backend_nessdb {
+
+class database : public interfaces::database_backend
 {
-    if (argc < 2)
-    {
-        help();
-        return 1;
-    }
-    std::string arg = argv[1];
-    if (arg == "--help" || arg == "-help")
-    {
-        help();
-        return 1;
-    }
+public:
 
-    backend_leveldb::backend backend;
+    virtual ~database();
 
-    dbengine::engine_config config = { arg };
-    dbengine::engine engine(config, backend);
+    virtual void drop();
 
-    frontend::mongo::server frontend(engine);
+    virtual void add(range key, range data);
+    virtual void del(range key);
+    virtual std::string get(range key);
+    virtual void for_each(const key_value_handler& handler);
 
-    engine.run();
 
-    frontend.execute();
-}
+private:
+
+    database(const std::string& path);
+    friend class backend;
+
+    nessdb* _db;
+
+};
+
+} }
+
+#endif

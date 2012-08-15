@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "backend_nessdb/backend.hpp"
-#include "backend_nessdb/database.hpp"
+#include "backends/nessdb/backend.hpp"
+#include "backends/nessdb/database.hpp"
 
 #include "utils/exception.hpp"
 #include "utils/filesystem.hpp"
@@ -39,7 +39,7 @@ std::shared_ptr<interfaces::database_backend> backend::open_database(const std::
     // ness dosn't do any checking, lets do some chedcking by ourselves
     if (bfs::is_directory(path))
     {
-        return std::shared_ptr<interfaces::database_backend>(new database(path));
+        //return std::shared_ptr<interfaces::database_backend>(new database(path));
     }
     else
     {
@@ -51,7 +51,7 @@ std::shared_ptr<interfaces::database_backend> backend::create_database(const std
 {
     if (!bfs::exists(path))
     {
-        return std::shared_ptr<interfaces::database_backend>(new database(path));
+        //return std::shared_ptr<interfaces::database_backend>(new database(path));
     }
     else
     {
