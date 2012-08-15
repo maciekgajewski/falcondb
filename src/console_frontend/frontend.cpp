@@ -43,22 +43,8 @@ frontend::frontend(interfaces::engine& engine)
         [this](const arg_list& al) { handle_quit(al); });
     _dispatcher.add_command("help", "help", "Display this help",
         [this](const arg_list& al) { _dispatcher.print_help(); });
-    _dispatcher.add_command("create", "create DBNAME", "Create new database",
-        [this](const arg_list& al) { handle_create_db(al); });
-    _dispatcher.add_command("drop", "drop DBNAME", "Drop existing database",
-        [this](const arg_list& al) { handle_drop_db(al); });
-    _dispatcher.add_command("insert", "insert DATABASE DOCUMENT", "Upsert document into database",
-        [this](const arg_list& al) { handle_insert(al); });
-    _dispatcher.add_command("list", "list DATABASE", "Get the entire content of the db",
-        [this](const arg_list& al) { handle_list(al); });
-    _dispatcher.add_command("listindexes", "listindexes DATABASE", "Get the entire content of the db",
-        [this](const arg_list& al) { handle_listindexes(al); });
-    _dispatcher.add_command("remove", "remove DATABASE KEY", "Remove document with _id=KEY from db",
-        [this](const arg_list& al) { handle_remove(al); });
-    _dispatcher.add_command("showdbs", "showdbs", "List databases",
-        [this](const arg_list&) { handle_showdbs(); });
-    _dispatcher.add_command("dump", "dump DATABASE", "DEBUG: dumps db content to STDOUT",
-        [this](const arg_list& al) { handle_dump(al); });
+    _dispatcher.set_unrecognized_hanlder(
+        [this](const arg_list& al) { handle_command(al); });
 }
 
 void frontend::execute()
@@ -85,7 +71,6 @@ void frontend::execute()
 
 
     // read stdin
-
     stdin_stream.async_read_some(
                     boost::asio::null_buffers(),
                     [&](const boost::system::error_code&, std::size_t){ read_handler(stdin_stream); });
@@ -93,6 +78,8 @@ void frontend::execute()
     // enter loop
     _io_service = &io_service;
     static_instance.reset(this);
+
+    io_service.post([this]() { create_session(); });
 
     try
     {
@@ -133,15 +120,19 @@ const std::string& frontend::require_arg(const command_dispatcher::arg_list& al,
     return al[idx];
 }
 
-void frontend::post_command(const std::string& db_name, const std::string& command, const document& param)
+void frontend::post_command(const std::string& path, const std::string& command, document&& param)
 {
-    interfaces::database_ptr db = _engine.get_database(db_name);
+    interfaces::channel_ptr channel = _open_channels[path];
+    interfaces::channel::command_result_callback callback =
+        [=](const error_message& err, const optional_document& data)
+        {
+            result_handler(command, err, data);
+        };
 
-    db->post(command, param,
-             [this, command](const error_message& error, const document_list& data)
-             {
-                result_handler(command, error, data);
-            });
+    channel->post(
+        command,
+        std::move(param),
+        std::move(callback));
 }
 
 void frontend::static_on_text(char* text)
@@ -154,19 +145,7 @@ void frontend::handle_quit(const frontend::arg_list &al)
     _io_service->stop();
 }
 
-void frontend::handle_create_db(const frontend::arg_list& al)
-{
-    _engine.create_database(require_arg(al, 0));
-    std::cout << "ok" << std::endl;
-}
-
-void frontend::handle_drop_db(const frontend::arg_list& al)
-{
-    _engine.drop_database(require_arg(al, 0));
-    std::cout << "ok" << std::endl;
-}
-
-void frontend::result_handler(const std::string& operation, const error_message& err, const document_list& data)
+void frontend::result_handler(const std::string& operation, const error_message& err, const optional_document& data)
 {
     if (err)
     {
@@ -176,57 +155,116 @@ void frontend::result_handler(const std::string& operation, const error_message&
     else
     {
         std::cout << operation << " successfull" << std::endl;
-        if (data.empty()) std::cout << "no data returned" << std::endl;
-        else
-        {
-            std::cout << data.size() << " documents returned" << std::endl;
-            std::copy(data.begin(), data.end(), std::ostream_iterator<document>(std::cout, "\n"));
-            std::cout << std::endl;
-        }
+        std::cout << data->to_json() << std::endl;
     }
     _io_service->post([]{ rl_forced_update_display(); });
 }
 
-void frontend::handle_insert(const frontend::arg_list& al)
+void frontend::handle_command(const arg_list& al)
 {
-    std::string db_name = require_arg(al, 0);
-    document doc = document::from_json(require_arg(al, 1));
-    post_command(db_name, "insert", doc);
-}
-
-void frontend::handle_list(const frontend::arg_list& al)
-{
-    std::string db_name = require_arg(al, 0);
-    post_command(db_name, "list");
-}
-
-void frontend::handle_listindexes(const frontend::arg_list& al)
-{
-    std::string db_name = require_arg(al, 0);
-    post_command(db_name, "listindexes");
-}
-
-void frontend::handle_remove(const arg_list& al)
-{
-    std::string db_name = require_arg(al, 0);
-    document doc = document::from_json(require_arg(al, 1));
-    post_command(db_name, "remove", doc);
-}
-
-void frontend::handle_showdbs()
-{
-    std::cout << "Databases: " << std::endl;
-    for(const std::string& db_name : _engine.get_databases())
+    // input parsing and validation
+    if (al.size() < 1)
     {
-        std::cout << " * " << db_name << std::endl;
+        std::cout << "Command syntax: COMMAND [PATH [PARAM]]" << std::endl;
+        return;
+    }
+
+    std::string command = al[0];
+    std::string path = "/";
+    document param = document_scalar::null();
+    if (al.size() > 1) path = al[1];
+    if (al.size() > 2)
+    {
+        try
+        {
+            param = document::from_json(al[2]);
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "Error parsig param: " << e.what() << std::endl;
+            return;
+        }
+    }
+
+    // check session
+    if (!_session)
+    {
+        std::cout << "Error: unable to execute command, session not created yet" << std::endl;
+    }
+
+    // do we have open channel to the object?
+    auto it = _open_channels.find(path);
+    if (it == _open_channels.end())
+    {
+        open_channel(
+            path,
+            [=]()
+            {
+                document copy = param; // why??
+                post_command(path, command, std::move(copy));
+            });
+    }
+    else
+    {
+        post_command(path, command, std::move(param));
     }
 }
 
-void frontend::handle_dump(const arg_list& al)
+void frontend::create_session()
 {
-    std::string db_name = require_arg(al, 0);
-    interfaces::database_ptr db = _engine.get_database(db_name);
-    db->dump();
+    _engine.create_session(
+        "interactive session",
+        [this](const error_message& e, const interfaces::session_ptr& session)
+        {
+            session_callback(e, session);
+        });
+}
+
+void frontend::session_callback(const error_message& e, const interfaces::session_ptr& session)
+{
+    if (e)
+    {
+        std::cout << "Error creating session: " << e << std::endl;
+        _io_service->stop();
+    }
+    else
+    {
+        std::cout << "Session created, ready to accept commands" << std::endl;
+        _io_service->post([=](){ _session = session; });
+    }
+}
+
+void frontend::open_channel(const std::string& path, const std::function<void ()>& continuation)
+{
+    std::cout << "Opening channel to " << path << " ..." << std::endl;
+    _session->open(
+        path,
+        [=](const error_message& e, const interfaces::channel_ptr& channel)
+        {
+            channel_callback(path, e, channel, continuation);
+        });
+}
+
+void frontend::channel_callback(
+    const std::string& path,
+    const error_message& e,
+    const interfaces::channel_ptr& channel,
+    const std::function<void ()>& continuation)
+{
+    if (e)
+    {
+        std::cout << "Error opening channel to " << path << ": " << e << std::endl;
+    }
+    else
+    {
+        std::cout << "Chanel to" << path << "open" << std::endl;
+        _io_service->post(
+            [=]()
+            {
+                _open_channels.insert(std::make_pair(path, channel));
+                continuation();
+            });
+    }
 }
 
 }}

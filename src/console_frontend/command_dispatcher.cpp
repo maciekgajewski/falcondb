@@ -40,6 +40,11 @@ void command_dispatcher::add_command(
     _commands.insert(std::make_pair(command, command_description {synopsis, description, handler}));
 }
 
+void command_dispatcher::set_unrecognized_hanlder(const command_dispatcher::command_handler& handler)
+{
+    _unrecognized_hanlder = handler;
+}
+
 void command_dispatcher::tokenize_and_execute(const std::string& commandline)
 {
     // tokenize
@@ -61,8 +66,15 @@ void command_dispatcher::tokenize_and_execute(const std::string& commandline)
     auto it = _commands.find(command);
     if (it == _commands.end())
     {
-        std::cout << "Unknown command: " << command << std::endl;
-        std::cout << "Type 'help' for list of available commands" << std::endl;
+        if (_unrecognized_hanlder)
+        {
+            _unrecognized_hanlder(arg_list(tok.begin(), tok.end()));
+        }
+        else
+        {
+            std::cout << "Unknown command: " << command << std::endl;
+            std::cout << "Type 'help' for list of available commands" << std::endl;
+        }
     }
     else
     {
