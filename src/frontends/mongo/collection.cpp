@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "frontend/mongo/collection.hpp"
+#include "frontends/mongo/collection.hpp"
 
 #include "utils/log.hpp"
 

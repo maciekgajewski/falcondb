@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define FALCONDB_FRONTEND_MONGO_BASE_COLLECTION_HPP
 
 #include "interfaces/engine.hpp"
-#include "frontend/mongo/message.hpp"
+#include "frontends/mongo/message.hpp"
 
 #include <functional>
 #include <memory>

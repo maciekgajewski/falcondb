@@ -22,9 +22,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "interfaces/engine.hpp"
 
-#include "frontend/mongo/message.hpp"
+#include "frontends/mongo/message.hpp"
 
-#include "frontend/mongo/base_collection.hpp"
+#include "frontends/mongo/base_collection.hpp"
 
 #include <boost/optional.hpp>
 

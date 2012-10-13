@@ -41,10 +41,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 namespace falcondb { namespace frontend { namespace mongo {
 
-connection::connection(boost::asio::io_service& io_service, collection_engine& engine)
+connection::connection(boost::asio::io_service& io_service)
 : _socket(io_service)
-, _engine(engine)
 {
+}
+
+void connection::start(const interfaces::session_ptr &session)
+{
+    assert(session);
+
+    _session = session;
+    start();
 }
 
 void connection::start()
@@ -114,7 +121,7 @@ void connection::handle_query_msg(const message::pointer& msg)
     }
 
     logging::debug("Quering ", query_msg.get_ns(), " ", query);
-
+/*
     base_collection::pointer collection = _engine.get_collection(query_msg.get_ns());
 
     assert(collection);
@@ -130,6 +137,8 @@ void connection::handle_query_msg(const message::pointer& msg)
                 this->send_reply(msg, result);
             }
         });
+    */
+
 }
 
 void connection::handle_insert_msg(const message::pointer& msg)
@@ -144,9 +153,10 @@ void connection::handle_insert_msg(const message::pointer& msg)
         ins += params.back().toString();
     }
 
+    logging::debug("inserting ", db_msg.get_ns(), " ", ins);
+/*
     base_collection::pointer collection = _engine.get_collection(db_msg.get_ns());
 
-    logging::debug("inserting ", db_msg.get_ns(), " ", ins);
 
     assert(collection);
 
@@ -161,6 +171,7 @@ void connection::handle_insert_msg(const message::pointer& msg)
                // this->send_reply(msg, result);
             }
         });
+        */
 }
 
 std::uint32_t connection::reqId()

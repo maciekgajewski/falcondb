@@ -17,11 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "frontend/mongo/collection.hpp"
-#include "frontend/mongo/engine.hpp"
-#include "frontend/mongo/admin_collection.hpp"
-#include "frontend/mongo/collection.hpp"
-#include "frontend/mongo/collection_group.hpp"
+#include "frontends/mongo/collection.hpp"
+#include "frontends/mongo/engine.hpp"
+#include "frontends/mongo/admin_collection.hpp"
+#include "frontends/mongo/collection.hpp"
+#include "frontends/mongo/collection_group.hpp"
 
 #include "utils/log.hpp"
 
@@ -63,10 +63,10 @@ base_collection::pointer collection_engine::get_collection(const std::string& co
         } else {
             logging::info("Creating new collection ", collection_name);
             try {
-                _engine.create_database(collection_name);
+                //_engine.create_database(collection_name);
             } catch (...) {}
-            falcondb::interfaces::database_ptr db = _engine.get_database(collection_name);
-            return std::make_shared<collection>(collection_name, db);
+            //falcondb::interfaces::database_ptr db = _engine.get_database(collection_name);
+            //return std::make_shared<collection>(collection_name, db);
         }
     }
 

@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "frontend/mongo/collection_group.hpp"
+#include "frontends/mongo/collection_group.hpp"
 
 #include "utils/log.hpp"
 
@@ -40,7 +40,7 @@ collection_group::collection_group(const std::vector<std::string>& ns, falcondb:
 std::vector<std::string> collection_group::get_collection_names()
 {
     typedef std::vector<std::string> collection_name_list;
-    collection_name_list collection_names = _engine.get_databases();
+    //collection_name_list collection_names = _engine.get_databases();
 
     const std::string& group_name = _ns[0];
     collection_name_list::iterator end =

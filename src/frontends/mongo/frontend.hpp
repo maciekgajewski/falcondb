@@ -21,8 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define FALCONDB_FRONTEND_MONGO_HPP
 
 #include "interfaces/engine.hpp"
-
-#include "connection.hpp"
+#include "frontends/mongo/connection.hpp"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio.hpp>
@@ -32,7 +31,7 @@ namespace falcondb { namespace frontend { namespace mongo {
 class server
 {
 public:
-    server(falcondb::interfaces::engine& engine);
+    server(interfaces::engine& engine);
 
     /// Starts interactive loop. Returns when user quits
     void execute();
@@ -40,10 +39,10 @@ public:
 private:
 
     void start_accept();
-    void handle_accept(const boost::system::error_code& error, const connection::pointer& conn);
+    void handle_accept(const boost::system::error_code& error, const connection::pointer &conn);
 
     // data
-    collection_engine _collection_engine;
+    interfaces::engine& _engine;
 
     boost::asio::io_service* _io_service;
     boost::asio::ip::tcp::acceptor* _acceptor;

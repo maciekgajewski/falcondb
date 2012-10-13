@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "frontend/mongo/frontend.hpp"
-#include "frontend/mongo/engine.hpp"
+#include "frontends/mongo/frontend.hpp"
 
 #include "utils/exception.hpp"
 
@@ -37,21 +36,10 @@ namespace falcondb { namespace frontend { namespace mongo {
 
 server::server(falcondb::interfaces::engine& engine)
 :
-    _collection_engine(engine),
+    _engine(engine),
     _io_service(nullptr),
     _acceptor(nullptr)
 {
-}
-
-void server::start_accept()
-{
-    connection::pointer conn = boost::make_shared<connection>(*_io_service, _collection_engine);
-    _acceptor->async_accept(
-        conn->socket(),
-        [this, conn](const boost::system::error_code &e)
-        {
-            this->handle_accept(e, conn);
-        });
 }
 
 void server::handle_accept(const boost::system::error_code& error, const connection::pointer &conn)
@@ -59,10 +47,33 @@ void server::handle_accept(const boost::system::error_code& error, const connect
     std::cout << "Connection accepted" << std::endl;
     if (!error)
     {
-        conn->start();
+        _engine.create_session(
+            "_test",
+            [conn](const error_message& error, const interfaces::session_ptr& session)
+            {
+                if (!error)
+                    conn->start(session);
+                else
+                    std::cout << "ERROR: session not created" << std::endl;
+            }
+            );
     }
+    else
+        std::cout << "ERROR: Connection" << std::endl;
 
     start_accept();
+}
+
+void server::start_accept()
+{
+    connection::pointer conn = boost::make_shared<connection>(*_io_service);
+
+    _acceptor->async_accept(
+        conn->socket(),
+        [this, conn](const boost::system::error_code &e)
+        {
+            handle_accept(e, conn);
+        });
 }
 
 void server::execute()

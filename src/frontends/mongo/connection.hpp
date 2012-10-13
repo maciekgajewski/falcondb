@@ -20,9 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_FRONTEND_MONGO_CONNECTION_HPP
 #define FALCONDB_FRONTEND_MONGO_CONNECTION_HPP
 
-#include "message.hpp"
+#include "interfaces/engine.hpp"
 
-#include "frontend/mongo/engine.hpp"
+#include "message.hpp"
 
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio/io_service.hpp>
@@ -37,13 +37,15 @@ class connection : public boost::enable_shared_from_this<connection>
 public:
     typedef boost::shared_ptr<connection> pointer;
 
-    connection(boost::asio::io_service& io_service, collection_engine& engine);
+    connection(boost::asio::io_service& io_service);
 
     boost::asio::ip::tcp::socket& socket() { return _socket; }
 
-    void start();
+    void start(const interfaces::session_ptr& session);
 
 private:
+
+    void start();
 
     std::uint32_t reqId();
 
@@ -57,7 +59,7 @@ private:
     void send_reply(const message::pointer& msg, const bson_object_list &obj_list);
     boost::asio::ip::tcp::socket _socket;
 
-    collection_engine& _engine;
+    interfaces::session_ptr _session;
 };
 
 }}}

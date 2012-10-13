@@ -20,9 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef FALCONDB_FRONTEND_MONGO_COLLECTION_HPP
 #define FALCONDB_FRONTEND_MONGO_COLLECTION_HPP
 
-#include "frontend/mongo/base_collection.hpp"
 
-#include "frontend/mongo/engine.hpp"
+#include "engine.hpp"
 
 namespace falcondb { namespace frontend { namespace mongo {
 
